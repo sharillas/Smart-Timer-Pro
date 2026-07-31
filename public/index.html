@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartCountdownTimer Pro | Moderator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --bg: #080c14; --card: #111827; --border: #1e293b;
+            --text: #f1f5f9; --text-dim: #64748b;
+            --accent: #00a3e0; --accent-glow: rgba(0,163,224,0.15);
+            --green: #10b981; --amber: #f59e0b; --red: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg); color: var(--text); padding: 24px;
+            user-select: none; overflow-y: auto;
+        }
+        .container { max-width: 1300px; margin: 0 auto; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+        }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-logo { height: 40px; }
+        .brand-text { font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+        .brand-text strong { color: var(--accent); }
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .header-btn {
+            background: var(--card); border: 1px solid var(--border); color: var(--text);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px;
+            font-weight: 600; letter-spacing: 0.5px; transition: all 0.15s;
+        }
+        .header-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .header-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .header-btn.warn { border-color: rgba(239,68,68,0.3); color: var(--red); }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        @media (min-width: 1100px) { .grid { grid-template-columns: 1.5fr 1fr; } }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+        .card-header {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--text-dim); margin-bottom: 16px; font-weight: 700;
+        }
+        .monitor-preview {
+            width: 100%; aspect-ratio: 16/9; background: #000;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; border: 2px solid #1a1a2e;
+        }
+        .monitor-preview img {
+            position: absolute; max-width: 80%; max-height: 80%;
+            object-fit: contain; opacity: 0.8; z-index: 1;
+        }
+        .monitor-time {
+            font-family: 'Courier New', monospace; font-size: 5vw;
+            font-weight: 900; color: #10b981; z-index: 2; position: relative;
+            transition: color 0.3s;
+        }
+        .msg-preview {
+            margin-top: 14px; padding: 12px 16px; border-radius: 10px;
+            background: rgba(0,0,0,0.3); border-left: 4px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .msg-badge {
+            font-size: 10px; padding: 4px 10px; border-radius: 4px;
+            font-weight: 900; letter-spacing: 1px; flex-shrink: 0;
+        }
+        .badge-live { background: var(--red); color: #fff; animation: pulse 1.5s infinite; }
+        .badge-off { background: #334155; color: var(--text-dim); }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn {
+            border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
+            color: #fff; transition: all 0.15s; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-icon { font-size: 24px; }
+        .btn-label { font-size: 13px; }
+        .btn-start { background: var(--green); height: 120px; }
+        .btn-start:hover { background: #059669; }
+        .btn-pause { background: var(--amber); height: 120px; }
+        .btn-pause:hover { background: #d97706; }
+        .btn-reset { background: #334155; height: 120px; color: #cbd5e1; }
+        .btn-reset:hover { background: #475569; }
+        .btn-sm { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; }
+        .btn-add { background: rgba(0,163,224,0.15); color: var(--accent); border: 1px solid rgba(0,163,224,0.2); }
+        .btn-sub { background: #334155; color: #94a3b8; }
+        .btn-add:hover { background: rgba(0,163,224,0.25); }
+        .btn-sub:hover { background: #475569; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+        .preset-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+        .btn-preset {
+            background: rgba(30,41,59,0.6); border: 1px solid var(--border);
+            padding: 12px; border-radius: 10px; color: #cbd5e1; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; font-size: 13px; text-align: center;
+        }
+        .btn-preset:hover { background: rgba(0,163,224,0.1); border-color: var(--accent); color: #fff; }
+        .btn-preset.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .custom-row { display: flex; gap: 8px; }
+        .custom-input {
+            flex: 1; background: #0f172a; border: 1px solid var(--border);
+            border-radius: 10px; color: #fff; padding: 12px 16px;
+            font-size: 14px; font-weight: 600; outline: none;
+        }
+        .custom-input:focus { border-color: var(--accent); }
+        .btn-set {
+            background: var(--accent); border: none; padding: 12px 20px;
+            border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer;
+            font-size: 12px; letter-spacing: 1px; white-space: nowrap;
+        }
+        .btn-set:hover { background: #0090cc; }
+        .msg-input {
+            width: 100%; background: #0f172a; border: 1px solid var(--border);
+            border-radius: 10px; color: #fff; padding: 12px; font-size: 14px;
+            outline: none; margin-bottom: 10px;
+        }
+        .msg-input:focus { border-color: var(--accent); }
+        .btn-toggle {
+            width: 100%; padding: 14px; border-radius: 10px; font-weight: 700;
+            cursor: pointer; border: none; font-size: 14px; letter-spacing: 1px;
+            margin-bottom: 14px; transition: all 0.15s;
+        }
+        .btn-msg-show { background: var(--red); color: #fff; }
+        .btn-msg-hide { background: var(--accent); color: #fff; }
+        .bank-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .btn-save {
+            background: rgba(0,163,224,0.15); color: var(--accent);
+            border: 1px solid rgba(0,163,224,0.2); padding: 6px 14px;
+            border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .msg-bank-item {
+            width: 100%; background: var(--card); border: 1px solid var(--border);
+            padding: 12px 40px 12px 16px; border-radius: 10px; color: #fff;
+            font-weight: 600; cursor: pointer; transition: all 0.15s;
+            position: relative; text-align: left; font-size: 13px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .msg-bank-item:hover { border-color: var(--accent); }
+        .msg-delete {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #ef4444; font-size: 18px;
+            cursor: pointer; opacity: 0; transition: opacity 0.15s; padding: 0 4px;
+        }
+        .msg-bank-wrapper:hover .msg-delete { opacity: 0.7; }
+        .msg-delete:hover { opacity: 1; }
+        .logo-section { margin-top: 16px; }
+        .logo-preview {
+            width: 100%; height: 80px; background: #000; border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 10px; display: flex;
+            align-items: center; justify-content: center; overflow: hidden; position: relative;
+        }
+        .logo-preview img { max-width: 80%; max-height: 80%; object-fit: contain; }
+        .logo-empty { color: var(--text-dim); font-size: 11px; letter-spacing: 1px; }
+        .hidden { display: none !important; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 30px; border-radius: 20px; width: 560px; max-height: 90vh;
+            overflow-y: auto; transform: translateY(20px); transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-title {
+            color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
+            margin: 0 0 20px 0; display: flex; justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            background: none; border: none; color: #fff; font-size: 24px;
+            cursor: pointer; padding: 0; line-height: 1;
+        }
+        .modal-close:hover { color: var(--red); }
+        .setting-group {
+            background: #0f172a; padding: 16px; border-radius: 12px;
+            border: 1px solid #1e293b; margin-bottom: 14px;
+        }
+        .setting-group h3 {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--text-dim); margin: 0 0 12px 0; font-weight: 700;
+        }
+        .setting-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; margin-bottom: 8px;
+        }
+        .setting-row:last-child { margin-bottom: 0; }
+        .setting-label { font-size: 13px; color: #cbd5e1; white-space: nowrap; }
+        .setting-input {
+            background: #1e293b; border: 1px solid var(--border);
+            color: #fff; padding: 6px 10px; border-radius: 6px;
+            font-size: 13px; outline: none; width: 120px; text-align: center;
+        }
+        .setting-input:focus { border-color: var(--accent); }
+        .setting-input[type="color"] {
+            width: 40px; height: 30px; padding: 2px; cursor: pointer;
+        }
+        .setting-input.wide { width: 180px; }
+        .setting-input.num { width: 70px; }
+
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background: #334155; border-radius: 24px; transition: 0.2s;
+        }
+        .toggle-slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background: #fff;
+            border-radius: 50%; transition: 0.2s;
+        }
+        input:checked + .toggle-slider { background: var(--accent); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        .audio-upload-row {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .audio-file-name {
+            font-size: 11px; color: var(--accent); max-width: 160px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .audio-status {
+            font-size: 10px; padding: 3px 8px; border-radius: 4px;
+            font-weight: 700;
+        }
+        .audio-status.set { background: rgba(16,185,129,0.15); color: var(--green); }
+        .audio-status.none { background: rgba(100,116,139,0.15); color: var(--text-dim); }
+
+        .btn-small {
+            background: var(--accent); border: none; padding: 6px 12px;
+            border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+        }
+        .btn-small:hover { background: #0090cc; }
+        .btn-small.danger { background: var(--red); }
+        .btn-small.danger:hover { background: #dc2626; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                SETTINGS
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </div>
+
+            <div class="setting-group">
+                <h3>Font & Time Format</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Font Family</span>
+                    <input type="text" id="set-font" class="setting-input wide" placeholder="'Courier New', monospace">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Show Seconds</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-seconds" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Show Hours</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-hours" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Timer Colors</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Normal</span>
+                    <input type="color" id="set-color-normal" class="setting-input" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Warning</span>
+                    <input type="color" id="set-color-warning" class="setting-input" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Danger</span>
+                    <input type="color" id="set-color-danger" class="setting-input" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Expired</span>
+                    <input type="color" id="set-color-expired" class="setting-input" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Thresholds (seconds)</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Warning at</span>
+                    <input type="number" id="set-warning-thr" class="setting-input num" min="5" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Danger at</span>
+                    <input type="number" id="set-danger-thr" class="setting-input num" min="1" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Stop at Zero (countdown)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-start-zero" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Audio - End Sound</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Enabled</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-audio-end" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="audio-upload-row" style="margin-top:8px">
+                    <input type="file" id="audio-end-input" accept="audio/*" class="hidden" onchange="uploadAudio('end', this)">
+                    <button class="btn-small" onclick="document.getElementById('audio-end-input').click()">UPLOAD</button>
+                    <span class="audio-file-name" id="audio-end-name"></span>
+                    <span class="audio-status none" id="audio-end-status">None</span>
+                    <button class="btn-small danger" onclick="clearAudio('end')">CLEAR</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Audio - Warning Sound</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Enabled</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-audio-warning" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="audio-upload-row" style="margin-top:8px">
+                    <input type="file" id="audio-warning-input" accept="audio/*" class="hidden" onchange="uploadAudio('warning', this)">
+                    <button class="btn-small" onclick="document.getElementById('audio-warning-input').click()">UPLOAD</button>
+                    <span class="audio-file-name" id="audio-warning-name"></span>
+                    <span class="audio-status none" id="audio-warning-status">None</span>
+                    <button class="btn-small danger" onclick="clearAudio('warning')">CLEAR</button>
+                </div>
+            </div>
+
+            <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()">DONE</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="brand">
+                <img src="/images/logo.svg" class="brand-logo" alt="smartchoice" onerror="this.style.display='none'">
+                <div class="brand-text">SmartCountdownTimer <strong>Pro</strong></div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="btn-presenter" onclick="togglePresenter()">EXTERNAL DISPLAY</button>
+                <button class="header-btn" id="btn-audio" onclick="toggleAudio()">AUDIO OFF</button>
+                <button class="header-btn" onclick="openSettings()">SETTINGS</button>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="side-left">
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">Quick Presets & Custom Time</div>
+                    <div class="preset-grid">
+                        <button onclick="resetTime(0)" class="btn-preset" style="color:var(--text-dim)">00:00</button>
+                        <button onclick="resetTime(60)" class="btn-preset">1m</button>
+                        <button onclick="resetTime(300)" class="btn-preset">5m</button>
+                        <button onclick="resetTime(600)" class="btn-preset" style="color:var(--accent);border-color:rgba(0,163,224,0.3)">10m</button>
+                        <button onclick="resetTime(900)" class="btn-preset">15m</button>
+                        <button onclick="resetTime(1800)" class="btn-preset">30m</button>
+                        <button onclick="resetTime(3600)" class="btn-preset">60m</button>
+                        <button onclick="resetTime(7200)" class="btn-preset">2h</button>
+                    </div>
+                    <div class="custom-row">
+                        <input type="number" id="custom-min" placeholder="Minutes..." class="custom-input">
+                        <button onclick="setCustomTime()" class="btn-set">SET TIME</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">Display Mode</div>
+                    <div class="preset-grid cols4" style="margin-bottom:0">
+                        <button onclick="setMode('countdown')" class="btn-preset active" id="mode-countdown">Countdown</button>
+                        <button onclick="setMode('countup')" class="btn-preset" id="mode-countup">Count-Up</button>
+                        <button onclick="setMode('timeofday')" class="btn-preset" id="mode-timeofday">Time of Day</button>
+                        <button onclick="setMode('logo')" class="btn-preset" id="mode-logo">Idle / Logo</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Live Monitor</div>
+                    <div class="monitor-preview" id="monitor-frame">
+                        <img id="monitor-logo" src="" class="hidden">
+                        <div class="monitor-time" id="monitor-time">10:00</div>
+                    </div>
+                    <div class="msg-preview">
+                        <div style="flex:1">
+                            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">MESSAGE PREVIEW</div>
+                            <div id="msg-text" style="font-weight:600;font-style:italic">No message set</div>
+                        </div>
+                        <span id="msg-badge" class="msg-badge badge-off">OFF AIR</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-right">
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">Transport Controls</div>
+                    <div class="btn-grid">
+                        <button id="btn-start" onclick="api('start')" class="btn btn-start">
+                            <span class="btn-icon">▶</span>
+                            <span class="btn-label">START</span>
+                        </button>
+                        <button id="btn-pause" onclick="api('pause')" class="btn btn-pause hidden">
+                            <span class="btn-icon">⏸</span>
+                            <span class="btn-label">PAUSE</span>
+                        </button>
+                        <button onclick="api('reset')" class="btn btn-reset">
+                            <span class="btn-icon">↺</span>
+                            <span class="btn-label">RESET</span>
+                        </button>
+                    </div>
+                    <div class="btn-grid" style="margin-top:12px">
+                        <button onclick="addTime(60)" class="btn btn-add btn-sm">+1 MIN</button>
+                        <button onclick="addTime(-60)" class="btn btn-sub btn-sm">-1 MIN</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">Event Logo</div>
+                    <div class="logo-preview" id="logo-container">
+                        <span class="logo-empty" id="logo-empty">No Logo Uploaded</span>
+                        <img id="logo-img" src="" class="hidden">
+                    </div>
+                    <div class="custom-row">
+                        <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="uploadLogo(this)">
+                        <button onclick="document.getElementById('logo-input').click()" class="btn-set" style="flex:1;padding:12px">UPLOAD LOGO</button>
+                        <button onclick="clearLogo()" class="btn-set" style="background:var(--red);flex:none;padding:0 20px">✕</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Messaging Control</div>
+                    <input type="text" id="msg-input" placeholder="Type custom message..." class="msg-input" oninput="updateMessage()">
+                    <button id="btn-msg-toggle" onclick="toggleMessage()" class="btn-toggle btn-msg-hide">SHOW MESSAGE</button>
+                    <div class="bank-header">
+                        <div class="card-header" style="margin-bottom:0">Quick Messages <span id="msg-count" style="color:var(--text-dim);font-weight:400">(0/5)</span></div>
+                        <button id="btn-save-msg" onclick="saveQuickMessage()" class="btn-save">+ ADD QUICK MESSAGE</button>
+                    </div>
+                    <div id="quick-msgs" style="display:flex;flex-direction:column;gap:6px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let audioEnabled = false;
+        let lastTimeLeft = -999;
+
+        // --- ELECTRON ---
+        function togglePresenter() {
+            if (window.electronAPI) {
+                window.electronAPI.togglePresenter().then(function(active) {
+                    document.getElementById('btn-presenter').classList.toggle('active', active);
+                });
+            } else {
+                window.open('/presenter.html', 'presenter', 'fullscreen=yes');
+            }
+        }
+
+        // --- AUDIO ---
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            var btn = document.getElementById('btn-audio');
+            if (audioEnabled) {
+                btn.textContent = 'AUDIO ON';
+                btn.style.color = 'var(--green)';
+            } else {
+                btn.textContent = 'AUDIO OFF';
+                btn.style.color = '';
+            }
+        }
+
+        // --- SETTINGS ---
+        var currentSettings = {
+            fontFamily: "'Courier New', monospace",
+            showSeconds: true,
+            showHours: true,
+            colorNormal: '#10b981',
+            colorWarning: '#f59e0b',
+            colorDanger: '#f97316',
+            colorExpired: '#ef4444',
+            warningThreshold: 120,
+            dangerThreshold: 30,
+            stopAtZero: true,
+            audioEndEnabled: true,
+            audioWarningEnabled: true
+        };
+
+        function populateSettingsForm(s) {
+            document.getElementById('set-font').value = s.fontFamily || '';
+            document.getElementById('set-seconds').checked = s.showSeconds !== false;
+            document.getElementById('set-hours').checked = s.showHours !== false;
+            document.getElementById('set-color-normal').value = s.colorNormal || '#10b981';
+            document.getElementById('set-color-warning').value = s.colorWarning || '#f59e0b';
+            document.getElementById('set-color-danger').value = s.colorDanger || '#f97316';
+            document.getElementById('set-color-expired').value = s.colorExpired || '#ef4444';
+            document.getElementById('set-warning-thr').value = s.warningThreshold || 120;
+            document.getElementById('set-danger-thr').value = s.dangerThreshold || 30;
+            document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
+            document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
+            document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
+        }
+
+        function openSettings() {
+            populateSettingsForm(currentSettings);
+            document.getElementById('settings-modal').classList.add('active');
+        }
+
+        function closeSettings() {
+            autoSaveSettings();
+            document.getElementById('settings-modal').classList.remove('active');
+        }
+
+        function autoSaveSettings() {
+            var s = {
+                fontFamily: document.getElementById('set-font').value,
+                showSeconds: document.getElementById('set-seconds').checked,
+                showHours: document.getElementById('set-hours').checked,
+                colorNormal: document.getElementById('set-color-normal').value,
+                colorWarning: document.getElementById('set-color-warning').value,
+                colorDanger: document.getElementById('set-color-danger').value,
+                colorExpired: document.getElementById('set-color-expired').value,
+                warningThreshold: parseInt(document.getElementById('set-warning-thr').value) || 120,
+                dangerThreshold: parseInt(document.getElementById('set-danger-thr').value) || 30,
+                stopAtZero: document.getElementById('set-start-zero').checked,
+                audioEndEnabled: document.getElementById('set-audio-end').checked,
+                audioWarningEnabled: document.getElementById('set-audio-warning').checked
+            };
+            currentSettings = s;
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(s)
+            });
+        }
+
+        function uploadAudio(type, input) {
+            var file = input.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                fetch('/api/audio/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type, audio: e.target.result })
+                });
+                var nameEl = document.getElementById('audio-' + type + '-name');
+                var statusEl = document.getElementById('audio-' + type + '-status');
+                if (nameEl) nameEl.textContent = file.name;
+                if (statusEl) { statusEl.textContent = 'SET'; statusEl.className = 'audio-status set'; }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearAudio(type) {
+            fetch('/api/audio/clear?type=' + type);
+            var nameEl = document.getElementById('audio-' + type + '-name');
+            var statusEl = document.getElementById('audio-' + type + '-status');
+            if (nameEl) nameEl.textContent = '';
+            if (statusEl) { statusEl.textContent = 'None'; statusEl.className = 'audio-status none'; }
+        }
+
+        // --- API ---
+        function api(cmd, param) { fetch('/api/' + cmd + (param || '')); }
+        function setMode(mode) { api('mode', '?set=' + mode); }
+        function resetTime(sec) { api('reset', '?sec=' + sec); }
+        function addTime(sec) { api('add', '?sec=' + sec); }
+        function updateMessage() {
+            var val = document.getElementById('msg-input').value;
+            api('message/set', '?text=' + encodeURIComponent(val));
+        }
+        function toggleMessage() { api('message/toggle'); }
+        function setCustomTime() {
+            var mins = document.getElementById('custom-min').value;
+            if (mins) api('reset', '?sec=' + parseInt(mins) * 60);
+        }
+        function saveQuickMessage() {
+            var text = document.getElementById('msg-input').value.trim();
+            if (text) { api('messages/add', '?text=' + encodeURIComponent(text)); document.getElementById('msg-input').value = ''; }
+        }
+        function uploadLogo(input) {
+            var file = input.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                fetch('/api/system/logo/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: e.target.result })
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+        function clearLogo() {
+            if (confirm('Clear current logo?')) { api('system/logo/clear'); document.getElementById('logo-input').value = ''; }
+        }
+
+        function formatTimeDisplay(s, timeLeft) {
+            var abs = Math.abs(timeLeft);
+            var sign = timeLeft < 0 ? '-' : '';
+            var h = Math.floor(abs / 3600);
+            var m = Math.floor((abs % 3600) / 60);
+            var sec = abs % 60;
+            if (h > 0 || (s.showHours !== false)) {
+                if (s.showSeconds !== false) {
+                    return sign + h.toString().padStart(2, '0') + ':' +
+                           m.toString().padStart(2, '0') + ':' +
+                           sec.toString().padStart(2, '0');
+                }
+                return sign + h.toString().padStart(2, '0') + ':' +
+                       m.toString().padStart(2, '0');
+            }
+            if (s.showSeconds !== false) {
+                return sign + m.toString().padStart(2, '0') + ':' +
+                       sec.toString().padStart(2, '0');
+            }
+            return sign + m.toString().padStart(2, '0');
+        }
+
+        socket.on('stateUpdate', function(s) {
+            var cfg = s.settings || {};
+            if (s.mode === 'countdown' && s.isRunning && s.timeLeft === 0 && lastTimeLeft === 1) {
+                if (audioEnabled && cfg.audioEndEnabled !== false) {
+                    // audio trigger handled by server
+                }
+            }
+            lastTimeLeft = s.timeLeft;
+
+            // Logo
+            if (s.logoData) {
+                document.getElementById('logo-empty').classList.add('hidden');
+                document.getElementById('logo-img').src = s.logoData;
+                document.getElementById('logo-img').classList.remove('hidden');
+                document.getElementById('monitor-logo').src = s.logoData;
+            } else {
+                document.getElementById('logo-empty').classList.remove('hidden');
+                document.getElementById('logo-img').classList.add('hidden');
+                document.getElementById('monitor-logo').src = '';
+                document.getElementById('monitor-logo').classList.add('hidden');
+            }
+
+            // Mode buttons
+            ['countdown','countup','timeofday','logo'].forEach(function(m) {
+                var btn = document.getElementById('mode-' + m);
+                if (btn) btn.classList.toggle('active', s.mode === m);
+            });
+
+            // Monitor time
+            var mt = document.getElementById('monitor-time');
+            var ml = document.getElementById('monitor-logo');
+
+            if (s.mode === 'logo') {
+                mt.classList.add('hidden');
+                if (s.logoData) ml.classList.remove('hidden');
+                else { mt.textContent = 'IDLE'; mt.style.color = cfg.colorNormal || '#10b981'; mt.classList.remove('hidden'); }
+            } else {
+                mt.classList.remove('hidden');
+                ml.classList.add('hidden');
+
+                if (s.mode === 'timeofday') {
+                    mt.textContent = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                    mt.style.color = cfg.colorNormal || '#10b981';
+                } else {
+                    mt.textContent = formatTimeDisplay(cfg, s.timeLeft);
+                    if (s.mode === 'countdown') {
+                        if (s.alertLevel === 'expired') mt.style.color = cfg.colorExpired || '#ef4444';
+                        else if (s.alertLevel === 'danger') mt.style.color = cfg.colorDanger || '#f97316';
+                        else if (s.alertLevel === 'warning') mt.style.color = cfg.colorWarning || '#f59e0b';
+                        else mt.style.color = cfg.colorNormal || '#10b981';
+                    } else {
+                        mt.style.color = cfg.colorNormal || '#10b981';
+                    }
+                }
+            }
+
+            // Message
+            document.getElementById('msg-text').textContent = s.message || 'No message set';
+            var badge = document.getElementById('msg-badge');
+            var toggleBtn = document.getElementById('btn-msg-toggle');
+            if (s.showMessage) {
+                badge.textContent = 'LIVE ON STAGE';
+                badge.className = 'msg-badge badge-live';
+                toggleBtn.textContent = 'HIDE MESSAGE';
+                toggleBtn.className = 'btn-toggle btn-msg-show';
+            } else {
+                badge.textContent = 'OFF AIR';
+                badge.className = 'msg-badge badge-off';
+                toggleBtn.textContent = 'SHOW MESSAGE';
+                toggleBtn.className = 'btn-toggle btn-msg-hide';
+            }
+
+            // Transport
+            var startBtn = document.getElementById('btn-start');
+            var pauseBtn = document.getElementById('btn-pause');
+            if (s.isRunning) { startBtn.classList.add('hidden'); pauseBtn.classList.remove('hidden'); }
+            else { startBtn.classList.remove('hidden'); pauseBtn.classList.add('hidden'); }
+        });
+
+        socket.on('messagesUpdate', function(msgs) {
+            var grid = document.getElementById('quick-msgs');
+            grid.innerHTML = '';
+            var count = msgs.length;
+            document.getElementById('msg-count').textContent = '(' + count + '/5)';
+            var saveBtn = document.getElementById('btn-save-msg');
+            if (count >= 5) { saveBtn.classList.add('hidden'); } else { saveBtn.classList.remove('hidden'); }
+            msgs.forEach(function(msg, index) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'msg-bank-wrapper';
+                wrapper.style.position = 'relative';
+
+                var btn = document.createElement('button');
+                btn.className = 'msg-bank-item';
+                btn.textContent = (index + 1) + '. ' + msg;
+                btn.onclick = function() { api('message/trigger', '?index=' + index); };
+
+                var editBtn = document.createElement('button');
+                editBtn.innerHTML = '&#9998;';
+                editBtn.style.cssText = 'position:absolute;right:32px;top:50%;transform:translateY(-50%);background:none;border:none;color:#60a5fa;font-size:14px;cursor:pointer;opacity:0;transition:opacity 0.15s;padding:2px 4px;';
+                editBtn.title = 'Edit message';
+                editBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    editQuickMessage(index, msg);
+                };
+
+                var del = document.createElement('button');
+                del.className = 'msg-delete';
+                del.textContent = '\u00d7';
+                del.style.right = '10px';
+                del.onclick = function(e) { e.stopPropagation(); api('messages/remove', '?index=' + index); };
+
+                wrapper.onmouseover = function() { editBtn.style.opacity = '0.8'; del.style.opacity = '0.8'; };
+                wrapper.onmouseout = function() { editBtn.style.opacity = '0'; del.style.opacity = '0'; };
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(editBtn);
+                wrapper.appendChild(del);
+                grid.appendChild(wrapper);
+            });
+        });
+
+        function editQuickMessage(index, currentText) {
+            var grid = document.getElementById('quick-msgs');
+            var wrapper = grid.children[index];
+            if (!wrapper) return;
+            var btn = wrapper.querySelector('.msg-bank-item');
+            if (!btn) return;
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'width:100%;background:#0f172a;border:1px solid var(--accent);border-radius:10px;color:#fff;padding:10px 40px 10px 16px;font-size:13px;font-weight:600;outline:none;';
+            btn.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function save() {
+                var newText = input.value.trim();
+                if (newText && newText !== currentText) {
+                    fetch('/api/messages/edit?index=' + index + '&text=' + encodeURIComponent(newText));
+                } else {
+                    socket.emit('refresh');
+                }
+            }
+
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { input.blur(); }
+                if (e.key === 'Escape') { input.value = currentText; input.blur(); }
+            });
+        }
+
+        socket.on('settingsUpdate', function(s) {
+            currentSettings = s;
+        });
+
+        socket.on('audioUpdate', function(data) {
+            if (data.audioEnd) {
+                document.getElementById('audio-end-name').textContent = 'Uploaded';
+                document.getElementById('audio-end-status').textContent = 'SET';
+                document.getElementById('audio-end-status').className = 'audio-status set';
+            } else {
+                document.getElementById('audio-end-name').textContent = '';
+                document.getElementById('audio-end-status').textContent = 'None';
+                document.getElementById('audio-end-status').className = 'audio-status none';
+            }
+            if (data.audioWarning) {
+                document.getElementById('audio-warning-name').textContent = 'Uploaded';
+                document.getElementById('audio-warning-status').textContent = 'SET';
+                document.getElementById('audio-warning-status').className = 'audio-status set';
+            } else {
+                document.getElementById('audio-warning-name').textContent = '';
+                document.getElementById('audio-warning-status').textContent = 'None';
+                document.getElementById('audio-warning-status').className = 'audio-status none';
+            }
+        });
+    </script>
+</body>
+</html>
