@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "bump": "node scripts/bump-version.js",
+    "build": "node scripts/bump-version.js && electron-builder"
   },
   "dependencies": {
     "express": "^4.18.2",
