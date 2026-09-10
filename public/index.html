@@ -353,13 +353,17 @@
             </div>
 
             <div class="setting-group">
-                <h3>Overlay / Transparent Window</h3>
+                <h3>Background</h3>
                 <div class="setting-row">
-                    <span class="setting-label">Transparent Background</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="set-transparent" onchange="autoSaveSettings()">
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <span class="setting-label">Mode</span>
+                    <select id="set-bg-mode" class="setting-input" style="width:160px" onchange="onBgModeChange()">
+                        <option value="color">Color</option>
+                        <option value="transparent">Transparent (no bg)</option>
+                    </select>
+                </div>
+                <div class="setting-row" id="bg-color-row">
+                    <span class="setting-label">Background Color</span>
+                    <input type="color" id="set-bg-color" class="setting-input" onchange="autoSaveSettings()">
                 </div>
             </div>
 
@@ -432,10 +436,6 @@
                 <div class="setting-row">
                     <span class="setting-label">Expired</span>
                     <input type="color" id="set-color-expired" class="setting-input" onchange="autoSaveSettings()">
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label">Background</span>
-                    <input type="color" id="set-bg-color" class="setting-input" onchange="autoSaveSettings()">
                 </div>
             </div>
 
@@ -676,7 +676,8 @@
             timerX: 50,
             timerY: 46,
             timerSize: 22,
-            transparentMode: false,
+            bgMode: 'color',
+            bgColor: '#000000',
             customPresets: [],
             defaultPresets: []
         };
@@ -718,6 +719,16 @@
             autoSaveSettings();
         }
 
+        function onBgModeChange() {
+            var mode = document.getElementById('set-bg-mode').value;
+            if (mode === 'transparent') {
+                document.getElementById('bg-color-row').classList.add('hidden');
+            } else {
+                document.getElementById('bg-color-row').classList.remove('hidden');
+            }
+            autoSaveSettings();
+        }
+
         function populateSettingsForm(s) {
             document.getElementById('set-font').value = fontToDropdown(s.fontFamily);
             if (fontToDropdown(s.fontFamily) === 'custom') {
@@ -733,13 +744,18 @@
             document.getElementById('set-color-danger').value = s.colorDanger || '#f97316';
             document.getElementById('set-color-expired').value = s.colorExpired || '#ef4444';
             document.getElementById('set-bg-color').value = s.bgColor || '#000000';
+            document.getElementById('set-bg-mode').value = s.bgMode || 'color';
+            if ((s.bgMode || 'color') === 'transparent') {
+                document.getElementById('bg-color-row').classList.add('hidden');
+            } else {
+                document.getElementById('bg-color-row').classList.remove('hidden');
+            }
             document.getElementById('set-warning-thr').value = s.warningThreshold || 120;
             document.getElementById('set-danger-thr').value = s.dangerThreshold || 30;
             document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
             document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
-            document.getElementById('set-transparent').checked = s.transparentMode === true;
             document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
             document.getElementById('set-timer-y').value = s.timerY !== undefined ? s.timerY : 46;
             document.getElementById('set-timer-size').value = s.timerSize !== undefined ? s.timerSize : 22;
@@ -772,13 +788,13 @@
                 colorDanger: document.getElementById('set-color-danger').value,
                 colorExpired: document.getElementById('set-color-expired').value,
                 bgColor: document.getElementById('set-bg-color').value,
+                bgMode: document.getElementById('set-bg-mode').value,
                 warningThreshold: parseInt(document.getElementById('set-warning-thr').value) || 120,
                 dangerThreshold: parseInt(document.getElementById('set-danger-thr').value) || 30,
                 stopAtZero: document.getElementById('set-start-zero').checked,
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
                 audioWarningEnabled: document.getElementById('set-audio-warning').checked,
                 logoFit: document.getElementById('set-logo-fit').value,
-                transparentMode: document.getElementById('set-transparent').checked,
                 timerX: parseInt(document.getElementById('set-timer-x').value) || 50,
                 timerY: parseInt(document.getElementById('set-timer-y').value) || 46,
                 timerSize: parseInt(document.getElementById('set-timer-size').value) || 22,
@@ -1109,7 +1125,13 @@
             var mt = document.getElementById('monitor-time');
             var ml = document.getElementById('monitor-logo');
             var mf = document.getElementById('monitor-frame');
-            if (mf && cfg.bgColor) mf.style.background = cfg.bgColor;
+            if (mf) {
+                if (cfg.bgMode === 'transparent') {
+                    mf.style.background = 'transparent';
+                } else {
+                    mf.style.background = cfg.bgColor || '#000000';
+                }
+            }
 
             if (s.mode === 'logo') {
                 mt.classList.add('hidden');
