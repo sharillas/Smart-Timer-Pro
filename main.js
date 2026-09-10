@@ -58,10 +58,11 @@ function createPresenterWindow() {
     const targetDisplay = hasExternalMonitor ? displays[1] : displays[0];
     const { x, y, width, height } = targetDisplay.bounds;
 
-    let transparentMode = false;
+    let bgMode = 'color';
     if (serverInstance && serverInstance.getSettings) {
-        transparentMode = serverInstance.getSettings().transparentMode === true;
+        bgMode = serverInstance.getSettings().bgMode || 'color';
     }
+    const isTransparent = bgMode === 'transparent';
 
     const windowOpts = {
         x: x,
@@ -73,7 +74,7 @@ function createPresenterWindow() {
             contextIsolation: true,
             nodeIntegration: false
         },
-        backgroundColor: '#000000',
+        backgroundColor: isTransparent ? '#00000000' : '#000000',
         show: false,
         autoHideMenuBar: true
     };
@@ -85,22 +86,20 @@ function createPresenterWindow() {
         windowOpts.frame = false;
         windowOpts.resizable = false;
         windowOpts.thickFrame = false;
-    } else if (transparentMode) {
+        if (isTransparent) {
+            windowOpts.transparent = true;
+        }
+    } else {
         windowOpts.width = 800;
         windowOpts.height = 300;
         windowOpts.frame = false;
+        windowOpts.thickFrame = false;
         windowOpts.resizable = true;
-        windowOpts.transparent = true;
         windowOpts.alwaysOnTop = true;
-        windowOpts.skipTaskbar = false;
-        windowOpts.hasShadow = false;
-        windowOpts.backgroundColor = '#00000000';
-    } else {
-        windowOpts.width = 960;
-        windowOpts.height = 540;
-        windowOpts.frame = true;
-        windowOpts.resizable = true;
-        windowOpts.fullscreen = false;
+        if (isTransparent) {
+            windowOpts.transparent = true;
+            windowOpts.hasShadow = false;
+        }
     }
 
     presenterWindow = new BrowserWindow(windowOpts);
