@@ -1,4 +1,4 @@
-# SmartCountdownTimer Pro - Development Guide
+# Smart Timer Pro - Development Guide
 
 ## Tech Stack
 
@@ -39,7 +39,7 @@
 ## Project Structure
 
 ```
-SmartCountdownTimer-Pro/
+Smart-Timer-Pro/
 ├── main.js              # Electron main process
 │   ├── createMainWindow()      # Moderator window (1280x850)
 │   ├── createPresenterWindow() # External display window
@@ -59,7 +59,7 @@ SmartCountdownTimer-Pro/
 │   └── images/
 │       └── logo.svg     # smartchoice logo
 ├── companion/
-│   └── smartcountdowntimer-pro/
+│   └── Smart-Timer-Pro/
 │       ├── main.js      # Companion module logic
 │       ├── package.json # Module manifest
 │       └── HELP.md      # Installation guide
@@ -69,7 +69,7 @@ SmartCountdownTimer-Pro/
 ├── docs/                # Documentation
 └── dist/                # Build output (gitignored)
     ├── win-unpacked/    # Unpacked app
-    └── SmartCountdownTimer Pro Setup X.Y.0.exe
+    └── Smart Timer Pro Setup X.Y.0.exe
 ```
 
 ## Key Design Decisions
@@ -85,7 +85,7 @@ The timer runs in the server process using `setInterval(1000)`. The state is bro
 ### 3. Settings Persistence
 
 Settings, messages, logos, and audio are stored as JSON files in the writable data directory:
-- **Electron**: `%APPDATA%/smartcountdowntimer-pro/`
+- **Electron**: `%APPDATA%/Smart-Timer-Pro/`
 - **Standalone**: project directory
 
 ### 4. External Display Detection
@@ -118,13 +118,13 @@ npm run bump
 npm run build
 ```
 
-The build outputs to `dist/SmartCountdownTimer Pro Setup X.Y.0.exe`.
+The build outputs to `dist/Smart Timer Pro Setup X.Y.0.exe`.
 
 ## Companion Module Development
 
 ```powershell
 # Navigate to companion module
-cd companion/smartcountdowntimer-pro
+cd companion/Smart-Timer-Pro
 
 # Install dependencies
 npm install
@@ -133,4 +133,4 @@ npm install
 npm run build
 ```
 
-The module uses variables with the prefix `$(smartcountdowntimer-pro:*)` to avoid collisions with other modules.
+The module uses variables with the prefix `$(Smart-Timer-Pro:*)` to avoid collisions with other modules.
