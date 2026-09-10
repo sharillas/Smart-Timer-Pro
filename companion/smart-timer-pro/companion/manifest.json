@@ -1,0 +1,25 @@
+{
+  "id": "smart-timer-pro",
+  "name": "smartchoice Smart Timer Pro",
+  "shortname": "smart-timer-pro",
+  "description": "Control Smart Timer Pro stage timer from Bitfocus Companion",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "repository": "https://github.com/sharillas/Smart-Timer-Pro",
+  "bugs": "https://github.com/sharillas/Smart-Timer-Pro/issues",
+  "maintainers": [
+    {
+      "name": "smartchoice"
+    }
+  ],
+  "legacyIds": [],
+  "runtime": {
+    "type": "node18",
+    "api": "nodejs-ipc",
+    "apiVersion": "1.0.0",
+    "entrypoint": "../main.js"
+  },
+  "manufacturer": "smartchoice",
+  "products": ["Smart Timer Pro"],
+  "keywords": ["timer", "countdown", "stage", "production", "stream deck"]
+}
