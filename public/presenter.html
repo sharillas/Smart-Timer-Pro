@@ -253,9 +253,9 @@
         }
 
         function applyTransparency(settings) {
-            var transparent = settings && settings.transparentMode === true;
+            var mode = (settings && settings.bgMode) || 'color';
             var bg = (settings && settings.bgColor) || '#000000';
-            if (transparent) {
+            if (mode === 'transparent') {
                 document.body.style.background = 'transparent';
                 stage.style.background = 'transparent';
                 stage.style.webkitAppRegion = 'drag';
