@@ -7,9 +7,9 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --bg: #080c14; --card: #111827; --border: #1e293b;
-            --text: #f1f5f9; --text-dim: #64748b;
-            --accent: #00a3e0; --accent-glow: rgba(0,163,224,0.15);
+            --bg: #171a21; --card: #232833; --border: #3b424e;
+            --text: #f3f4f6; --text-dim: #9ca3af;
+            --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15);
             --green: #10b981; --amber: #f59e0b; --red: #ef4444;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,8 +42,8 @@
 
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
         .card-header {
-            font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
-            color: var(--text-dim); margin-bottom: 16px; font-weight: 700;
+            font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
+            color: #ffffff; margin-bottom: 16px; font-weight: 700;
         }
         .monitor-preview {
             width: 100%; aspect-ratio: 16/9; background: #000;
@@ -102,7 +102,7 @@
         }
         .btn:active { transform: scale(0.96); }
         .btn-icon { font-size: 24px; }
-        .btn-label { font-size: 13px; }
+        .btn-label { font-size: 17px; }
         .btn-start { background: var(--green); height: 120px; }
         .btn-start:hover { background: #059669; }
         .btn-pause { background: var(--amber); height: 120px; }
@@ -213,8 +213,8 @@
             border: 1px solid #1e293b; margin-bottom: 14px;
         }
         .setting-group h3 {
-            font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text-dim); margin: 0 0 12px 0; font-weight: 700;
+            font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #ffffff; margin: 0 0 12px 0; font-weight: 700;
         }
         .setting-row {
             display: flex; align-items: center; justify-content: space-between;
@@ -303,7 +303,26 @@
                 <h3>Font & Time Format</h3>
                 <div class="setting-row">
                     <span class="setting-label">Font Family</span>
-                    <input type="text" id="set-font" class="setting-input wide" placeholder="'Courier New', monospace">
+                    <select id="set-font" class="setting-input" style="width:200px" onchange="onFontChange()">
+                        <option value="'Courier New', monospace">Courier New (mono)</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Helvetica, sans-serif">Helvetica</option>
+                        <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                        <option value="Consolas, monospace">Consolas (mono)</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Impact, sans-serif">Impact</option>
+                        <option value="Orbitron, sans-serif">Orbitron (digital)</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                </div>
+                <div class="setting-row hidden" id="custom-font-row">
+                    <span class="setting-label">Custom Font</span>
+                    <input type="text" id="set-font-custom" class="setting-input wide" placeholder="'My Font', monospace" onchange="autoSaveSettings()">
                 </div>
                 <div class="setting-row">
                     <span class="setting-label">Show Seconds</span>
@@ -330,6 +349,17 @@
                         <option value="cover">Fill (cover)</option>
                         <option value="fill">Stretch (fill)</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Overlay / Transparent Window</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Transparent Background</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-transparent" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
 
@@ -481,16 +511,7 @@
             <div class="side-left">
                 <div class="card" style="margin-bottom:24px">
                     <div class="card-header">Custom Quick Presets</div>
-                    <div class="preset-grid">
-                        <button onclick="resetTime(0)" class="btn-preset" style="color:var(--text-dim)">00:00</button>
-                        <button onclick="resetTime(60)" class="btn-preset">1m</button>
-                        <button onclick="resetTime(300)" class="btn-preset">5m</button>
-                        <button onclick="resetTime(600)" class="btn-preset" style="color:var(--accent);border-color:rgba(0,163,224,0.3)">10m</button>
-                        <button onclick="resetTime(900)" class="btn-preset">15m</button>
-                        <button onclick="resetTime(1800)" class="btn-preset">30m</button>
-                        <button onclick="resetTime(3600)" class="btn-preset">60m</button>
-                        <button onclick="resetTime(7200)" class="btn-preset">2h</button>
-                    </div>
+                    <div id="default-presets-grid" class="preset-grid"></div>
                     <div class="custom-row">
                         <input type="number" id="custom-min" placeholder="Minutes..." class="custom-input">
                         <button onclick="setCustomTime()" class="btn-set">SET TIME</button>
@@ -558,7 +579,10 @@
                         <button onclick="addTime(60)" class="btn btn-add btn-sm">+1 MIN</button>
                         <button onclick="addTime(-60)" class="btn btn-sub btn-sm">-1 MIN</button>
                     </div>
-                    <button id="btn-indicator" onclick="cycleIndicator()" class="btn btn-sm" style="width:100%;margin-top:12px;background:#334155;color:#cbd5e1">STATUS INDICATOR: OFF</button>
+                    <div class="btn-grid" style="margin-top:12px">
+                        <button id="btn-bar" onclick="toggleIndicator('bar')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">LOADING BAR: OFF</button>
+                        <button id="btn-semaforo" onclick="toggleIndicator('semaforo')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">SEMÁFORO: OFF</button>
+                    </div>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
@@ -647,11 +671,56 @@
             timerX: 50,
             timerY: 46,
             timerSize: 22,
-            customPresets: []
+            transparentMode: false,
+            customPresets: [],
+            defaultPresets: []
         };
 
+        function fontToDropdown(f) {
+            var map = {
+                "'Courier New', monospace": "'Courier New', monospace",
+                "Arial, sans-serif": "Arial, sans-serif",
+                "Helvetica, sans-serif": "Helvetica, sans-serif",
+                "'Segoe UI', sans-serif": "'Segoe UI', sans-serif",
+                "Roboto, sans-serif": "Roboto, sans-serif",
+                "Verdana, sans-serif": "Verdana, sans-serif",
+                "Tahoma, sans-serif": "Tahoma, sans-serif",
+                "'Trebuchet MS', sans-serif": "'Trebuchet MS', sans-serif",
+                "Consolas, monospace": "Consolas, monospace",
+                "Georgia, serif": "Georgia, serif",
+                "'Times New Roman', serif": "'Times New Roman', serif",
+                "Impact, sans-serif": "Impact, sans-serif",
+                "Orbitron, sans-serif": "Orbitron, sans-serif"
+            };
+            return map[f] || 'custom';
+        }
+
+        function getSelectedFont() {
+            var sel = document.getElementById('set-font').value;
+            if (sel === 'custom') {
+                return document.getElementById('set-font-custom').value || "'Courier New', monospace";
+            }
+            return sel;
+        }
+
+        function onFontChange() {
+            var sel = document.getElementById('set-font').value;
+            if (sel === 'custom') {
+                document.getElementById('custom-font-row').classList.remove('hidden');
+            } else {
+                document.getElementById('custom-font-row').classList.add('hidden');
+            }
+            autoSaveSettings();
+        }
+
         function populateSettingsForm(s) {
-            document.getElementById('set-font').value = s.fontFamily || '';
+            document.getElementById('set-font').value = fontToDropdown(s.fontFamily);
+            if (fontToDropdown(s.fontFamily) === 'custom') {
+                document.getElementById('set-font-custom').value = s.fontFamily || '';
+                document.getElementById('custom-font-row').classList.remove('hidden');
+            } else {
+                document.getElementById('custom-font-row').classList.add('hidden');
+            }
             document.getElementById('set-seconds').checked = s.showSeconds !== false;
             document.getElementById('set-hours').checked = s.showHours !== false;
             document.getElementById('set-color-normal').value = s.colorNormal || '#10b981';
@@ -664,6 +733,7 @@
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
             document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
+            document.getElementById('set-transparent').checked = s.transparentMode === true;
             document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
             document.getElementById('set-timer-y').value = s.timerY !== undefined ? s.timerY : 46;
             document.getElementById('set-timer-size').value = s.timerSize !== undefined ? s.timerSize : 22;
@@ -688,7 +758,7 @@
 
         function autoSaveSettings() {
             var s = {
-                fontFamily: document.getElementById('set-font').value,
+                fontFamily: getSelectedFont(),
                 showSeconds: document.getElementById('set-seconds').checked,
                 showHours: document.getElementById('set-hours').checked,
                 colorNormal: document.getElementById('set-color-normal').value,
@@ -701,6 +771,7 @@
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
                 audioWarningEnabled: document.getElementById('set-audio-warning').checked,
                 logoFit: document.getElementById('set-logo-fit').value,
+                transparentMode: document.getElementById('set-transparent').checked,
                 timerX: parseInt(document.getElementById('set-timer-x').value) || 50,
                 timerY: parseInt(document.getElementById('set-timer-y').value) || 46,
                 timerSize: parseInt(document.getElementById('set-timer-size').value) || 22,
@@ -756,24 +827,36 @@
             api('message/set', '?text=' + encodeURIComponent(val));
         }
         function toggleMessage() { api('message/toggle'); }
-        function cycleIndicator() {
-            var order = ['none', 'bar', 'semaforo', 'both'];
+        function toggleIndicator(type) {
             var cur = currentSettings.statusIndicator || 'none';
-            var idx = order.indexOf(cur);
-            var next = order[(idx + 1) % order.length];
-            var labels = { none: 'OFF', bar: 'LOADING BAR', semaforo: 'SEMÁFORO', both: 'BAR + SEMÁFORO' };
-            var body = { statusIndicator: next };
-            fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            currentSettings.statusIndicator = next;
-            document.getElementById('btn-indicator').textContent = 'STATUS INDICATOR: ' + labels[next];
+            var action = (cur === type) ? 'off' : 'on';
+            fetch('/api/indicator?type=' + type + '&action=' + action);
         }
-        function updateIndicatorButton(val) {
-            var labels = { none: 'OFF', bar: 'LOADING BAR', semaforo: 'SEMÁFORO', both: 'BAR + SEMÁFORO' };
-            document.getElementById('btn-indicator').textContent = 'STATUS INDICATOR: ' + (labels[val] || 'OFF');
+        function updateIndicatorButtons(val) {
+            var barBtn = document.getElementById('btn-bar');
+            var semBtn = document.getElementById('btn-semaforo');
+            if (val === 'bar') {
+                barBtn.textContent = 'LOADING BAR: ON';
+                barBtn.style.background = 'var(--green)';
+                barBtn.style.color = '#fff';
+                semBtn.textContent = 'SEMÁFORO: OFF';
+                semBtn.style.background = '#334155';
+                semBtn.style.color = '#cbd5e1';
+            } else if (val === 'semaforo') {
+                barBtn.textContent = 'LOADING BAR: OFF';
+                barBtn.style.background = '#334155';
+                barBtn.style.color = '#cbd5e1';
+                semBtn.textContent = 'SEMÁFORO: ON';
+                semBtn.style.background = 'var(--green)';
+                semBtn.style.color = '#fff';
+            } else {
+                barBtn.textContent = 'LOADING BAR: OFF';
+                barBtn.style.background = '#334155';
+                barBtn.style.color = '#cbd5e1';
+                semBtn.textContent = 'SEMÁFORO: OFF';
+                semBtn.style.background = '#334155';
+                semBtn.style.color = '#cbd5e1';
+            }
         }
         function setCustomTime() {
             var mins = document.getElementById('custom-min').value;
@@ -831,6 +914,81 @@
                 grid.appendChild(wrapper);
             });
         }
+
+        function renderDefaultPresets(presets) {
+            var grid = document.getElementById('default-presets-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            var list = presets || [];
+            list.forEach(function(p, index) {
+                var wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+
+                var btn = document.createElement('button');
+                btn.className = 'btn-preset';
+                btn.style.cssText = 'width:100%;position:relative;padding-right:20px';
+                btn.textContent = p.label || presetLabel(p.seconds);
+                btn.onclick = function() { resetTime(p.seconds); };
+
+                var edit = document.createElement('button');
+                edit.innerHTML = '&#9998;';
+                edit.style.cssText = 'position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:#60a5fa;font-size:12px;cursor:pointer;opacity:0;transition:opacity 0.15s;line-height:1;padding:0;';
+                edit.onclick = function(e) { e.stopPropagation(); editDefaultPreset(index, p); };
+
+                wrapper.onmouseover = function() { edit.style.opacity = '0.8'; };
+                wrapper.onmouseout = function() { edit.style.opacity = '0'; };
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(edit);
+                grid.appendChild(wrapper);
+            });
+        }
+
+        function editDefaultPreset(index, preset) {
+            var grid = document.getElementById('default-presets-grid');
+            var wrapper = grid.children[index];
+            if (!wrapper) return;
+            var btn = wrapper.querySelector('.btn-preset');
+            if (!btn) return;
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.value = secondsToHMS(preset.seconds);
+            input.style.cssText = 'width:100%;background:#0f172a;border:1px solid var(--accent);border-radius:10px;color:#fff;padding:10px;font-size:12px;font-family:monospace;text-align:center;outline:none;';
+            btn.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function save() {
+                var sec = hmsToSeconds(input.value.trim());
+                if (sec >= 0) {
+                    var label = presetLabel(sec);
+                    fetch('/api/presets/default/edit?index=' + index + '&sec=' + sec + '&label=' + encodeURIComponent(label));
+                }
+            }
+
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') { input.value = secondsToHMS(preset.seconds); input.blur(); }
+            });
+        }
+
+        function secondsToHMS(total) {
+            var h = Math.floor(total / 3600);
+            var m = Math.floor((total % 3600) / 60);
+            var s = total % 60;
+            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        function hmsToSeconds(str) {
+            var parts = str.split(':').map(function(x) { return parseInt(x, 10); });
+            if (parts.length === 3) return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+            if (parts.length === 2) return (parts[0] || 0) * 60 + (parts[1] || 0);
+            if (parts.length === 1) return parseInt(str, 10) || 0;
+            return -1;
+        }
+
         function saveQuickMessage() {
             var text = document.getElementById('msg-input').value.trim();
             if (text) { api('messages/add', '?text=' + encodeURIComponent(text)); document.getElementById('msg-input').value = ''; }
@@ -1070,7 +1228,8 @@
         socket.on('settingsUpdate', function(s) {
             currentSettings = s;
             renderCustomPresets(s.customPresets);
-            updateIndicatorButton(s.statusIndicator);
+            renderDefaultPresets(s.defaultPresets);
+            updateIndicatorButtons(s.statusIndicator);
         });
 
         socket.on('audioUpdate', function(data) {
