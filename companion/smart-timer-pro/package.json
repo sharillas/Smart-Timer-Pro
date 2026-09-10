@@ -1,20 +1,63 @@
 {
-  "name": "companion-module-smart-timer-pro",
-  "version": "1.0.0",
+  "name": "smart-timer-pro",
+  "version": "1.4.0",
+  "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
   "main": "main.js",
-  "license": "UNLICENSED",
-  "type": "commonjs",
-  "manufacturer": "smartchoice",
-  "product": "Smart Timer Pro",
-  "shortname": "smart-timer-pro",
-  "description": "Bitfocus Companion module for Smart Timer Pro stage timer",
   "scripts": {
-    "build": "companion-module-build"
+    "start": "electron .",
+    "bump": "node scripts/bump-version.js",
+    "build": "node scripts/bump-version.js && electron-builder"
   },
   "dependencies": {
-    "@companion-module/base": "^1.8.0"
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "@companion-module/tools": "^1.5.0"
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  },
+  "author": "smartchoice",
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.smartchoice.smarttimerpro",
+    "productName": "Smart Timer Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "public/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "messages.json",
+        "to": "messages.json"
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Smart Timer Pro"
+    }
   }
 }
