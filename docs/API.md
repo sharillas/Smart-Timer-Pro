@@ -1,4 +1,4 @@
-# SmartCountdownTimer Pro - API Reference
+# Smart Timer Pro - API Reference
 
 ## Base URL
 
