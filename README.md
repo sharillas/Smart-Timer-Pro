@@ -177,4 +177,6 @@ User data (settings, messages, logos, audio) is stored in:
 
 ## License
 
-UNLICENSED -- Proprietary software for smartchoice.
+Este projeto é de **software proprietário** — `Copyright © 2026 Nelson Teixeira`. Todos os direitos reservados.
+
+Desenvolvido por **Nelson Teixeira** para a **smartchoice**. Consulte o ficheiro [LICENSE](LICENSE) para os termos completos de utilização.
