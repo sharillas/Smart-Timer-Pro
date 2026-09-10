@@ -285,6 +285,34 @@ class SmartTimerProInstance extends InstanceBase {
 					await sendCmd(`mode?set=${action.options.mode}`);
 				},
 			},
+			set_indicator: {
+				name: 'Loading Bar / Semáforo',
+				options: [
+					{
+						type: 'dropdown',
+						label: 'Type',
+						id: 'type',
+						default: 'bar',
+						choices: [
+							{ id: 'bar', label: 'Loading Bar' },
+							{ id: 'semaforo', label: 'Semáforo' },
+						],
+					},
+					{
+						type: 'dropdown',
+						label: 'Action',
+						id: 'action',
+						default: 'on',
+						choices: [
+							{ id: 'on', label: 'ON' },
+							{ id: 'off', label: 'OFF' },
+						],
+					},
+				],
+				callback: async (action) => {
+					await sendCmd(`indicator?type=${action.options.type}&action=${action.options.action}`);
+				},
+			},
 		});
 	}
 
@@ -500,6 +528,36 @@ class SmartTimerProInstance extends InstanceBase {
 			],
 			feedbacks: [],
 		};
+
+		// Status Indicator Controls
+		const indicators = [
+			{ id: 'bar_on', label: 'Loading Bar ON', icon: '▮', type: 'bar', action: 'on', bg: [16, 185, 129] },
+			{ id: 'bar_off', label: 'Loading Bar OFF', icon: '▯', type: 'bar', action: 'off', bg: [100, 116, 139] },
+			{ id: 'semaforo_on', label: 'Semáforo ON', icon: '🚦', type: 'semaforo', action: 'on', bg: [16, 185, 129] },
+			{ id: 'semaforo_off', label: 'Semáforo OFF', icon: '🚫', type: 'semaforo', action: 'off', bg: [100, 116, 139] },
+		];
+
+		indicators.forEach((ind) => {
+			presets[ind.id] = {
+				type: 'button',
+				category: 'Status Indicator',
+				name: ind.label,
+				style: {
+					text: `${ind.icon}\\n${ind.label}`,
+					size: '14',
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(...ind.bg),
+					show_topbar: false,
+				},
+				steps: [
+					{
+						down: [{ actionId: 'set_indicator', options: { type: ind.type, action: ind.action } }],
+						up: [],
+					},
+				],
+				feedbacks: [],
+			};
+		});
 
 		this.setPresetDefinitions(presets);
 	}
