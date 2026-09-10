@@ -1,8 +1,10 @@
 # SmartCountdownTimer Pro
 
-Professional Stage Timer for Windows -- developed for **Nelson Teixeira** . **for Smartchoice**.
+Professional Stage Timer for Windows -- developed for **smartchoice**.
 
 A full-featured countdown/count-up timer for live events, conferences, and stage productions. Built with Electron + Node.js, installable as a standalone `.exe` on Windows.
+
+![SmartCountdownTimer Pro](assets/screenshot.png)
 
 ## Features
 
@@ -30,6 +32,26 @@ A full-featured countdown/count-up timer for live events, conferences, and stage
 | Real-time | Socket.IO |
 | Frontend | Vanilla HTML/CSS/JS |
 | Installer | electron-builder (NSIS) |
+
+## Project Structure
+
+```
+SmartCountdownTimer-Pro/
+├── main.js                  # Electron main process (window management)
+├── preload.js               # IPC bridge for renderer
+├── server.js                # Express + Socket.IO backend (port 3000)
+├── package.json             # Dependencies & electron-builder config
+├── messages.json            # Default quick messages
+├── .gitignore
+├── assets/
+│   ├── icon.png             # App icon
+│   └── icon.ico             # Installer icon
+└── public/
+    ├── index.html           # Moderator control panel
+    ├── presenter.html       # Fullscreen presenter view
+    └── images/
+        └── logo.svg         # smartchoice logo
+```
 
 ## API Endpoints
 
@@ -91,6 +113,24 @@ A full-featured countdown/count-up timer for live events, conferences, and stage
 |---|---|
 | `connection` | Auto-receives current state, messages, settings, audio |
 
+## Settings Schema
+
+```json
+{
+  "fontFamily": "'Courier New', monospace",
+  "colorNormal": "#10b981",
+  "colorWarning": "#f59e0b",
+  "colorDanger": "#f97316",
+  "colorExpired": "#ef4444",
+  "showHours": true,
+  "showSeconds": true,
+  "warningThreshold": 120,
+  "dangerThreshold": 30,
+  "stopAtZero": true,
+  "audioEndEnabled": true,
+  "audioWarningEnabled": true
+}
+```
 
 ## Development
 
