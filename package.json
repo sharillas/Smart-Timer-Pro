@@ -1,7 +1,7 @@
 {
-  "name": "smartcountdowntimer-pro",
+  "name": "smart-timer-pro",
   "version": "1.2.0",
-  "description": "SmartCountdownTimer Pro - Professional Stage Timer for smartchoice",
+  "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -19,8 +19,8 @@
   "author": "smartchoice",
   "license": "UNLICENSED",
   "build": {
-    "appId": "com.smartchoice.smartcountdowntimerpro",
-    "productName": "SmartCountdownTimer Pro",
+    "appId": "com.smartchoice.smarttimerpro",
+    "productName": "Smart Timer Pro",
     "directories": {
       "output": "dist"
     },
@@ -57,7 +57,7 @@
       "installerHeaderIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "SmartCountdownTimer Pro"
+      "shortcutName": "Smart Timer Pro"
     }
   }
 }
