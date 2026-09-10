@@ -34,7 +34,7 @@
         }
         .message.hidden { opacity: 0; }
         .logo-display {
-            max-width: 60%; max-height: 60%;
+            width: 100%; height: 100%;
             object-fit: contain; opacity: 0.85;
         }
         .idle-text {
@@ -93,7 +93,7 @@
             var el = getTimerEl();
             if (!el) return;
             var cfg = s.settings || currentSettings;
-            var h = Math.floor(Math.abs(s.timeLeft) / 3600);
+            var h = Math.floor(Math.abs(s.activeTime) / 3600);
             if ((cfg.showHours !== false) || h > 0) {
                 el.style.fontSize = '14vw';
             } else {
@@ -113,7 +113,7 @@
                 color = cfg.colorWarning || '#f59e0b';
             }
 
-            el.textContent = formatTime(s.timeLeft, cfg);
+            el.textContent = formatTime(s.activeTime, cfg);
             el.style.color = color;
         }
 
@@ -121,12 +121,12 @@
             var el = getTimerEl();
             if (!el) return;
             var cfg = s.settings || currentSettings;
-            if (cfg.showHours || Math.abs(s.timeLeft) >= 3600) {
+            if (cfg.showHours || Math.abs(s.activeTime) >= 3600) {
                 el.style.fontSize = '14vw';
             } else {
                 el.style.fontSize = '22vw';
             }
-            el.textContent = formatTime(s.timeLeft, cfg);
+            el.textContent = formatTime(s.activeTime, cfg);
             el.style.color = cfg.colorNormal || '#10b981';
         }
 
@@ -140,6 +140,8 @@
                     var img = document.createElement('img');
                     img.src = s.logoData;
                     img.className = 'logo-display';
+                    var fit = (s.settings && s.settings.logoFit) || 'contain';
+                    img.style.objectFit = fit;
                     stage.appendChild(img);
                 } else {
                     var idle = document.createElement('div');
