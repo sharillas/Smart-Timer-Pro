@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0] - 2026-09-10
+
+### New Features
+- **Editable default presets**: Default quick presets (00:00, 1m, 5m, ...) can now be edited (HH:MM:SS)
+- **Independent indicator buttons**: Separate Loading Bar and Semáforo ON/OFF buttons (mutually exclusive)
+- **Font dropdown**: Choose font type from a dropdown in Settings
+- **Transparent overlay window**: Transparent, borderless, always-on-top window to overlay presenter apps (PowerPoint)
+- **New theme**: Gray/blue color scheme with white titles (+2px)
+- **Modern STM icon**: Gray/blue icon with "STM" letters
+
+### Changes
+- GO and RESET button text increased by 4px
+- Companion module updated to v1.4.0
+
 ## [1.3.0] - 2026-09-10
 
 ### New Features
