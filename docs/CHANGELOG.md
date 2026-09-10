@@ -43,4 +43,4 @@
 
 **Branding:**
 - smartchoice logo and color scheme
-- "SmartCountdownTimer Pro" product name
+- "Smart Timer Pro" product name
