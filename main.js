@@ -58,6 +58,11 @@ function createPresenterWindow() {
     const targetDisplay = hasExternalMonitor ? displays[1] : displays[0];
     const { x, y, width, height } = targetDisplay.bounds;
 
+    let transparentMode = false;
+    if (serverInstance && serverInstance.getSettings) {
+        transparentMode = serverInstance.getSettings().transparentMode === true;
+    }
+
     const windowOpts = {
         x: x,
         y: y,
@@ -80,6 +85,16 @@ function createPresenterWindow() {
         windowOpts.frame = false;
         windowOpts.resizable = false;
         windowOpts.thickFrame = false;
+    } else if (transparentMode) {
+        windowOpts.width = 800;
+        windowOpts.height = 300;
+        windowOpts.frame = false;
+        windowOpts.resizable = true;
+        windowOpts.transparent = true;
+        windowOpts.alwaysOnTop = true;
+        windowOpts.skipTaskbar = false;
+        windowOpts.hasShadow = false;
+        windowOpts.backgroundColor = '#00000000';
     } else {
         windowOpts.width = 960;
         windowOpts.height = 540;
