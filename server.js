@@ -52,7 +52,7 @@ let settings = {
     timerX: 50,
     timerY: 46,
     timerSize: 22,
-    transparentMode: false,
+    bgMode: 'color',
     defaultPresets: [
         { label: '00:00', seconds: 0 },
         { label: '1m', seconds: 60 },
