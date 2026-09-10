@@ -1,0 +1,20 @@
+{
+  "name": "companion-module-smart-timer-pro",
+  "version": "1.0.0",
+  "main": "main.js",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "manufacturer": "smartchoice",
+  "product": "Smart Timer Pro",
+  "shortname": "smart-timer-pro",
+  "description": "Bitfocus Companion module for Smart Timer Pro stage timer",
+  "scripts": {
+    "build": "companion-module-build"
+  },
+  "dependencies": {
+    "@companion-module/base": "^1.8.0"
+  },
+  "devDependencies": {
+    "@companion-module/tools": "^1.5.0"
+  }
+}
