@@ -1,32 +1,32 @@
-# SmartCountdownTimer Pro - Companion Module
+# Smart Timer Pro - Companion Module
 
 ## Overview
 
-This module allows controlling **SmartCountdownTimer Pro** from an Elgato Stream Deck via Bitfocus Companion.
+This module allows controlling **Smart Timer Pro** from an Elgato Stream Deck via Bitfocus Companion.
 
 ## Installation
 
 ### Prerequisites
 
 - Bitfocus Companion v3.0 or later
-- SmartCountdownTimer Pro running on the same network
+- Smart Timer Pro running on the same network
 - Elgato Stream Deck
 
 ### Method 1: Developer Mode (Windows/Mac)
 
 1. Open Companion > Click the gear icon (Settings) > Enable **Developer Mode**
 2. Choose a folder for developer modules
-3. Copy the `companion/smartcountdowntimer-pro/` folder into that directory
+3. Copy the `companion/Smart-Timer-Pro/` folder into that directory
 4. Restart Companion
 
 ### Method 2: Companion Pi (Linux)
 
 ```bash
-sudo mkdir -p /opt/companion-module-dev/smartcountdowntimer-pro
-sudo cp -r companion/smartcountdowntimer-pro/* /opt/companion-module-dev/smartcountdowntimer-pro/
-cd /opt/companion-module-dev/smartcountdowntimer-pro
+sudo mkdir -p /opt/companion-module-dev/Smart-Timer-Pro
+sudo cp -r companion/Smart-Timer-Pro/* /opt/companion-module-dev/Smart-Timer-Pro/
+cd /opt/companion-module-dev/Smart-Timer-Pro
 sudo npm install @companion-module/base@^1.8.0
-sudo chown -R companion:companion /opt/companion-module-dev/smartcountdowntimer-pro
+sudo chown -R companion:companion /opt/companion-module-dev/Smart-Timer-Pro
 sudo systemctl restart companion
 ```
 
@@ -41,8 +41,8 @@ sudo systemctl restart companion
 1. Open Companion Web UI (usually `http://<companion-ip>:8000`)
 2. Go to **Connections** tab
 3. Click **Add Connection**
-4. Search for **SmartCountdownTimer Pro**
-5. Enter the IP address of the PC running SmartCountdownTimer Pro
+4. Search for **Smart Timer Pro**
+5. Enter the IP address of the PC running Smart Timer Pro
 6. Port: `3000` (default)
 7. Click **Save**
 
@@ -109,14 +109,14 @@ Variables can be used in button text for dynamic display:
 
 | Variable | Value |
 |---|---|
-| `$(smartcountdowntimer-pro:time)` | Current time (MM:SS) |
-| `$(smartcountdowntimer-pro:raw_seconds)` | Raw seconds value |
-| `$(smartcountdowntimer-pro:over_time)` | Overtime (+MM:SS) |
-| `$(smartcountdowntimer-pro:mode)` | Current mode name |
-| `$(smartcountdowntimer-pro:msg_1)` | Quick message slot 1 text |
-| `$(smartcountdowntimer-pro:msg_2)` | Quick message slot 2 text |
+| `$(Smart-Timer-Pro:time)` | Current time (MM:SS) |
+| `$(Smart-Timer-Pro:raw_seconds)` | Raw seconds value |
+| `$(Smart-Timer-Pro:over_time)` | Overtime (+MM:SS) |
+| `$(Smart-Timer-Pro:mode)` | Current mode name |
+| `$(Smart-Timer-Pro:msg_1)` | Quick message slot 1 text |
+| `$(Smart-Timer-Pro:msg_2)` | Quick message slot 2 text |
 | ... | ... |
-| `$(smartcountdowntimer-pro:msg_5)` | Quick message slot 5 text |
+| `$(Smart-Timer-Pro:msg_5)` | Quick message slot 5 text |
 
 ## Troubleshooting
 
