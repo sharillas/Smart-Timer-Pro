@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0] - 2026-09-10
+
+### New Features
+- **Status Indicator**: Loading Bar and/or Semáforo (traffic light) with ON/OFF toggle in the Controls panel
+- **Loading Bar**: Progress bar showing remaining time, with independent position (X/Y) and size settings
+- **Semáforo**: Modern traffic light indicator (green/amber/red) with glow effects, independent position (X/Y) and size settings
+- **Timer Position & Size**: Adjustable X/Y position and size of the timer on the external monitor
+- **Companion module**: Added Loading Bar ON/OFF and Semáforo ON/OFF buttons
+
 ## [1.2.0] - 2026-09-10
 
 ### New Features
