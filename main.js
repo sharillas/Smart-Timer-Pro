@@ -38,6 +38,11 @@ function createMainWindow() {
 
     mainWindow.on('closed', () => {
         mainWindow = null;
+        if (presenterWindow && !presenterWindow.isDestroyed()) {
+            presenterWindow.close();
+            presenterWindow = null;
+        }
+        app.quit();
     });
 }
 
