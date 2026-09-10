@@ -7,6 +7,8 @@ Professional Stage Timer for Windows -- developed for **smartchoice**.
 [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20x64-lightgrey.svg)](https://github.com/sharillas/SmartCountdownTimer-Pro)
 [![Electron](https://img.shields.io/badge/Electron-28-blue.svg)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7-black.svg)](https://socket.io/)
+[![Companion](https://img.shields.io/badge/Companion-Module-orange.svg)](https://github.com/sharillas/SmartCountdownTimer-Pro/tree/master/companion/smartcountdowntimer-pro)
 
 A full-featured countdown/count-up timer for live events, conferences, and stage productions. Built with Electron + Node.js, installable as a standalone `.exe` on Windows.
 
