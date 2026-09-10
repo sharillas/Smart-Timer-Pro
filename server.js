@@ -10,6 +10,11 @@ app.use(express.json({ limit: '50mb' }));
 const server = http.createServer(app);
 const io = new Server(server);
 
+const appVersion = (() => {
+    try { return require('./package.json').version; }
+    catch (e) { return '1.2.0'; }
+})();
+
 // --- PERSISTENCE ---
 let messagesFile = '';
 let logoFile = '';
@@ -135,6 +140,7 @@ let state = {
     logoData: logoData,
     alertLevel: 'normal',
     activeTime: 600,
+    version: appVersion,
     settings: settings
 };
 
@@ -473,7 +479,7 @@ io.on('connection', (socket) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '127.0.0.1', () => console.log(`SmartCountdownTimer Pro server running on port ${PORT}`));
+server.listen(PORT, '127.0.0.1', () => console.log(`Smart Timer Pro server running on port ${PORT}`));
 
 if (!messagesFile && dataDir === __dirname) {
     init({});
