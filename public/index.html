@@ -433,6 +433,10 @@
                     <span class="setting-label">Expired</span>
                     <input type="color" id="set-color-expired" class="setting-input" onchange="autoSaveSettings()">
                 </div>
+                <div class="setting-row">
+                    <span class="setting-label">Background</span>
+                    <input type="color" id="set-bg-color" class="setting-input" onchange="autoSaveSettings()">
+                </div>
             </div>
 
             <div class="setting-group">
@@ -654,6 +658,7 @@
             colorWarning: '#f59e0b',
             colorDanger: '#f97316',
             colorExpired: '#ef4444',
+            bgColor: '#000000',
             warningThreshold: 120,
             dangerThreshold: 30,
             stopAtZero: true,
@@ -727,6 +732,7 @@
             document.getElementById('set-color-warning').value = s.colorWarning || '#f59e0b';
             document.getElementById('set-color-danger').value = s.colorDanger || '#f97316';
             document.getElementById('set-color-expired').value = s.colorExpired || '#ef4444';
+            document.getElementById('set-bg-color').value = s.bgColor || '#000000';
             document.getElementById('set-warning-thr').value = s.warningThreshold || 120;
             document.getElementById('set-danger-thr').value = s.dangerThreshold || 30;
             document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
@@ -765,6 +771,7 @@
                 colorWarning: document.getElementById('set-color-warning').value,
                 colorDanger: document.getElementById('set-color-danger').value,
                 colorExpired: document.getElementById('set-color-expired').value,
+                bgColor: document.getElementById('set-bg-color').value,
                 warningThreshold: parseInt(document.getElementById('set-warning-thr').value) || 120,
                 dangerThreshold: parseInt(document.getElementById('set-danger-thr').value) || 30,
                 stopAtZero: document.getElementById('set-start-zero').checked,
@@ -1101,6 +1108,8 @@
             // Monitor time
             var mt = document.getElementById('monitor-time');
             var ml = document.getElementById('monitor-logo');
+            var mf = document.getElementById('monitor-frame');
+            if (mf && cfg.bgColor) mf.style.background = cfg.bgColor;
 
             if (s.mode === 'logo') {
                 mt.classList.add('hidden');
