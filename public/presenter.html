@@ -281,10 +281,10 @@
                     img.style.objectFit = fit;
                     stage.appendChild(img);
                 } else {
-                    var idle = document.createElement('div');
-                    idle.className = 'idle-text';
-                    idle.style.color = currentSettings.colorNormal || '#10b981';
-                    idle.textContent = 'Smart Timer Pro';
+                    var idle = document.createElement('img');
+                    idle.src = '/images/testpattern.png';
+                    idle.className = 'logo-display';
+                    idle.style.objectFit = 'contain';
                     stage.appendChild(idle);
                 }
                 renderIndicator(s);
