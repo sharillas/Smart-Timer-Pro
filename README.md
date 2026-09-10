@@ -12,7 +12,19 @@ Professional Stage Timer for Windows -- developed for **smartchoice**.
 
 A full-featured countdown/count-up timer for live events, conferences, and stage productions. Built with Electron + Node.js, installable as a standalone `.exe` on Windows.
 
-![Smart Timer Pro](assets/screenshot.png)
+## Screenshots
+
+### GUI - Controller
+![GUI Controller](assets/screenshot_GUI_1.png)
+
+### Live Monitor & Message Warning
+![Live Monitor](assets/screenshot_GUI_2.png)
+
+### External Window (with Semáforo)
+![External Window](assets/screenshot_External_Monitor_Smaforo.png)
+
+### Companion Module - Preset Buttons
+![Companion Module](assets/screenshot_Companion_Module.png)
 
 ## Features
 
