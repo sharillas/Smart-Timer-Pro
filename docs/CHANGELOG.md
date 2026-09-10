@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0] - 2026-09-10
+
+### New Features
+- **Logo Fit Mode**: Added logo display options (Fit/contain, Fill/cover, Stretch/fill) to fill the external monitor screen
+- **Custom Quick Presets**: Ability to add custom presets in HH:MM:SS format (e.g., 00:33:15 → "33m15s" button)
+
+### Bug Fixes
+- **Display Mode switching**: Fixed a bug where switching between display modes (countdown/count-up/time-of-day/logo) reset or lost the timer state. Now countdown and count-up track their own values independently, so switching views preserves what was happening before the change.
+
 ## [1.0.0] - 2026-07-31
 
 ### Initial Release
