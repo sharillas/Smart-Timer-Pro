@@ -18,7 +18,7 @@ function createMainWindow() {
         height: 850,
         minWidth: 1024,
         minHeight: 700,
-        title: 'SmartCountdownTimer Pro - Moderator',
+        title: 'Smart Timer Pro - Moderator',
         icon: path.join(__dirname, 'assets', 'icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -56,7 +56,7 @@ function createPresenterWindow() {
     const windowOpts = {
         x: x,
         y: y,
-        title: 'SmartCountdownTimer Pro - Presenter',
+        title: 'Smart Timer Pro - Presenter',
         icon: path.join(__dirname, 'assets', 'icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
