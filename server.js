@@ -33,7 +33,9 @@ let settings = {
     dangerThreshold: 30,
     stopAtZero: true,
     audioEndEnabled: true,
-    audioWarningEnabled: true
+    audioWarningEnabled: true,
+    logoFit: 'contain',
+    customPresets: []
 };
 
 let audioEnd = '';
@@ -124,6 +126,7 @@ function init(config) {
 let state = {
     timeLeft: 600,
     initialTime: 600,
+    countupTime: 0,
     isRunning: false,
     message: '',
     showMessage: false,
@@ -131,6 +134,7 @@ let state = {
     mode: 'countdown',
     logoData: logoData,
     alertLevel: 'normal',
+    activeTime: 600,
     settings: settings
 };
 
@@ -150,7 +154,7 @@ setInterval(() => {
             }
             state.timeLeft--;
         } else if (state.mode === 'countup') {
-            state.timeLeft++;
+            state.countupTime++;
         }
         broadcast();
     }
@@ -170,6 +174,7 @@ function broadcast() {
     const prevAlert = state.alertLevel;
     state.alertLevel = computeAlertLevel();
     state.settings = settings;
+    state.activeTime = state.mode === 'countup' ? state.countupTime : state.timeLeft;
 
     // Audio triggers
     if (state.isRunning && state.mode === 'countdown') {
@@ -213,12 +218,18 @@ app.get('/api/reset', (req, res) => {
     let sec;
     if (req.query.sec !== undefined) {
         sec = parseInt(req.query.sec) || 0;
+    } else if (state.mode === 'countup') {
+        sec = 0;
     } else {
         sec = state.initialTime;
     }
     state.isRunning = false;
-    state.timeLeft = sec;
-    state.initialTime = sec;
+    if (state.mode === 'countup') {
+        state.countupTime = sec;
+    } else {
+        state.timeLeft = sec;
+        state.initialTime = sec;
+    }
     warningFired = false;
     dangerFired = false;
     broadcast();
@@ -226,7 +237,12 @@ app.get('/api/reset', (req, res) => {
 });
 
 app.get('/api/add', (req, res) => {
-    state.timeLeft += parseInt(req.query.sec) || 0;
+    const sec = parseInt(req.query.sec) || 0;
+    if (state.mode === 'countup') {
+        state.countupTime += sec;
+    } else {
+        state.timeLeft += sec;
+    }
     broadcast();
     res.send('Adjusted');
 });
@@ -235,12 +251,6 @@ app.get('/api/mode', (req, res) => {
     const validModes = ['countdown', 'countup', 'timeofday', 'logo'];
     if (validModes.includes(req.query.set)) {
         state.mode = req.query.set;
-        if (state.mode === 'countup') {
-            state.timeLeft = 0;
-            state.initialTime = 0;
-        }
-        warningFired = false;
-        dangerFired = false;
         broadcast();
         res.send('Mode updated');
     } else {
@@ -350,6 +360,46 @@ app.post('/api/settings', (req, res) => {
     res.json(settings);
 });
 
+// --- CUSTOM PRESETS API ---
+app.get('/api/presets', (req, res) => res.json(settings.customPresets || []));
+
+app.get('/api/presets/add', (req, res) => {
+    const sec = parseInt(req.query.sec);
+    const label = req.query.label || '';
+    if (isNaN(sec) || sec <= 0) return res.status(400).send('Invalid seconds');
+    if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
+    settings.customPresets.push({ label: label || formatPresetLabel(sec), seconds: sec });
+    saveSettings();
+    state.settings = settings;
+    io.emit('settingsUpdate', settings);
+    res.send('Preset added');
+});
+
+app.get('/api/presets/remove', (req, res) => {
+    const index = parseInt(req.query.index);
+    if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
+    if (!isNaN(index) && index >= 0 && index < settings.customPresets.length) {
+        settings.customPresets.splice(index, 1);
+        saveSettings();
+        state.settings = settings;
+        io.emit('settingsUpdate', settings);
+    }
+    res.send('Preset removed');
+});
+
+function formatPresetLabel(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    if (h > 0) {
+        return `${h}h${m.toString().padStart(2, '0')}m${s.toString().padStart(2, '0')}s`;
+    }
+    if (m > 0) {
+        return `${m}m${s.toString().padStart(2, '0')}s`;
+    }
+    return `${s}s`;
+}
+
 // --- AUDIO API ---
 app.post('/api/audio/upload', (req, res) => {
     const { type, audio } = req.body;
@@ -388,12 +438,13 @@ app.get('/api/audio', (req, res) => {
 });
 
 app.get('/api/companion', (req, res) => {
-    const abs = Math.abs(state.timeLeft);
-    const timeStr = (state.timeLeft < 0 ? '-' : '') +
+    const active = state.mode === 'countup' ? state.countupTime : state.timeLeft;
+    const abs = Math.abs(active);
+    const timeStr = (active < 0 ? '-' : '') +
         Math.floor(abs / 60).toString().padStart(2, '0') + ':' +
         (abs % 60).toString().padStart(2, '0');
 
-    const overTimeStr = state.timeLeft < 0
+    const overTimeStr = active < 0
         ? '+' + Math.floor(abs / 60).toString().padStart(2, '0') + ':' + (abs % 60).toString().padStart(2, '0')
         : '';
 
@@ -401,7 +452,7 @@ app.get('/api/companion', (req, res) => {
         time: timeStr,
         running: state.isRunning,
         msg_active: state.showMessage,
-        raw_seconds: state.timeLeft,
+        raw_seconds: active,
         over_time: overTimeStr,
         mode: state.mode,
         alertLevel: state.alertLevel,
