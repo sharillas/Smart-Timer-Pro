@@ -288,6 +288,18 @@
             </div>
 
             <div class="setting-group">
+                <h3>Logo Display</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Fit Mode</span>
+                    <select id="set-logo-fit" class="setting-input" style="width:140px" onchange="autoSaveSettings()">
+                        <option value="contain">Fit (contain)</option>
+                        <option value="cover">Fill (cover)</option>
+                        <option value="fill">Stretch (fill)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
                 <h3>Timer Colors</h3>
                 <div class="setting-row">
                     <span class="setting-label">Normal</span>
@@ -396,6 +408,14 @@
                     <div class="custom-row">
                         <input type="number" id="custom-min" placeholder="Minutes..." class="custom-input">
                         <button onclick="setCustomTime()" class="btn-set">SET TIME</button>
+                    </div>
+                    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                        <div class="card-header" style="margin-bottom:8px">Custom Presets <span id="preset-count" style="font-weight:400;color:var(--text-dim)"></span></div>
+                        <div class="custom-row">
+                            <input type="text" id="custom-preset-time" placeholder="HH:MM:SS (ex: 00:33:15)" class="custom-input" style="font-family:monospace">
+                            <button onclick="addCustomPreset()" class="btn-set">ADD</button>
+                        </div>
+                        <div id="custom-presets-grid" class="preset-grid" style="margin-top:10px;margin-bottom:0"></div>
                     </div>
                 </div>
 
@@ -517,7 +537,9 @@
             dangerThreshold: 30,
             stopAtZero: true,
             audioEndEnabled: true,
-            audioWarningEnabled: true
+            audioWarningEnabled: true,
+            logoFit: 'contain',
+            customPresets: []
         };
 
         function populateSettingsForm(s) {
@@ -533,6 +555,7 @@
             document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
+            document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
         }
 
         function openSettings() {
@@ -558,7 +581,8 @@
                 dangerThreshold: parseInt(document.getElementById('set-danger-thr').value) || 30,
                 stopAtZero: document.getElementById('set-start-zero').checked,
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
-                audioWarningEnabled: document.getElementById('set-audio-warning').checked
+                audioWarningEnabled: document.getElementById('set-audio-warning').checked,
+                logoFit: document.getElementById('set-logo-fit').value
             };
             currentSettings = s;
             fetch('/api/settings', {
@@ -607,6 +631,58 @@
         function setCustomTime() {
             var mins = document.getElementById('custom-min').value;
             if (mins) api('reset', '?sec=' + parseInt(mins) * 60);
+        }
+        function addCustomPreset() {
+            var raw = document.getElementById('custom-preset-time').value.trim();
+            if (!raw) return;
+            var parts = raw.split(':').map(function(p) { return parseInt(p, 10); });
+            var total = 0;
+            if (parts.length === 3) {
+                total = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+            } else if (parts.length === 2) {
+                total = (parts[0] || 0) * 60 + (parts[1] || 0);
+            } else {
+                return;
+            }
+            if (total <= 0) return;
+            var label = presetLabel(total);
+            api('presets/add', '?sec=' + total + '&label=' + encodeURIComponent(label));
+            document.getElementById('custom-preset-time').value = '';
+        }
+        function removeCustomPreset(index) {
+            api('presets/remove', '?index=' + index);
+        }
+        function presetLabel(totalSeconds) {
+            var h = Math.floor(totalSeconds / 3600);
+            var m = Math.floor((totalSeconds % 3600) / 60);
+            var s = totalSeconds % 60;
+            if (h > 0) return h + 'h' + String(m).padStart(2, '0') + 'm' + String(s).padStart(2, '0') + 's';
+            if (m > 0) return m + 'm' + String(s).padStart(2, '0') + 's';
+            return s + 's';
+        }
+        function renderCustomPresets(presets) {
+            var grid = document.getElementById('custom-presets-grid');
+            var count = document.getElementById('preset-count');
+            if (!grid) return;
+            grid.innerHTML = '';
+            var list = presets || [];
+            if (count) count.textContent = list.length ? '(' + list.length + ')' : '';
+            list.forEach(function(p, index) {
+                var wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                var btn = document.createElement('button');
+                btn.className = 'btn-preset';
+                btn.style.cssText = 'width:100%;position:relative;padding-right:22px';
+                btn.textContent = p.label || presetLabel(p.seconds);
+                btn.onclick = function() { resetTime(p.seconds); };
+                var del = document.createElement('button');
+                del.innerHTML = '&times;';
+                del.style.cssText = 'position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ef4444;font-size:14px;cursor:pointer;line-height:1;padding:0;';
+                del.onclick = function(e) { e.stopPropagation(); removeCustomPreset(index); };
+                wrapper.appendChild(btn);
+                wrapper.appendChild(del);
+                grid.appendChild(wrapper);
+            });
         }
         function saveQuickMessage() {
             var text = document.getElementById('msg-input').value.trim();
@@ -695,7 +771,7 @@
                     mt.textContent = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
                     mt.style.color = cfg.colorNormal || '#10b981';
                 } else {
-                    mt.textContent = formatTimeDisplay(cfg, s.timeLeft);
+                    mt.textContent = formatTimeDisplay(cfg, s.activeTime);
                     if (s.mode === 'countdown') {
                         if (s.alertLevel === 'expired') mt.style.color = cfg.colorExpired || '#ef4444';
                         else if (s.alertLevel === 'danger') mt.style.color = cfg.colorDanger || '#f97316';
@@ -805,6 +881,7 @@
 
         socket.on('settingsUpdate', function(s) {
             currentSettings = s;
+            renderCustomPresets(s.customPresets);
         });
 
         socket.on('audioUpdate', function(data) {
