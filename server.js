@@ -40,6 +40,17 @@ let settings = {
     audioEndEnabled: true,
     audioWarningEnabled: true,
     logoFit: 'contain',
+    statusIndicator: 'none',
+    barX: 10,
+    barY: 88,
+    barWidth: 80,
+    barHeight: 14,
+    semaforoX: 50,
+    semaforoY: 88,
+    semaforoSize: 46,
+    timerX: 50,
+    timerY: 46,
+    timerSize: 22,
     customPresets: []
 };
 
@@ -364,6 +375,35 @@ app.post('/api/settings', (req, res) => {
     broadcast();
     io.emit('settingsUpdate', settings);
     res.json(settings);
+});
+
+// --- INDICATOR API ---
+app.get('/api/indicator', (req, res) => {
+    const type = req.query.type;
+    const action = req.query.action;
+    if (!type || !action) return res.status(400).send('Missing type/action');
+
+    let hasBar = settings.statusIndicator === 'bar' || settings.statusIndicator === 'both';
+    let hasSem = settings.statusIndicator === 'semaforo' || settings.statusIndicator === 'both';
+
+    if (type === 'bar') {
+        hasBar = action === 'on';
+    } else if (type === 'semaforo') {
+        hasSem = action === 'on';
+    } else {
+        return res.status(400).send('Invalid type');
+    }
+
+    if (hasBar && hasSem) settings.statusIndicator = 'both';
+    else if (hasBar) settings.statusIndicator = 'bar';
+    else if (hasSem) settings.statusIndicator = 'semaforo';
+    else settings.statusIndicator = 'none';
+
+    saveSettings();
+    state.settings = settings;
+    broadcast();
+    io.emit('settingsUpdate', settings);
+    res.send('Indicator updated');
 });
 
 // --- CUSTOM PRESETS API ---
