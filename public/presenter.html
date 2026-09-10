@@ -252,10 +252,24 @@
             document.body.appendChild(wrap);
         }
 
+        function applyTransparency(settings) {
+            var transparent = settings && settings.transparentMode === true;
+            if (transparent) {
+                document.body.style.background = 'transparent';
+                stage.style.background = 'transparent';
+                stage.style.webkitAppRegion = 'drag';
+            } else {
+                document.body.style.background = '#000';
+                stage.style.background = '#000';
+                stage.style.webkitAppRegion = 'no-drag';
+            }
+        }
+
         function buildStage(s) {
             stage.innerHTML = '';
             currentState = s;
             currentSettings = s.settings || {};
+            applyTransparency(currentSettings);
 
             if (s.mode === 'logo') {
                 if (s.logoData) {
