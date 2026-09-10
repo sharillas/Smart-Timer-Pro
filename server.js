@@ -32,6 +32,7 @@ let settings = {
     colorWarning: '#f59e0b',
     colorDanger: '#f97316',
     colorExpired: '#ef4444',
+    bgColor: '#000000',
     showHours: true,
     showSeconds: true,
     warningThreshold: 120,
