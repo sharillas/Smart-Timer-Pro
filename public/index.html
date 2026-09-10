@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SmartCountdownTimer Pro | Moderator</title>
+    <title>Smart Timer Pro | Moderator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -253,6 +253,16 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        .app-footer {
+            margin-top: 24px;
+            padding: 12px 0 4px 0;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 0.3px;
+        }
     </style>
 </head>
 <body>
@@ -382,7 +392,7 @@
         <header>
             <div class="brand">
                 <img src="/images/logo.svg" class="brand-logo" alt="smartchoice" onerror="this.style.display='none'">
-                <div class="brand-text">SmartCountdownTimer <strong>Pro</strong></div>
+                <div class="brand-text">Smart Timer <strong>Pro</strong></div>
             </div>
             <div class="header-actions">
                 <button class="header-btn" id="btn-presenter" onclick="togglePresenter()">EXTERNAL DISPLAY</button>
@@ -394,7 +404,7 @@
         <div class="grid">
             <div class="side-left">
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Quick Presets & Custom Time</div>
+                    <div class="card-header">Custom Quick Presets</div>
                     <div class="preset-grid">
                         <button onclick="resetTime(0)" class="btn-preset" style="color:var(--text-dim)">00:00</button>
                         <button onclick="resetTime(60)" class="btn-preset">1m</button>
@@ -447,11 +457,11 @@
 
             <div class="side-right">
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Transport Controls</div>
+                    <div class="card-header">Controls</div>
                     <div class="btn-grid">
                         <button id="btn-start" onclick="api('start')" class="btn btn-start">
                             <span class="btn-icon">▶</span>
-                            <span class="btn-label">START</span>
+                            <span class="btn-label">GO</span>
                         </button>
                         <button id="btn-pause" onclick="api('pause')" class="btn btn-pause hidden">
                             <span class="btn-icon">⏸</span>
@@ -494,6 +504,10 @@
             </div>
         </div>
     </div>
+
+    <footer class="app-footer">
+        <span id="footer-text">Copyright © Smart Timer Pro v1.2.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+    </footer>
 
     <script>
         const socket = io();
@@ -729,6 +743,10 @@
 
         socket.on('stateUpdate', function(s) {
             var cfg = s.settings || {};
+            if (s.version) {
+                document.getElementById('footer-text').textContent =
+                    'Copyright © Smart Timer Pro v' + s.version + ' - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026';
+            }
             if (s.mode === 'countdown' && s.isRunning && s.timeLeft === 0 && lastTimeLeft === 1) {
                 if (audioEnabled && cfg.audioEndEnabled !== false) {
                     // audio trigger handled by server
