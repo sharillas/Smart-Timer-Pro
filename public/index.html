@@ -59,6 +59,30 @@
             font-weight: 900; color: #10b981; z-index: 2; position: relative;
             transition: color 0.3s;
         }
+        .monitor-bar {
+            position: absolute; bottom: 8%; left: 12%; width: 76%;
+            height: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 999px; overflow: hidden; z-index: 3;
+        }
+        .monitor-bar-fill {
+            height: 100%; border-radius: 999px;
+            background: linear-gradient(90deg, #10b981, #22d3ee);
+            transition: width 0.5s linear;
+        }
+        .monitor-bar-fill.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .monitor-bar-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .monitor-semaforo {
+            position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; background: rgba(15,23,42,0.9);
+            padding: 5px 8px; border-radius: 999px; z-index: 3;
+        }
+        .monitor-lamp {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: #1e293b; opacity: 0.3; transition: all .3s;
+        }
+        .monitor-lamp.on-green { background: #10b981; opacity: 1; box-shadow: 0 0 8px rgba(16,185,129,0.8); }
+        .monitor-lamp.on-amber { background: #f59e0b; opacity: 1; box-shadow: 0 0 8px rgba(245,158,11,0.8); }
+        .monitor-lamp.on-red { background: #ef4444; opacity: 1; box-shadow: 0 0 8px rgba(239,68,68,0.9); animation: pulse 0.6s infinite; }
         .msg-preview {
             margin-top: 14px; padding: 12px 16px; border-radius: 10px;
             background: rgba(0,0,0,0.3); border-left: 4px solid var(--border);
@@ -310,6 +334,58 @@
             </div>
 
             <div class="setting-group">
+                <h3>Timer Position & Size</h3>
+                <div class="setting-row">
+                    <span class="setting-label">X (%)</span>
+                    <input type="number" id="set-timer-x" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Y (%)</span>
+                    <input type="number" id="set-timer-y" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Size (vw)</span>
+                    <input type="number" id="set-timer-size" class="setting-input num" min="4" max="40" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Loading Bar</h3>
+                <div class="setting-row">
+                    <span class="setting-label">X (%)</span>
+                    <input type="number" id="set-bar-x" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Y (%)</span>
+                    <input type="number" id="set-bar-y" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Width (%)</span>
+                    <input type="number" id="set-bar-width" class="setting-input num" min="5" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Height (px)</span>
+                    <input type="number" id="set-bar-height" class="setting-input num" min="4" max="60" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Semáforo</h3>
+                <div class="setting-row">
+                    <span class="setting-label">X (%)</span>
+                    <input type="number" id="set-semaforo-x" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Y (%)</span>
+                    <input type="number" id="set-semaforo-y" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Size (px)</span>
+                    <input type="number" id="set-semaforo-size" class="setting-input num" min="20" max="120" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
                 <h3>Timer Colors</h3>
                 <div class="setting-row">
                     <span class="setting-label">Normal</span>
@@ -444,6 +520,12 @@
                     <div class="monitor-preview" id="monitor-frame">
                         <img id="monitor-logo" src="" class="hidden">
                         <div class="monitor-time" id="monitor-time">10:00</div>
+                        <div class="monitor-bar hidden" id="monitor-bar"><div class="monitor-bar-fill" id="monitor-bar-fill"></div></div>
+                        <div class="monitor-semaforo hidden" id="monitor-semaforo">
+                            <span class="monitor-lamp" id="ml-red"></span>
+                            <span class="monitor-lamp" id="ml-amber"></span>
+                            <span class="monitor-lamp" id="ml-green"></span>
+                        </div>
                     </div>
                     <div class="msg-preview">
                         <div style="flex:1">
@@ -476,6 +558,7 @@
                         <button onclick="addTime(60)" class="btn btn-add btn-sm">+1 MIN</button>
                         <button onclick="addTime(-60)" class="btn btn-sub btn-sm">-1 MIN</button>
                     </div>
+                    <button id="btn-indicator" onclick="cycleIndicator()" class="btn btn-sm" style="width:100%;margin-top:12px;background:#334155;color:#cbd5e1">STATUS INDICATOR: OFF</button>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
@@ -553,6 +636,17 @@
             audioEndEnabled: true,
             audioWarningEnabled: true,
             logoFit: 'contain',
+            statusIndicator: 'none',
+            barX: 10,
+            barY: 88,
+            barWidth: 80,
+            barHeight: 14,
+            semaforoX: 50,
+            semaforoY: 88,
+            semaforoSize: 46,
+            timerX: 50,
+            timerY: 46,
+            timerSize: 22,
             customPresets: []
         };
 
@@ -570,6 +664,16 @@
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
             document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
+            document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
+            document.getElementById('set-timer-y').value = s.timerY !== undefined ? s.timerY : 46;
+            document.getElementById('set-timer-size').value = s.timerSize !== undefined ? s.timerSize : 22;
+            document.getElementById('set-bar-x').value = s.barX !== undefined ? s.barX : 10;
+            document.getElementById('set-bar-y').value = s.barY !== undefined ? s.barY : 88;
+            document.getElementById('set-bar-width').value = s.barWidth !== undefined ? s.barWidth : 80;
+            document.getElementById('set-bar-height').value = s.barHeight !== undefined ? s.barHeight : 14;
+            document.getElementById('set-semaforo-x').value = s.semaforoX !== undefined ? s.semaforoX : 50;
+            document.getElementById('set-semaforo-y').value = s.semaforoY !== undefined ? s.semaforoY : 88;
+            document.getElementById('set-semaforo-size').value = s.semaforoSize !== undefined ? s.semaforoSize : 46;
         }
 
         function openSettings() {
@@ -596,7 +700,17 @@
                 stopAtZero: document.getElementById('set-start-zero').checked,
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
                 audioWarningEnabled: document.getElementById('set-audio-warning').checked,
-                logoFit: document.getElementById('set-logo-fit').value
+                logoFit: document.getElementById('set-logo-fit').value,
+                timerX: parseInt(document.getElementById('set-timer-x').value) || 50,
+                timerY: parseInt(document.getElementById('set-timer-y').value) || 46,
+                timerSize: parseInt(document.getElementById('set-timer-size').value) || 22,
+                barX: parseInt(document.getElementById('set-bar-x').value) || 10,
+                barY: parseInt(document.getElementById('set-bar-y').value) || 88,
+                barWidth: parseInt(document.getElementById('set-bar-width').value) || 80,
+                barHeight: parseInt(document.getElementById('set-bar-height').value) || 14,
+                semaforoX: parseInt(document.getElementById('set-semaforo-x').value) || 50,
+                semaforoY: parseInt(document.getElementById('set-semaforo-y').value) || 88,
+                semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46
             };
             currentSettings = s;
             fetch('/api/settings', {
@@ -642,6 +756,25 @@
             api('message/set', '?text=' + encodeURIComponent(val));
         }
         function toggleMessage() { api('message/toggle'); }
+        function cycleIndicator() {
+            var order = ['none', 'bar', 'semaforo', 'both'];
+            var cur = currentSettings.statusIndicator || 'none';
+            var idx = order.indexOf(cur);
+            var next = order[(idx + 1) % order.length];
+            var labels = { none: 'OFF', bar: 'LOADING BAR', semaforo: 'SEMÁFORO', both: 'BAR + SEMÁFORO' };
+            var body = { statusIndicator: next };
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            currentSettings.statusIndicator = next;
+            document.getElementById('btn-indicator').textContent = 'STATUS INDICATOR: ' + labels[next];
+        }
+        function updateIndicatorButton(val) {
+            var labels = { none: 'OFF', bar: 'LOADING BAR', semaforo: 'SEMÁFORO', both: 'BAR + SEMÁFORO' };
+            document.getElementById('btn-indicator').textContent = 'STATUS INDICATOR: ' + (labels[val] || 'OFF');
+        }
         function setCustomTime() {
             var mins = document.getElementById('custom-min').value;
             if (mins) api('reset', '?sec=' + parseInt(mins) * 60);
@@ -741,6 +874,40 @@
             return sign + m.toString().padStart(2, '0');
         }
 
+        function renderMonitorIndicator(s) {
+            var bar = document.getElementById('monitor-bar');
+            var barFill = document.getElementById('monitor-bar-fill');
+            var sem = document.getElementById('monitor-semaforo');
+            var ind = (s.settings && s.settings.statusIndicator) || 'none';
+
+            if (ind === 'bar' || ind === 'both') {
+                bar.classList.remove('hidden');
+                var pct = 100;
+                if (s.mode === 'countdown' && s.initialTime > 0) {
+                    pct = Math.max(0, Math.min(100, (s.activeTime / s.initialTime) * 100));
+                }
+                barFill.style.width = pct + '%';
+                barFill.className = 'monitor-bar-fill';
+                if (s.alertLevel === 'expired' || s.alertLevel === 'danger') barFill.classList.add('danger');
+                else if (s.alertLevel === 'warning') barFill.classList.add('warning');
+            } else {
+                bar.classList.add('hidden');
+            }
+
+            if (ind === 'semaforo' || ind === 'both') {
+                sem.classList.remove('hidden');
+                var red = document.getElementById('ml-red');
+                var amber = document.getElementById('ml-amber');
+                var green = document.getElementById('ml-green');
+                red.className = 'monitor-lamp'; amber.className = 'monitor-lamp'; green.className = 'monitor-lamp';
+                if (s.alertLevel === 'expired' || s.alertLevel === 'danger') red.classList.add('on-red');
+                else if (s.alertLevel === 'warning') amber.classList.add('on-amber');
+                else green.classList.add('on-green');
+            } else {
+                sem.classList.add('hidden');
+            }
+        }
+
         socket.on('stateUpdate', function(s) {
             var cfg = s.settings || {};
             if (s.version) {
@@ -800,6 +967,9 @@
                     }
                 }
             }
+
+            // Monitor indicator (bar/semaforo)
+            renderMonitorIndicator(s);
 
             // Message
             document.getElementById('msg-text').textContent = s.message || 'No message set';
@@ -900,6 +1070,7 @@
         socket.on('settingsUpdate', function(s) {
             currentSettings = s;
             renderCustomPresets(s.customPresets);
+            updateIndicatorButton(s.statusIndicator);
         });
 
         socket.on('audioUpdate', function(data) {
