@@ -1,63 +1,25 @@
 {
-  "name": "smart-timer-pro",
+  "id": "smart-timer-pro",
+  "name": "smartchoice Smart Timer Pro",
+  "shortname": "smart-timer-pro",
+  "description": "Control Smart Timer Pro stage timer from Bitfocus Companion",
   "version": "1.4.0",
-  "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "bump": "node scripts/bump-version.js",
-    "build": "node scripts/bump-version.js && electron-builder"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
-  },
-  "devDependencies": {
-    "electron": "^28.1.0",
-    "electron-builder": "^24.9.1"
-  },
-  "author": "smartchoice",
   "license": "UNLICENSED",
-  "build": {
-    "appId": "com.smartchoice.smarttimerpro",
-    "productName": "Smart Timer Pro",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "main.js",
-      "preload.js",
-      "server.js",
-      "public/**/*",
-      "assets/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "messages.json",
-        "to": "messages.json"
-      }
-    ],
-    "win": {
-      "icon": "assets/icon.png",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "signAndEditExecutable": false
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
-      "installerHeaderIcon": "assets/icon.ico",
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Smart Timer Pro"
+  "repository": "https://github.com/sharillas/Smart-Timer-Pro",
+  "bugs": "https://github.com/sharillas/Smart-Timer-Pro/issues",
+  "maintainers": [
+    {
+      "name": "smartchoice"
     }
-  }
+  ],
+  "legacyIds": [],
+  "runtime": {
+    "type": "node18",
+    "api": "nodejs-ipc",
+    "apiVersion": "1.0.0",
+    "entrypoint": "../main.js"
+  },
+  "manufacturer": "smartchoice",
+  "products": ["Smart Timer Pro"],
+  "keywords": ["timer", "countdown", "stage", "production", "stream deck"]
 }
