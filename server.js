@@ -51,6 +51,17 @@ let settings = {
     timerX: 50,
     timerY: 46,
     timerSize: 22,
+    transparentMode: false,
+    defaultPresets: [
+        { label: '00:00', seconds: 0 },
+        { label: '1m', seconds: 60 },
+        { label: '5m', seconds: 300 },
+        { label: '10m', seconds: 600 },
+        { label: '15m', seconds: 900 },
+        { label: '30m', seconds: 1800 },
+        { label: '60m', seconds: 3600 },
+        { label: '2h', seconds: 7200 }
+    ],
     customPresets: []
 };
 
@@ -383,27 +394,34 @@ app.get('/api/indicator', (req, res) => {
     const action = req.query.action;
     if (!type || !action) return res.status(400).send('Missing type/action');
 
-    let hasBar = settings.statusIndicator === 'bar' || settings.statusIndicator === 'both';
-    let hasSem = settings.statusIndicator === 'semaforo' || settings.statusIndicator === 'both';
-
-    if (type === 'bar') {
-        hasBar = action === 'on';
-    } else if (type === 'semaforo') {
-        hasSem = action === 'on';
+    if (action === 'on') {
+        settings.statusIndicator = type;
     } else {
-        return res.status(400).send('Invalid type');
+        if (settings.statusIndicator === type) settings.statusIndicator = 'none';
     }
-
-    if (hasBar && hasSem) settings.statusIndicator = 'both';
-    else if (hasBar) settings.statusIndicator = 'bar';
-    else if (hasSem) settings.statusIndicator = 'semaforo';
-    else settings.statusIndicator = 'none';
 
     saveSettings();
     state.settings = settings;
     broadcast();
     io.emit('settingsUpdate', settings);
     res.send('Indicator updated');
+});
+
+// --- DEFAULT PRESETS API ---
+app.get('/api/presets/default', (req, res) => res.json(settings.defaultPresets || []));
+
+app.get('/api/presets/default/edit', (req, res) => {
+    const index = parseInt(req.query.index);
+    const sec = parseInt(req.query.sec);
+    const label = req.query.label || '';
+    if (!Array.isArray(settings.defaultPresets)) return res.status(400).send('No presets');
+    if (isNaN(index) || index < 0 || index >= settings.defaultPresets.length) return res.status(400).send('Invalid index');
+    if (isNaN(sec) || sec < 0) return res.status(400).send('Invalid seconds');
+    settings.defaultPresets[index] = { label: label || formatPresetLabel(sec), seconds: sec };
+    saveSettings();
+    state.settings = settings;
+    io.emit('settingsUpdate', settings);
+    res.send('Preset edited');
 });
 
 // --- CUSTOM PRESETS API ---
@@ -525,4 +543,8 @@ if (!messagesFile && dataDir === __dirname) {
     init({});
 }
 
-module.exports = { app, server, io, state, init };
+module.exports = { app, server, io, state, init, getSettings };
+
+function getSettings() {
+    return settings;
+}
