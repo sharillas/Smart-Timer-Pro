@@ -256,10 +256,12 @@
             var mode = (settings && settings.bgMode) || 'color';
             var bg = (settings && settings.bgColor) || '#000000';
             if (mode === 'transparent') {
+                document.documentElement.style.background = 'transparent';
                 document.body.style.background = 'transparent';
                 stage.style.background = 'transparent';
                 stage.style.webkitAppRegion = 'drag';
             } else {
+                document.documentElement.style.background = bg;
                 document.body.style.background = bg;
                 stage.style.background = bg;
                 stage.style.webkitAppRegion = 'no-drag';
