@@ -152,32 +152,11 @@ Smart-Timer-Pro/
 }
 ```
 
-## Development
-
-```powershell
-# Install dependencies
-npm install
-
-# Run in dev mode (opens Electron app)
-npm start
-
-# Run server only (browser access at http://127.0.0.1:3000)
-node server.js
-```
-
-## Build Installer
-
-```powershell
-npm run build
-```
-
-Output: `dist/Smart Timer Pro Setup 1.2.0.exe` (~73 MB)
-
 The installer is standalone -- no Node.js, Electron, or any runtime required on the target PC.
 
 ## Installation
 
-1. Run `Smart Timer Pro Setup 1.2.0.exe`
+1. Run `Smart Timer Pro Setup 1.4.0.exe`
 2. Follow the installer wizard
 3. Launch from desktop shortcut or Start Menu
 
