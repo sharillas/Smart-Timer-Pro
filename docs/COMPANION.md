@@ -8,7 +8,7 @@ This module allows controlling **Smart Timer Pro** from an Elgato Stream Deck vi
 
 ### Prerequisites
 
-- Bitfocus Companion v3.0 or later
+- Bitfocus Companion v3.4 or later (borders need v3.4+)
 - Smart Timer Pro running on the same network
 - Elgato Stream Deck
 
@@ -16,17 +16,17 @@ This module allows controlling **Smart Timer Pro** from an Elgato Stream Deck vi
 
 1. Open Companion > Click the gear icon (Settings) > Enable **Developer Mode**
 2. Choose a folder for developer modules
-3. Copy the `companion/Smart-Timer-Pro/` folder into that directory
+3. Copy the `companion/smart-timer-pro/` folder into that directory
 4. Restart Companion
 
 ### Method 2: Companion Pi (Linux)
 
 ```bash
-sudo mkdir -p /opt/companion-module-dev/Smart-Timer-Pro
-sudo cp -r companion/Smart-Timer-Pro/* /opt/companion-module-dev/Smart-Timer-Pro/
-cd /opt/companion-module-dev/Smart-Timer-Pro
+sudo mkdir -p /opt/companion-module-dev/smart-timer-pro
+sudo cp -r companion/smart-timer-pro/* /opt/companion-module-dev/smart-timer-pro/
+cd /opt/companion-module-dev/smart-timer-pro
 sudo npm install @companion-module/base@^1.8.0
-sudo chown -R companion:companion /opt/companion-module-dev/Smart-Timer-Pro
+sudo chown -R companion:companion /opt/companion-module-dev/smart-timer-pro
 sudo systemctl restart companion
 ```
 
@@ -42,7 +42,7 @@ sudo systemctl restart companion
 2. Go to **Connections** tab
 3. Click **Add Connection**
 4. Search for **Smart Timer Pro**
-5. Enter the IP address of the PC running Smart Timer Pro
+5. Enter the IP address of the PC running Smart Timer Pro (use `127.0.0.1` if Companion runs on the same PC)
 6. Port: `3000` (default)
 7. Click **Save**
 
@@ -109,14 +109,18 @@ Variables can be used in button text for dynamic display:
 
 | Variable | Value |
 |---|---|
-| `$(Smart-Timer-Pro:time)` | Current time (MM:SS) |
-| `$(Smart-Timer-Pro:raw_seconds)` | Raw seconds value |
-| `$(Smart-Timer-Pro:over_time)` | Overtime (+MM:SS) |
-| `$(Smart-Timer-Pro:mode)` | Current mode name |
-| `$(Smart-Timer-Pro:msg_1)` | Quick message slot 1 text |
-| `$(Smart-Timer-Pro:msg_2)` | Quick message slot 2 text |
+| `$(smart-timer-pro:time)` | Current time (MM:SS) |
+| `$(smart-timer-pro:raw_seconds)` | Raw seconds value |
+| `$(smart-timer-pro:over_time)` | Overtime (+MM:SS) |
+| `$(smart-timer-pro:mode)` | Current mode name |
+| `$(smart-timer-pro:hours)` | Hours (HH, zero-padded) |
+| `$(smart-timer-pro:minutes)` | Minutes (MM, zero-padded) |
+| `$(smart-timer-pro:seconds)` | Seconds (SS, zero-padded) |
+| `$(smart-timer-pro:sign)` | "-" when the timer is in overtime |
+| `$(smart-timer-pro:msg_1)` | Quick message slot 1 text |
+| `$(smart-timer-pro:msg_2)` | Quick message slot 2 text |
 | ... | ... |
-| `$(Smart-Timer-Pro:msg_5)` | Quick message slot 5 text |
+| `$(smart-timer-pro:msg_5)` | Quick message slot 5 text |
 
 ## Troubleshooting
 

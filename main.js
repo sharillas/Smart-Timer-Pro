@@ -1,15 +1,35 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
 let presenterWindow = null;
 let serverInstance = null;
 
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+    });
+}
+
 function startServer() {
-    const userDataPath = app.getPath('userData');
-    const server = require('./server.js');
-    server.init({ dataDir: userDataPath });
-    serverInstance = server;
+    try {
+        const userDataPath = app.getPath('userData');
+        const server = require('./server.js');
+        server.init({ dataDir: userDataPath });
+        serverInstance = server;
+    } catch (e) {
+        dialog.showErrorBox(
+            'Smart Timer Pro',
+            'Could not start the server (port 3000 may be in use by another application).\n\n' + (e && e.message ? e.message : e)
+        );
+        app.quit();
+    }
 }
 
 function createMainWindow() {

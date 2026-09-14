@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.1] - 2026-09-13
+
+### Bug Fixes
+- **Logo lost on restart**: The uploaded logo is now correctly restored after restarting the app
+- **LAN access**: Server now binds to `0.0.0.0` (all interfaces) so Companion and other devices on the network can connect; previously it was loopback-only
+- **Single instance**: Second launch now focuses the existing window instead of crashing with a port conflict
+- **Port conflict**: Friendly error dialog when port 3000 is already in use
+
+### Docs
+- Companion docs: corrected folder paths (`companion/smart-timer-pro`) and variable names
+
 ## [1.4.0] - 2026-09-10
 
 ### New Features

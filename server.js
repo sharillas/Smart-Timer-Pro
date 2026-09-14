@@ -95,6 +95,7 @@ function initPersistence() {
             if (parsed && parsed.image) logoData = parsed.image;
         }
     } catch (e) { console.error('Could not load logo.json', e); }
+    state.logoData = logoData;
 
     // Settings
     try {
@@ -323,6 +324,7 @@ app.get('/api/message/hide', (req, res) => {
 app.post('/api/system/logo/upload', (req, res) => {
     if (req.body && req.body.image) {
         state.logoData = req.body.image;
+        logoData = state.logoData;
         fs.writeFileSync(logoFile, JSON.stringify({ image: state.logoData }));
         broadcast();
         res.send('Logo Uploaded');
@@ -333,6 +335,7 @@ app.post('/api/system/logo/upload', (req, res) => {
 
 app.get('/api/system/logo/clear', (req, res) => {
     state.logoData = '';
+    logoData = '';
     if (fs.existsSync(logoFile)) {
         fs.unlinkSync(logoFile);
     }
@@ -538,7 +541,17 @@ io.on('connection', (socket) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '127.0.0.1', () => console.log(`Smart Timer Pro server running on port ${PORT}`));
+const HOST = process.env.HOST || '0.0.0.0';
+
+server.on('error', (e) => {
+    if (e && e.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Is another instance of Smart Timer Pro running?`);
+    } else {
+        console.error('Server error:', e);
+    }
+});
+
+server.listen(PORT, HOST, () => console.log(`Smart Timer Pro server running on port ${PORT}`));
 
 if (!messagesFile && dataDir === __dirname) {
     init({});

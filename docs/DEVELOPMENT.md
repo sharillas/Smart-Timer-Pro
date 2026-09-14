@@ -76,7 +76,7 @@ Smart-Timer-Pro/
 
 ### 1. Single Server, Multiple Windows
 
-The Express server runs on `127.0.0.1:3000` (localhost only) and both the moderator and presenter windows connect to it. This keeps state centralized and avoids complex IPC for timer data.
+The Express server runs on `0.0.0.0:3000` (all interfaces, so Companion or other devices on the network can connect) and both the moderator and presenter windows connect to it. This keeps state centralized and avoids complex IPC for timer data.
 
 ### 2. Tick Engine
 
@@ -124,13 +124,13 @@ The build outputs to `dist/Smart Timer Pro Setup X.Y.0.exe`.
 
 ```powershell
 # Navigate to companion module
-cd companion/Smart-Timer-Pro
+cd companion/smart-timer-pro
 
 # Install dependencies
 npm install
 
-# Build (requires companion-module-build)
+# Build tgz (bundles with webpack)
 npm run build
 ```
 
-The module uses variables with the prefix `$(Smart-Timer-Pro:*)` to avoid collisions with other modules.
+The module uses variables with the prefix `$(smart-timer-pro:*)` to avoid collisions with other modules.
