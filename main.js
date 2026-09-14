@@ -1,9 +1,11 @@
-const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
 let presenterWindow = null;
 let serverInstance = null;
+let tray = null;
+let isQuitting = false;
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -12,6 +14,33 @@ if (!gotTheLock) {
     app.on('second-instance', () => {
         if (mainWindow) {
             if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    });
+}
+
+function sendTimerCommand(cmd) {
+    fetch(`http://127.0.0.1:3000/api/${cmd}`).catch(() => {});
+}
+
+function createTray() {
+    const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'icon.png'));
+    tray = new Tray(icon);
+    tray.setToolTip('Smart Timer Pro');
+
+    const menu = Menu.buildFromTemplate([
+        { label: 'Open Smart Timer Pro', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+        { type: 'separator' },
+        { label: 'GO / Pause', click: () => sendTimerCommand('toggle_playback') },
+        { label: 'Reset Timer', click: () => sendTimerCommand('reset') },
+        { type: 'separator' },
+        { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
+    ]);
+    tray.setContextMenu(menu);
+    tray.on('click', () => {
+        if (mainWindow) {
+            if (!mainWindow.isVisible()) mainWindow.show();
             mainWindow.focus();
         }
     });
@@ -56,13 +85,20 @@ function createMainWindow() {
         mainWindow.show();
     });
 
+    // Closing the window hides it to the system tray; the timer keeps running
+    mainWindow.on('close', (e) => {
+        if (!isQuitting) {
+            e.preventDefault();
+            mainWindow.hide();
+        }
+    });
+
     mainWindow.on('closed', () => {
         mainWindow = null;
         if (presenterWindow && !presenterWindow.isDestroyed()) {
             presenterWindow.close();
             presenterWindow = null;
         }
-        app.quit();
     });
 }
 
@@ -157,6 +193,7 @@ ipcMain.handle('get-presenter-status', () => {
 // --- APP LIFECYCLE ---
 app.whenReady().then(() => {
     startServer();
+    createTray();
     createMainWindow();
 
     app.on('activate', () => {
@@ -166,13 +203,13 @@ app.whenReady().then(() => {
     });
 });
 
+// Keep the app (and timer) alive when all windows are hidden/closed
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+    // No quit: the app lives in the system tray
 });
 
 app.on('before-quit', () => {
+    isQuitting = true;
     if (presenterWindow) {
         presenterWindow.close();
     }

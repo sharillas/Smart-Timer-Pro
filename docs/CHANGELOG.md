@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.2] - 2026-09-13
+
+### New Features
+- **Keyboard shortcuts**: Space = GO/PAUSE, R = RESET, M = toggle message (main window)
+- **System tray**: Closing the window now minimizes to the tray with quick controls (GO/Pause, Reset, Quit) — the timer keeps running in background
+- **Mobile/tablet ready**: Responsive layout for small screens (remote control from phone/tablet on the same network)
+- **CSRF protection**: Foreign browser origins are rejected on API requests
+
+### Improvements
+- Presenter window now updates in place (no more full DOM rebuild every second) — smoother on external monitors
+- `bump-version.js` now supports `patch`, `minor` and `major` bump types
+
+### Bug Fixes
+- Removed dead code (unused alert flags)
+
 ## [1.4.1] - 2026-09-13
 
 ### Bug Fixes

@@ -169,8 +169,21 @@ let state = {
 };
 
 let lastAlertLevel = 'normal';
-let warningFired = false;
-let dangerFired = false;
+
+// --- CROSS-SITE REQUEST PROTECTION ---
+// Blocks browser requests coming from foreign origins (CSRF) while
+// allowing same-origin UI, Companion polling and LAN tools (no Origin header).
+app.use('/api', (req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        const originHost = origin.split('://')[1] || '';
+        const hostHeader = req.headers.host || '';
+        if (originHost !== hostHeader) {
+            return res.status(403).send('Forbidden');
+        }
+    }
+    next();
+});
 
 // --- TICK ENGINE ---
 setInterval(() => {
@@ -225,8 +238,6 @@ app.get('/api/state', (req, res) => res.json(state));
 
 app.get('/api/start', (req, res) => {
     state.isRunning = true;
-    warningFired = false;
-    dangerFired = false;
     broadcast();
     res.send('Started');
 });
@@ -239,7 +250,6 @@ app.get('/api/pause', (req, res) => {
 
 app.get('/api/toggle_playback', (req, res) => {
     state.isRunning = !state.isRunning;
-    if (state.isRunning) { warningFired = false; dangerFired = false; }
     broadcast();
     res.send(state.isRunning ? 'Started' : 'Paused');
 });
@@ -260,8 +270,6 @@ app.get('/api/reset', (req, res) => {
         state.timeLeft = sec;
         state.initialTime = sec;
     }
-    warningFired = false;
-    dangerFired = false;
     broadcast();
     res.send('Reset');
 });

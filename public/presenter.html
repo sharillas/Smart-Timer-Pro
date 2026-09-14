@@ -93,6 +93,7 @@
         var currentSettings = {};
         var currentState = null;
         var audioElements = {};
+        var builtMode = null;
 
         function getTimerEl() { return document.getElementById('timer'); }
         function getMsgEl() { return document.getElementById('msg'); }
@@ -177,43 +178,94 @@
             el.style.top = (y + 13) + '%';
         }
 
-        function renderIndicator(s) {
-            var oldBar = document.getElementById('loadbar');
-            if (oldBar && oldBar.parentNode) oldBar.parentNode.removeChild(oldBar);
-            var oldSem = document.getElementById('semaforo');
-            if (oldSem && oldSem.parentNode) oldSem.parentNode.removeChild(oldSem);
-
-            var cfg = s.settings || {};
-            var ind = cfg.statusIndicator || 'none';
-            if (ind === 'none') return;
-            if (ind === 'bar' || ind === 'both') renderLoadbar(s);
-            if (ind === 'semaforo' || ind === 'both') renderSemaforo(s);
-        }
-
-        function renderLoadbar(s) {
-            var cfg = s.settings || {};
-            var x = cfg.barX !== undefined ? cfg.barX : 10;
-            var y = cfg.barY !== undefined ? cfg.barY : 88;
-            var width = cfg.barWidth !== undefined ? cfg.barWidth : 80;
-            var height = cfg.barHeight !== undefined ? cfg.barHeight : 14;
-
+        function createLoadbar() {
             var wrap = document.createElement('div');
             wrap.className = 'loadbar-wrap';
             wrap.id = 'loadbar';
-            wrap.style.left = x + '%';
-            wrap.style.top = y + '%';
-            wrap.style.width = width + '%';
-            wrap.style.height = height + 'px';
 
             var fill = document.createElement('div');
             fill.className = 'loadbar-fill';
             fill.id = 'loadbar-fill';
-            fill.style.width = calcBarPct(s) + '%';
-            if (s.alertLevel === 'expired' || s.alertLevel === 'danger') fill.classList.add('danger');
-            else if (s.alertLevel === 'warning') fill.classList.add('warning');
 
             wrap.appendChild(fill);
             document.body.appendChild(wrap);
+            return wrap;
+        }
+
+        function updateLoadbar(s) {
+            var wrap = document.getElementById('loadbar');
+            if (!wrap) return;
+            var cfg = s.settings || {};
+            wrap.style.left = (cfg.barX !== undefined ? cfg.barX : 10) + '%';
+            wrap.style.top = (cfg.barY !== undefined ? cfg.barY : 88) + '%';
+            wrap.style.width = (cfg.barWidth !== undefined ? cfg.barWidth : 80) + '%';
+            wrap.style.height = (cfg.barHeight !== undefined ? cfg.barHeight : 14) + 'px';
+
+            var fill = document.getElementById('loadbar-fill');
+            if (!fill) return;
+            fill.style.width = calcBarPct(s) + '%';
+            fill.className = 'loadbar-fill';
+            if (s.alertLevel === 'expired' || s.alertLevel === 'danger') fill.classList.add('danger');
+            else if (s.alertLevel === 'warning') fill.classList.add('warning');
+        }
+
+        function createSemaforo() {
+            var wrap = document.createElement('div');
+            wrap.className = 'semaforo';
+            wrap.id = 'semaforo';
+
+            ['red', 'amber', 'green'].forEach(function (color) {
+                var lamp = document.createElement('div');
+                lamp.className = 'lamp';
+                lamp.id = 'lamp-' + color;
+                wrap.appendChild(lamp);
+            });
+
+            document.body.appendChild(wrap);
+            return wrap;
+        }
+
+        function updateSemaforo(s) {
+            var wrap = document.getElementById('semaforo');
+            if (!wrap) return;
+            var cfg = s.settings || {};
+            var size = cfg.semaforoSize !== undefined ? cfg.semaforoSize : 46;
+            wrap.style.left = (cfg.semaforoX !== undefined ? cfg.semaforoX : 50) + '%';
+            wrap.style.top = (cfg.semaforoY !== undefined ? cfg.semaforoY : 88) + '%';
+            wrap.style.gap = Math.round(size * 0.26) + 'px';
+
+            ['red', 'amber', 'green'].forEach(function (color) {
+                var lamp = document.getElementById('lamp-' + color);
+                if (!lamp) return;
+                lamp.style.width = size + 'px';
+                lamp.style.height = size + 'px';
+                lamp.className = 'lamp';
+                if (color === 'red' && (s.alertLevel === 'expired' || s.alertLevel === 'danger')) lamp.classList.add('on-red');
+                else if (color === 'amber' && s.alertLevel === 'warning') lamp.classList.add('on-amber');
+                else if (color === 'green' && s.alertLevel === 'normal') lamp.classList.add('on-green');
+            });
+        }
+
+        function updateIndicator(s) {
+            var cfg = s.settings || {};
+            var ind = cfg.statusIndicator || 'none';
+
+            var bar = document.getElementById('loadbar');
+            var sem = document.getElementById('semaforo');
+
+            if (ind === 'bar' || ind === 'both') {
+                if (!bar) bar = createLoadbar();
+                updateLoadbar(s);
+            } else if (bar && bar.parentNode) {
+                bar.parentNode.removeChild(bar);
+            }
+
+            if (ind === 'semaforo' || ind === 'both') {
+                if (!sem) sem = createSemaforo();
+                updateSemaforo(s);
+            } else if (sem && sem.parentNode) {
+                sem.parentNode.removeChild(sem);
+            }
         }
 
         function calcBarPct(s) {
@@ -223,33 +275,6 @@
                 return Math.max(0, Math.min(100, pct));
             }
             return 100;
-        }
-
-        function renderSemaforo(s) {
-            var cfg = s.settings || {};
-            var x = cfg.semaforoX !== undefined ? cfg.semaforoX : 50;
-            var y = cfg.semaforoY !== undefined ? cfg.semaforoY : 88;
-            var size = cfg.semaforoSize !== undefined ? cfg.semaforoSize : 46;
-
-            var wrap = document.createElement('div');
-            wrap.className = 'semaforo';
-            wrap.id = 'semaforo';
-            wrap.style.left = x + '%';
-            wrap.style.top = y + '%';
-            wrap.style.gap = Math.round(size * 0.26) + 'px';
-
-            ['red', 'amber', 'green'].forEach(function (color) {
-                var lamp = document.createElement('div');
-                lamp.className = 'lamp';
-                lamp.style.width = size + 'px';
-                lamp.style.height = size + 'px';
-                if (color === 'red' && (s.alertLevel === 'expired' || s.alertLevel === 'danger')) lamp.classList.add('on-red');
-                else if (color === 'amber' && s.alertLevel === 'warning') lamp.classList.add('on-amber');
-                else if (color === 'green' && s.alertLevel === 'normal') lamp.classList.add('on-green');
-                wrap.appendChild(lamp);
-            });
-
-            document.body.appendChild(wrap);
         }
 
         function applyTransparency(settings) {
@@ -269,85 +294,91 @@
         }
 
         function buildStage(s) {
-            stage.innerHTML = '';
             currentState = s;
             currentSettings = s.settings || {};
             applyTransparency(currentSettings);
 
-            if (s.mode === 'logo') {
-                if (s.logoData) {
+            if (builtMode !== s.mode) {
+                stage.innerHTML = '';
+
+                if (s.mode === 'logo') {
                     var img = document.createElement('img');
-                    img.src = s.logoData;
+                    img.id = 'logo-img';
                     img.className = 'logo-display';
-                    var fit = (s.settings && s.settings.logoFit) || 'contain';
-                    img.style.objectFit = fit;
                     stage.appendChild(img);
+                } else if (s.mode === 'timeofday') {
+                    var tod = document.createElement('div');
+                    tod.className = 'timer';
+                    tod.id = 'timer';
+                    stage.appendChild(tod);
+
+                    var msgDiv2 = document.createElement('div');
+                    msgDiv2.className = 'message';
+                    msgDiv2.id = 'msg';
+                    msgDiv2.style.fontSize = '4vw';
+                    stage.appendChild(msgDiv2);
                 } else {
-                    var idle = document.createElement('img');
-                    idle.src = '/images/testpattern.png';
-                    idle.className = 'logo-display';
-                    idle.style.objectFit = 'contain';
-                    stage.appendChild(idle);
+                    var timerDiv = document.createElement('div');
+                    timerDiv.className = 'timer';
+                    timerDiv.id = 'timer';
+                    applyFont(timerDiv, currentSettings);
+                    stage.appendChild(timerDiv);
+
+                    var msgDiv = document.createElement('div');
+                    msgDiv.className = 'message';
+                    msgDiv.id = 'msg';
+                    msgDiv.style.fontSize = '4vw';
+                    stage.appendChild(msgDiv);
                 }
-                renderIndicator(s);
+
+                builtMode = s.mode;
+            }
+
+            updateStage(s);
+        }
+
+        function updateStage(s) {
+            if (s.mode === 'logo') {
+                var img = document.getElementById('logo-img');
+                if (img) {
+                    if (s.logoData) img.src = s.logoData;
+                    else img.src = '/images/testpattern.png';
+                    img.style.objectFit = (s.settings && s.settings.logoFit) || 'contain';
+                }
+                updateIndicator(s);
                 return;
             }
 
-            if (s.mode === 'timeofday') {
-                var tod = document.createElement('div');
-                tod.className = 'timer';
-                tod.id = 'timer';
-                tod.textContent = formatTimeOfDay();
-                tod.style.color = currentSettings.colorNormal || '#10b981';
-                tod.style.fontSize = getTimerSize(currentSettings) + 'vw';
-                applyFont(tod, currentSettings);
-                positionTimer(tod, currentSettings);
-                stage.appendChild(tod);
+            var el = getTimerEl();
+            if (el) {
+                var cfg = s.settings || {};
+                el.style.fontSize = getTimerSize(cfg) + 'vw';
+                applyFont(el, cfg);
+                positionTimer(el, cfg);
 
-                var msgDiv2 = document.createElement('div');
-                msgDiv2.className = 'message';
-                msgDiv2.id = 'msg';
-                msgDiv2.style.fontSize = '4vw';
-                positionMessage(msgDiv2, currentSettings);
+                if (s.mode === 'timeofday') {
+                    el.textContent = formatTimeOfDay();
+                    el.style.color = cfg.colorNormal || '#10b981';
+                } else if (s.mode === 'countdown') {
+                    renderCountdown(s);
+                } else {
+                    renderCountUp(s);
+                }
+            }
+
+            var msg = getMsgEl();
+            if (msg) {
+                var cfg2 = s.settings || {};
+                positionMessage(msg, cfg2);
                 if (s.showMessage && s.message) {
-                    msgDiv2.textContent = s.message;
+                    msg.textContent = s.message;
+                    msg.classList.remove('hidden');
                 } else {
-                    msgDiv2.classList.add('hidden');
+                    msg.classList.add('hidden');
                 }
-                stage.appendChild(msgDiv2);
-                renderIndicator(s);
-                return;
             }
 
-            // countdown or countup
-            var timerDiv = document.createElement('div');
-            timerDiv.className = 'timer';
-            timerDiv.id = 'timer';
-            applyFont(timerDiv, currentSettings);
-            positionTimer(timerDiv, currentSettings);
-            stage.appendChild(timerDiv);
-
-            var msgDiv = document.createElement('div');
-            msgDiv.className = 'message';
-            msgDiv.id = 'msg';
-            msgDiv.style.fontSize = '4vw';
-            positionMessage(msgDiv, currentSettings);
-            stage.appendChild(msgDiv);
-
-            if (s.mode === 'countdown') {
-                renderCountdown(s);
-            } else {
-                renderCountUp(s);
-            }
-
-            if (s.showMessage && s.message) {
-                msgDiv.textContent = s.message;
-                msgDiv.classList.remove('hidden');
-            } else {
-                msgDiv.classList.add('hidden');
-            }
-
-            renderIndicator(s);
+            updateIndicator(s);
         }
 
         // --- Audio System ---
@@ -418,11 +449,11 @@
             }
         }, 1000);
 
-        // Expired flash tick
+        // Expired flash tick (in-place, only touches the timer color)
         setInterval(function() {
             if (currentState && currentState.mode === 'countdown' &&
                 currentState.alertLevel === 'expired' && currentState.isRunning) {
-                buildStage(currentState);
+                updateStage(currentState);
             }
         }, 500);
     </script>

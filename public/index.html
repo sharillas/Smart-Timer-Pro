@@ -282,10 +282,26 @@
             margin-top: 24px;
             padding: 12px 0 4px 0;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
             font-size: 11px;
             color: var(--text-dim);
             letter-spacing: 0.3px;
+        }
+
+        /* --- MOBILE / TABLET --- */
+        @media (max-width: 720px) {
+            body { padding: 12px; }
+            .card { padding: 16px; }
+            .brand-text { display: none; }
+            .btn { height: 92px; }
+            .btn-label { font-size: 15px; }
+            .btn-icon { font-size: 20px; }
+            .preset-grid, .preset-grid.cols4 { grid-template-columns: repeat(2, 1fr); }
+            .header-btn { padding: 12px 14px; }
+            .app-footer { justify-content: center; }
+            button, input, select, textarea { font-size: 16px; }
         }
     </style>
 </head>
@@ -566,15 +582,15 @@
                 <div class="card" style="margin-bottom:24px">
                     <div class="card-header">Controls</div>
                     <div class="btn-grid">
-                        <button id="btn-start" onclick="api('start')" class="btn btn-start">
+                        <button id="btn-start" title="Atalho: Espaço" onclick="api('start')" class="btn btn-start">
                             <span class="btn-icon">▶</span>
                             <span class="btn-label">GO</span>
                         </button>
-                        <button id="btn-pause" onclick="api('pause')" class="btn btn-pause hidden">
+                        <button id="btn-pause" title="Atalho: Espaço" onclick="api('pause')" class="btn btn-pause hidden">
                             <span class="btn-icon">⏸</span>
                             <span class="btn-label">PAUSE</span>
                         </button>
-                        <button onclick="api('reset')" class="btn btn-reset">
+                        <button title="Atalho: R" onclick="api('reset')" class="btn btn-reset">
                             <span class="btn-icon">↺</span>
                             <span class="btn-label">RESET</span>
                         </button>
@@ -605,7 +621,7 @@
                 <div class="card">
                     <div class="card-header">Messaging Control</div>
                     <input type="text" id="msg-input" placeholder="Type custom message..." class="msg-input" oninput="updateMessage()">
-                    <button id="btn-msg-toggle" onclick="toggleMessage()" class="btn-toggle btn-msg-hide">SHOW MESSAGE</button>
+                    <button id="btn-msg-toggle" title="Atalho: M" onclick="toggleMessage()" class="btn-toggle btn-msg-hide">SHOW MESSAGE</button>
                     <div class="bank-header">
                         <div class="card-header" style="margin-bottom:0">Quick Messages <span id="msg-count" style="color:var(--text-dim);font-weight:400">(0/5)</span></div>
                         <button id="btn-save-msg" onclick="saveQuickMessage()" class="btn-save">+ ADD QUICK MESSAGE</button>
@@ -617,13 +633,26 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.4.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.4.2 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span>Atalhos: Espaço = GO/PAUSE · R = RESET · M = Mensagem</span>
     </footer>
 
     <script>
         const socket = io();
         let audioEnabled = false;
-        let lastTimeLeft = -999;
+
+        // --- KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', function(e) {
+            if (e.target !== document.body && e.target !== document.documentElement) return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                api('toggle_playback');
+            } else if (e.key === 'r' || e.key === 'R') {
+                api('reset');
+            } else if (e.key === 'm' || e.key === 'M') {
+                api('message/toggle');
+            }
+        });
 
         // --- ELECTRON ---
         function togglePresenter() {
@@ -1095,12 +1124,6 @@
                 document.getElementById('footer-text').textContent =
                     'Copyright © Smart Timer Pro v' + s.version + ' - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026';
             }
-            if (s.mode === 'countdown' && s.isRunning && s.timeLeft === 0 && lastTimeLeft === 1) {
-                if (audioEnabled && cfg.audioEndEnabled !== false) {
-                    // audio trigger handled by server
-                }
-            }
-            lastTimeLeft = s.timeLeft;
 
             // Logo
             if (s.logoData) {
