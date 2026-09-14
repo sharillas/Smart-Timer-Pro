@@ -660,6 +660,18 @@
                 <p class="setting-hint">Serves the app over HTTPS with a self-signed certificate (generated automatically). Browsers will show a certificate warning — accept it once.</p>
             </div>
 
+            <div class="setting-group">
+                <h3>Updates</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Version</span>
+                    <span id="app-version" style="font-weight:700">—</span>
+                </div>
+                <div class="setting-row">
+                    <button class="btn-set" style="flex:1" onclick="checkForUpdates()">CHECK FOR UPDATES</button>
+                </div>
+                <p class="setting-hint" id="update-status">—</p>
+            </div>
+
             <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()" data-i18n="done">DONE</button>
         </div>
     </div>
@@ -809,7 +821,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.7.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.7.1 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1976,6 +1988,32 @@
         socket.on('connect', function() {
             if (connBanner) connBanner.classList.remove('visible');
         });
+
+        // --- UPDATES ---
+        if (window.electronAPI) {
+            window.electronAPI.getAppInfo().then(function(info) {
+                var el = document.getElementById('app-version');
+                if (el) el.textContent = 'v' + info.version + (info.packaged ? '' : ' (dev mode)');
+            });
+            window.electronAPI.onUpdateStatus(function(data) {
+                var el = document.getElementById('update-status');
+                if (el) el.textContent = data.message || data.status;
+            });
+        }
+
+        function checkForUpdates() {
+            var el = document.getElementById('update-status');
+            if (!window.electronAPI) {
+                if (el) el.textContent = 'Auto-update only works in the installed desktop app.';
+                return;
+            }
+            if (el) el.textContent = 'Checking...';
+            window.electronAPI.checkForUpdates().then(function(r) {
+                if (r && r.status === 'dev') {
+                    if (el) el.textContent = r.message;
+                }
+            });
+        }
     </script>
 </body>
 </html>

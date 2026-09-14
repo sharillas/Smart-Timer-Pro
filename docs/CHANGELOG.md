@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.1] - 2026-09-14
+
+### New Features
+- **Update from the GUI**: Settings > Updates shows the current version, a "CHECK FOR UPDATES" button and live status (checking, downloading, ready, up-to-date). The automatic check at launch remains active.
+
 ## [1.7.0] - 2026-09-14
 
 ### New Features

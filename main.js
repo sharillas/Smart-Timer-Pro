@@ -231,6 +231,31 @@ ipcMain.handle('get-presenter-status', () => {
     return presenterWindow !== null;
 });
 
+ipcMain.handle('get-app-info', () => {
+    return {
+        version: app.getVersion(),
+        packaged: app.isPackaged
+    };
+});
+
+ipcMain.handle('check-for-updates', async () => {
+    if (!app.isPackaged) {
+        return { status: 'dev', message: 'Auto-update only works in the installed app.' };
+    }
+    try {
+        const result = await autoUpdater.checkForUpdates();
+        return result ? { status: result.updateInfo.version ? 'checking' : 'checking' } : { status: 'checking' };
+    } catch (e) {
+        return { status: 'error', message: e && e.message ? e.message : String(e) };
+    }
+});
+
+function broadcastUpdateStatus(data) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-status', data);
+    }
+}
+
 // --- APP LIFECYCLE ---
 app.whenReady().then(() => {
     startServer();
@@ -243,20 +268,34 @@ app.whenReady().then(() => {
         }
     });
 
-    // Check for updates a few seconds after launch
+    // Check for updates a few seconds after launch (only in the packaged app)
     setTimeout(() => {
-        if (!process.env.PORTABLE_EXECUTABLE_DIR) {
+        if (app.isPackaged) {
             autoUpdater.autoDownload = true;
             autoUpdater.checkForUpdates().catch(() => {});
         }
     }, 8000);
 });
 
-autoUpdater.on('update-available', () => {
+autoUpdater.on('checking-for-update', () => {
+    broadcastUpdateStatus({ status: 'checking', message: 'Checking for updates...' });
+});
+
+autoUpdater.on('update-available', (info) => {
     console.log('Update available, downloading...');
+    broadcastUpdateStatus({ status: 'downloading', message: 'Update ' + info.version + ' found — downloading...' });
+});
+
+autoUpdater.on('update-not-available', () => {
+    broadcastUpdateStatus({ status: 'uptodate', message: 'You are running the latest version.' });
+});
+
+autoUpdater.on('error', (e) => {
+    broadcastUpdateStatus({ status: 'error', message: 'Update check failed: ' + (e && e.message ? e.message : e) });
 });
 
 autoUpdater.on('update-downloaded', (info) => {
+    broadcastUpdateStatus({ status: 'ready', message: 'Version ' + info.version + ' ready — restart to install.' });
     dialog.showMessageBox({
         type: 'info',
         title: 'Smart Timer Pro — Update Ready',
