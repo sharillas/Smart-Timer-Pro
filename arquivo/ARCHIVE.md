@@ -27,6 +27,10 @@ para uma aplicação desktop Windows instalável (`.exe`), construída com **Ele
 | Frontend | HTML/CSS/JS vanilla |
 | Instalador | electron-builder (NSIS) |
 | Integração | Bitfocus Companion / Stream Deck |
+| Updates | electron-updater (GitHub Releases) |
+| CI/CD | GitHub Actions |
+| Testes | node:test (15 testes) |
+| Extras | node-forge (cert HTTPS auto-assinado) |
 
 ---
 
@@ -44,43 +48,81 @@ para uma aplicação desktop Windows instalável (`.exe`), construída com **Ele
 - Settings: fonte, cores, thresholds, HH/SS toggles
 - Stop at Zero (pausa automática no 00:00 no countdown)
 - Endpoint `/api/companion` para Stream Deck
-- PWA-ready (interface responsive)
 - Branding smartchoice
 
 ### v1.1.0 — Versionamento + Módulo Companion
-- Script de auto-incremento de versão (`npm run build` → bump + build)
+- Script de auto-incremento de versão
 - Módulo Bitfocus Companion com branding e presets
 
 ### v1.2.0 — Correções e Presets
 - **Logo Fit Mode**: Fit (contain) / Fill (cover) / Stretch (fill)
 - **Correção de bug**: os modos de exibição já não resetam/perdem o tempo do timer
-  (countdown e count-up passaram a ter valores independentes — `timeLeft` e `countupTime`)
-- **Custom Quick Presets**: adicionar presets em HH:MM:SS (ex: 00:33:15 → "33m15s")
+- **Custom Quick Presets**: adicionar presets em HH:MM:SS
 
 ### Renomeação — "Smart Timer Pro"
 - Nome do software alterado de "SmartCountdownTimer Pro" para "Smart Timer Pro"
 - Repositório renomeado: `SmartCountdownTimer-Pro` → `Smart-Timer-Pro`
-- Footer com copyright dinâmico (versão lida do `package.json`)
-- Botão START → "GO"; divs renomeadas ("Custom Quick Presets", "Controls")
 
 ### v1.3.0 — Status Indicators
-- **Loading Bar**: barra de progresso com posição (X/Y) e tamanho independentes
-- **Semáforo**: indicador de 3 lâmpadas (verde/âmbar/vermelho) com glow
-- Botão de indicador ON/OFF nos Controls
-- Posição (X/Y) e tamanho do timer ajustáveis
+- **Loading Bar** e **Semáforo** com posição (X/Y) e tamanho independentes
+- Posição e tamanho do timer ajustáveis
 - Botões Loading Bar ON/OFF e Semáforo ON/OFF no módulo Companion
 
 ### v1.4.0 — Personalização Avançada
-- **Quick presets default editáveis** (HH:MM:SS)
-- **Botões independentes** Loading Bar / Semáforo (mutuamente exclusivos)
-- **Dropdown de fontes** (Courier New, Arial, Orbitron, etc. + Custom)
-- **Janela transparente** borderless/always-on-top (overlay sobre PowerPoint)
-- **Tema cinza/azul** com títulos em branco (+2px)
-- **Ícone moderno "STM"** (cinza/azul)
-- **Cor de fundo** (color picker) + modo transparente unificado (bgMode)
-- **Test pattern** por defeito no modo "Show Logo/Grid"
-- Botão "Idle / Logo" → "Show Logo/Grid"
-- Screenshots atualizadas no README
+- Quick presets default editáveis (HH:MM:SS)
+- Botões independentes Loading Bar / Semáforo (mutuamente exclusivos)
+- Dropdown de fontes + Custom
+- Janela transparente borderless/always-on-top (overlay sobre PowerPoint)
+- Tema cinza/azul, ícone "STM", cor de fundo + bgMode, test pattern
+
+### v1.4.1 — Correções
+- **Bug crítico**: o logo perdia-se ao reiniciar (persistido mas não carregado para o estado)
+- **Servidor passou a escutar em `0.0.0.0`** (acesso LAN para Companion/dispositivos)
+- Single-instance lock + diálogo amigável de porta ocupada
+- Docs corrigidos (caminhos e variáveis do módulo)
+
+### v1.4.2 — Usabilidade
+- Atalhos de teclado (Espaço, R, M)
+- System tray com controlos rápidos (fechar minimiza para o tray)
+- UI responsiva mobile/tablet
+- Proteção CSRF (Origem estrangeira bloqueada na API)
+- Renderização in-place do presenter (sem rebuild a cada segundo)
+- `bump-version.js` com suporte a patch/minor/major
+
+### v1.5.0 — Produção
+- **Agenda/Rundown**: sessões com duração, auto-avanço, nome da sessão no ecrã externo
+- **Perfis de evento** (export/import JSON: settings, mensagens, presets, agenda, logo)
+- **Áudio de perigo** (3º slot, com fallback para warning)
+- **Auto-update** via GitHub Releases
+- **Guia OBS** (`docs/OBS.md`)
+- **Hotkeys configuráveis** em Settings
+- **Timer sem deriva** (baseado em `Date.now()`)
+- **Auto-recuperação** da janela do ecrã externo
+- **Banner de reconexão** nas janelas
+
+### v1.6.0 — Segurança + Qualidade
+- **PIN opcional** (Settings > Security): comandos exigem PIN, leitura aberta;
+  PIN nunca sai do servidor (broadcasts, API, exports); Companion v1.6.0 com campo PIN
+- **Testes automáticos** (`npm test`, 12 testes iniciais)
+
+### v1.7.0 — Integração + Automação
+- **Registo de sessões** com export CSV
+- **Agenda no Companion** (ações Start/Next/Stop, preset de display, variáveis)
+- **Modo Prestart** ("STARTS IN")
+- **Anel de progresso** no ecrã
+- **Saída OSC** para mesas de luz (`/stp/start|pause|warning|danger|end|reset`)
+- **Webhooks** (POST JSON em cada evento)
+- **Página remota** `/remote.html` (telemóvel/tablet)
+- **Idiomas EN/PT**
+- **Undo** (Ctrl+Z)
+- **Timeline visual** da agenda
+- **HTTPS opcional** (certificado auto-assinado gerado automaticamente)
+- **CI/CD**: GitHub Actions corre testes em cada push e faz releases automáticos em tags
+- Companion v1.7.0
+
+### v1.7.1 — Update na GUI
+- Settings > Updates: versão atual, botão **CHECK FOR UPDATES** e estado em direto
+- Verificação automática ao arranque mantida (update in-place pelo NSIS, sem tocar em dados)
 
 ---
 
@@ -94,51 +136,56 @@ para uma aplicação desktop Windows instalável (`.exe`), construída com **Ele
 │  │ Window        │              │ (external display)   │ │
 │  └──────┬───────┘              └──────────┬───────────┘ │
 │         └──────────┬──────────────────────┘              │
-│           http://127.0.0.1:3000                         │
+│           http(s)://127.0.0.1:3000                      │
 │  ┌─────────────────▼──────────────────────────────────┐ │
 │  │              Express + Socket.IO Server             │ │
 │  │  REST API + Socket.IO events + Static files         │ │
+│  │  (PIN, CSRF, OSC, Webhooks, Session Log)            │ │
 │  └────────────────────────────────────────────────────┘ │
+│  Tray (quick controls) · AutoUpdater (GitHub Releases) │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### Ficheiros principais
 | Ficheiro | Descrição |
 |---|---|
-| `main.js` | Electron main (gestão de janelas, IPC) |
+| `main.js` | Electron main (janelas, tray, auto-update, IPC) |
 | `preload.js` | Bridge IPC |
-| `server.js` | Backend Express + Socket.IO |
-| `public/index.html` | Painel Moderador |
-| `public/presenter.html` | Ecrã do apresentador (fullscreen/transparente) |
+| `server.js` | Backend Express + Socket.IO + PIN/CSRF/OSC/webhooks/log |
+| `public/index.html` | Painel Moderador (i18n EN/PT) |
+| `public/presenter.html` | Ecrã do apresentador (anel, agenda, prestart) |
+| `public/remote.html` | Página de controlo remoto mobile |
 | `companion/smart-timer-pro/` | Módulo Bitfocus Companion |
-| `docs/` | Documentação (API, DEVELOPMENT, COMPANION, CHANGELOG) |
+| `tests/` | Testes automáticos (server + frontend) |
+| `.github/workflows/ci.yml` | CI/CD |
+| `docs/` | Documentação (API, DEVELOPMENT, COMPANION, OBS, OPERATOR_GUIDE, CHANGELOG) |
+| `arquivo/` | Este arquivo de projeto |
 
 ---
 
 ## 4. Registo de Decisões e Discussões
 
-1. **Electron vs outras tecnologias** — o utilizador questionou a "estabilidade" do Electron.
-   Decisão: manter Electron (é o que corre VS Code, Slack, Discord, etc.). Estabilidade depende do código, não da framework.
-
-2. **OBS Overlay** — foi implementado inicialmente e depois removido a pedido do utilizador.
-
-3. **Start at Zero vs Stop at Zero** — o utilizador clarificou que pretendia "parar no zero" (countdown não ir negativo), não "começar no zero".
-
-4. **Show Hours / Show Seconds** — ambos com toggle independente; HH:MM:SS por defeito.
-
-5. **Loading Bar vs Semáforo** — foi criado um mockup HTML interativo para o utilizador escolher. Decisão: ter AMBOS, com seleção por botão.
-
-6. **Botões de indicador** — inicialmente um botão cíclico (OFF→Bar→Semáforo→Both). Depois alterado para DOIS botões independentes mutuamente exclusivos (Bar XOR Semáforo).
-
-7. **Janela sem second display** — devia ser borderless (sem barra de título) e, em modo transparente, mostrar só o timer sobreposto a outras apps.
-
-8. **Fundo transparente** — o bug foi no elemento `html` (raiz da página) que mantinha o fundo preto. A solução foi definir `background: transparent` em `html`, `body` e `.stage`. Além disso, `transparent: true` é opção de criação da janela (requer fechar e reabrir a janela).
-
-9. **Cor de fundo** — pedido de um color picker para o fundo, unificado com o modo transparente num único setting `bgMode` (color/transparent).
-
-10. **Ícone STM** — o ícone "atómico" (default do Electron) aparecia. Solução: gerar um ICO válido (PNG-based 256x256) e apontar `win.icon` para ele.
-
-11. **Token GitHub revogado** — o primeiro token foi revogado (provavelmente pelo secret scanning do GitHub). Foi gerado um novo token.
+1. **Electron vs outras tecnologias** — manter Electron (é o que corre VS Code, Slack, Discord, etc.).
+2. **OBS Overlay** — implementado, depois removido; mais tarde readicionado como guia de browser source (`docs/OBS.md`).
+3. **Start at Zero vs Stop at Zero** — parar no zero (countdown não ir negativo).
+4. **Show Hours / Show Seconds** — toggles independentes.
+5. **Loading Bar vs Semáforo** — ambos, com DOIS botões mutuamente exclusivos.
+6. **Janela sem second display** — borderless; em modo transparente, só o timer sobreposto.
+7. **Fundo transparente** — bug no elemento `html`; corrigido com `background: transparent` + `transparent: true` na janela.
+8. **Ícone STM** — gerar ICO válido e apontar `win.icon`.
+9. **Token GitHub revogado** — secret scanning; usar PAT guardado no credential manager.
+10. **Companion 5 quebra o módulo** — módulos empacotados correm em processo isolado;
+    o `main.js` tem de ser empacotado com webpack e usar `runEntrypoint` (caminho antigo, apiVersion < 2.0).
+11. **Borders nos presets** — o Companion 5 só respeita borders no formato de presets **layered**; feedbacks não conseguem alterar borders (usam bgcolor).
+12. **Display name do módulo** — o Companion mostra `manufacturer: product`; alterado para "Nelson Teixeira: Smart Timer Pro".
+13. **Legacy ids** — `legacyIds: ["smartcountdowntimer-pro"]` para migrar ligações antigas.
+14. **PIN opcional** — default vazio (tudo funciona como antes); com PIN, comandos exigem `?pin=`;
+    leitura aberta; GUI pede PIN em 401; Companion tem campo PIN; PIN nunca é transmitido para clientes.
+15. **HTTPS** — opcional, certificado auto-assinado gerado com node-forge (Electron ignora erros de cert quando ativo).
+16. **Timer sem deriva** — tick baseado em `Date.now()` com `endTime`/`startTime`, não em `setInterval` cego.
+17. **Lan 0.0.0.0 vs localhost** — servidor escuta em todas as interfaces para permitir controlo remoto; CSRF protege contra sites maliciosos.
+18. **CI/CD** — testes em cada push; releases automáticos em tags (o glob de testes falhou no Node 20 do runner; usar lista explícita de ficheiros).
+19. **Update in-place** — electron-updater corre o instalador NSIS em silêncio; substitui ficheiros sem desinstalar; dados ficam em `%APPDATA%`.
 
 ---
 
@@ -154,51 +201,63 @@ npm start
 # Correr só o servidor (browser: http://127.0.0.1:3000)
 node server.js
 
-# Build (bump de versão + compilar)
-npm run build
+# Testes automáticos (15)
+npm test
 
-# Compilar sem bump (manter versão)
-npx electron-builder build --win --x64
-
-# Bump manual de versão
+# Bump de versão (patch / minor / major)
+npm run bump:patch
+npm run bump:minor
 npm run bump
+
+# Build do instalador (sem bump)
+npx electron-builder --publish never
+
+# Build do módulo Companion (bundle webpack + tgz)
+cd companion/smart-timer-pro
+node scripts/package.js
+
+# Screenshots do README
+node scripts/capture-screenshots.js
 ```
 
-Output: `dist/Smart Timer Pro Setup X.Y.0.exe`
+Output: `dist/Smart Timer Pro Setup X.Y.Z.exe`
 
 ---
 
 ## 6. Como fazer um Release no GitHub
 
-1. `npm run build` (bump automático de versão + compilar)
-2. Recompilar o módulo Companion:
-   ```powershell
-   cd companion/smart-timer-pro
-   npx webpack -c node_modules/@companion-module/tools/webpack.config.cjs --env ROOT=%cd%
-   node scripts/package.js
-   ```
-3. Criar release e fazer upload do `.exe` e do `.tgz`
+1. `npm run bump:minor` (ou patch/major)
+2. Atualizar `docs/CHANGELOG.md`, README e footer do `index.html`
+3. `npm test`
+4. Commit + push: `git push origin master`
+5. Tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
+6. O GitHub Actions faz o resto: testes + build do instalador + build do módulo
+   Companion + criação do release com `.exe`, `.blockmap`, `latest.yml` e `.tgz`
+   (alternativa manual: `npx electron-builder --publish never` + upload via API)
 
 ---
 
 ## 7. Dados do Utilizador
 
-Os dados (settings, mensagens, logos, áudio) são guardados em:
-- Electron: `%APPDATA%/smart-timer-pro/`
-- Servidor standalone: pasta do projeto
+Os dados são guardados em `%APPDATA%/smart-timer-pro/` (Electron) ou na pasta do
+projeto (servidor standalone, ou `STP_DATA_DIR` em testes).
 
-Ficheiros: `settings.json`, `messages.json`, `logo.json`, `audio_end.json`, `audio_warning.json`
+Ficheiros: `settings.json`, `messages.json`, `logo.json`, `audio_end.json`,
+`audio_warning.json`, `audio_danger.json`, `session_log.json`,
+`https-cert.pem` + `https-key.pem` (se HTTPS ativo).
 
 ---
 
-## 8. Estado Atual (v1.4.0)
+## 8. Estado Atual (v1.7.1)
 
 - Produto: **Smart Timer Pro**
 - Repositório: https://github.com/sharillas/Smart-Timer-Pro
-- Release mais recente: v1.4.0 (`.exe` + `.tgz` do Companion)
-- Módulo Companion: `companion-module-smart-timer-pro-1.4.0.tgz`
+- Release mais recente: **v1.7.1** (`.exe` + `.blockmap` + `latest.yml` + `.tgz`)
+- Módulo Companion: `companion-module-smart-timer-pro-1.7.0.tgz`
+- Testes: 15 a passar · CI/CD ativo · Auto-update ativo
 
 ---
 
 *Documento gerado a partir da conversa completa de desenvolvimento. Para detalhes técnicos
-(API, endpoints, Socket.IO), ver `docs/API.md`, `docs/DEVELOPMENT.md` e `docs/COMPANION.md`.*
+(API, endpoints, Socket.IO), ver `docs/API.md`, `docs/DEVELOPMENT.md`, `docs/COMPANION.md`,
+`docs/OBS.md` e `docs/OPERATOR_GUIDE.md`.*

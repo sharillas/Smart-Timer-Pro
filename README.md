@@ -15,16 +15,46 @@ A full-featured countdown/count-up timer for live events, conferences, and stage
 ## Screenshots
 
 ### GUI - Controller
+Main control panel: transport (GO/PAUSE/RESET), presets, agenda, messaging and live monitor preview.
+
 ![GUI Controller](assets/screenshot_GUI_1.png)
 
-### Live Monitor & Message Warning
-![Live Monitor](assets/screenshot_GUI_2.png)
+### GUI - Agenda Live
+Agenda/rundown running: session timeline, "now playing" card, live message badge and Semáforo on.
 
-### External Window (with Semáforo)
-![External Window](assets/screenshot_External_Monitor_Smaforo.png)
+![GUI Agenda Live](assets/screenshot_GUI_2.png)
+
+### Settings
+Full settings modal: fonts, colors, thresholds, audio slots, PIN, shortcuts, profiles, language, webhook/OSC, HTTPS and updates.
+
+![Settings](assets/screenshot_settings.png)
+
+### Presenter - Countdown with Progress Ring
+External display in countdown mode with the progress ring around the timer.
+
+![Presenter Countdown](assets/screenshot_presenter.png)
+
+### Presenter - Warning + Semáforo + Message
+Warning color, live message and the Semáforo indicator on the external display.
+
+![Presenter Semáforo](assets/screenshot_External_Monitor_Smaforo.png)
+
+### Presenter - Prestart
+Pre-event screen with the "STARTS IN" caption.
+
+![Presenter Prestart](assets/screenshot_prestart.png)
+
+### Remote Control (phone/tablet)
+Lightweight remote page at `/remote.html` with GO/PAUSE, RESET, +1m/-1m and message toggle.
+
+![Remote Control](assets/screenshot_remote.png)
 
 ### Companion Module - Preset Buttons
+Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda controls).
+
 ![Companion Module](assets/screenshot_Companion_Module.png)
+
+> Screenshots can be regenerated with `node scripts/capture-screenshots.js` (starts a temporary server with demo data and captures all pages).
 
 ## Features
 
