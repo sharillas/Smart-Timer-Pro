@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, screen, dialog, Tray, Menu, nativeImage } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
 let mainWindow = null;
@@ -6,6 +7,7 @@ let presenterWindow = null;
 let serverInstance = null;
 let tray = null;
 let isQuitting = false;
+let presenterEnabled = false;
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -109,6 +111,7 @@ function createPresenterWindow() {
         presenterWindow.close();
         presenterWindow = null;
     }
+    presenterEnabled = true;
 
     const hasExternalMonitor = displays.length > 1;
     const targetDisplay = hasExternalMonitor ? displays[1] : displays[0];
@@ -166,13 +169,34 @@ function createPresenterWindow() {
         presenterWindow.show();
     });
 
+    // Auto-recovery: if the presenter window crashes or is lost (e.g. display
+    // unplugged), reopen it automatically unless it was closed on purpose.
     presenterWindow.on('closed', () => {
         presenterWindow = null;
+        if (presenterEnabled && !isQuitting && mainWindow) {
+            setTimeout(() => {
+                if (presenterEnabled && !isQuitting && !presenterWindow && mainWindow) {
+                    createPresenterWindow();
+                }
+            }, 2000);
+        }
+    });
+
+    presenterWindow.webContents.on('render-process-gone', () => {
+        presenterWindow = null;
+        if (presenterEnabled && !isQuitting && mainWindow) {
+            setTimeout(() => {
+                if (presenterEnabled && !isQuitting && !presenterWindow && mainWindow) {
+                    createPresenterWindow();
+                }
+            }, 2000);
+        }
     });
 }
 
 function togglePresenterWindow() {
     if (presenterWindow) {
+        presenterEnabled = false;
         presenterWindow.close();
         presenterWindow = null;
     } else {
@@ -201,6 +225,34 @@ app.whenReady().then(() => {
             createMainWindow();
         }
     });
+
+    // Check for updates a few seconds after launch
+    setTimeout(() => {
+        if (!process.env.PORTABLE_EXECUTABLE_DIR) {
+            autoUpdater.autoDownload = true;
+            autoUpdater.checkForUpdates().catch(() => {});
+        }
+    }, 8000);
+});
+
+autoUpdater.on('update-available', () => {
+    console.log('Update available, downloading...');
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    dialog.showMessageBox({
+        type: 'info',
+        title: 'Smart Timer Pro — Update Ready',
+        message: `Version ${info.version} is ready to install.`,
+        detail: 'The update has been downloaded. Restart now to install it?',
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0
+    }).then((r) => {
+        if (r.response === 0) {
+            isQuitting = true;
+            autoUpdater.quitAndInstall();
+        }
+    });
 });
 
 // Keep the app (and timer) alive when all windows are hidden/closed
@@ -210,6 +262,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
     isQuitting = true;
+    presenterEnabled = false;
     if (presenterWindow) {
         presenterWindow.close();
     }

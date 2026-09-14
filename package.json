@@ -1,6 +1,6 @@
 {
   "name": "smart-timer-pro",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
   "main": "main.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "build": "node scripts/bump-version.js && electron-builder"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
   },
@@ -24,6 +25,13 @@
   "build": {
     "appId": "com.smartchoice.smarttimerpro",
     "productName": "Smart Timer Pro",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "sharillas",
+        "repo": "Smart-Timer-Pro"
+      }
+    ],
     "directories": {
       "output": "dist"
     },

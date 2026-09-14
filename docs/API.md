@@ -6,7 +6,11 @@
 http://127.0.0.1:3000
 ```
 
-All endpoints return plain text or JSON. No authentication required (localhost only).
+All endpoints return plain text or JSON. No authentication required.
+
+> **Security note**: requests with a foreign `Origin` header (browser cross-site
+> requests) are rejected with `403`. API clients (Companion, curl, OBS) don't
+> send an Origin header and work normally.
 
 ---
 
@@ -139,7 +143,7 @@ Upload audio file as base64.
 }
 ```
 
-Valid types: `end`, `warning`
+Valid types: `end`, `warning`, `danger`
 
 ### `GET /api/audio/clear?type=end`
 
@@ -147,7 +151,34 @@ Clear uploaded audio.
 
 ### `GET /api/audio`
 
-Returns `{ audioEnd: "...", audioWarning: "..." }`
+Returns `{ audioEnd: "...", audioWarning: "...", audioDanger: "..." }`
+
+---
+
+## Agenda / Rundown
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/agenda` | Get agenda items and current session state |
+| `POST /api/agenda/add` | Add session `{ "name": "...", "seconds": 300 }` |
+| `GET /api/agenda/remove?index=N` | Remove session N |
+| `POST /api/agenda/edit` | Edit session `{ "index": N, "name": "...", "seconds": 300 }` |
+| `GET /api/agenda/start?index=N` | Start the rundown (optionally at session N) and switch the display to Agenda mode |
+| `GET /api/agenda/next` | Skip to the next session |
+| `GET /api/agenda/stop` | Stop the rundown |
+| `GET /api/agenda/setAutoNext?value=true` | Enable/disable auto-advance |
+
+---
+
+## Event Profiles
+
+### `GET /api/profile/export`
+
+Downloads a JSON file with `settings`, `quickMessages` and `logoData`.
+
+### `POST /api/profile/import`
+
+Imports a previously exported profile (JSON body).
 
 ---
 

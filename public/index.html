@@ -290,6 +290,25 @@
             letter-spacing: 0.3px;
         }
 
+        .conn-banner {
+            position: fixed;
+            top: 12px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.95);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 9999;
+            display: none;
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+        }
+        .conn-banner.visible { display: block; }
+        .hotkey-input { cursor: pointer; }
+        .setting-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
+
         /* --- MOBILE / TABLET --- */
         @media (max-width: 720px) {
             body { padding: 12px; }
@@ -306,6 +325,8 @@
     </style>
 </head>
 <body>
+
+    <div class="conn-banner" id="conn-banner">CONNECTION LOST — RECONNECTING...</div>
 
     <!-- SETTINGS MODAL -->
     <div class="modal-overlay" id="settings-modal">
@@ -510,6 +531,52 @@
                 </div>
             </div>
 
+            <div class="setting-group">
+                <h3>Audio - Danger Sound</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Enabled</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-audio-danger" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="audio-upload-row" style="margin-top:8px">
+                    <input type="file" id="audio-danger-input" accept="audio/*" class="hidden" onchange="uploadAudio('danger', this)">
+                    <button class="btn-small" onclick="document.getElementById('audio-danger-input').click()">UPLOAD</button>
+                    <span class="audio-file-name" id="audio-danger-name"></span>
+                    <span class="audio-status none" id="audio-danger-status">None</span>
+                    <button class="btn-small danger" onclick="clearAudio('danger')">CLEAR</button>
+                </div>
+                <p class="setting-hint">Played when the timer enters the danger zone. Falls back to the warning sound if not set.</p>
+            </div>
+
+            <div class="setting-group">
+                <h3>Keyboard Shortcuts</h3>
+                <div class="setting-row">
+                    <span class="setting-label">GO / Pause</span>
+                    <input type="text" id="hotkey-toggle" class="setting-input hotkey-input" readonly placeholder="Click and press a key">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Reset</span>
+                    <input type="text" id="hotkey-reset" class="setting-input hotkey-input" readonly placeholder="Click and press a key">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Message Toggle</span>
+                    <input type="text" id="hotkey-message" class="setting-input hotkey-input" readonly placeholder="Click and press a key">
+                </div>
+                <p class="setting-hint">Click a field and press the key you want. Press Esc to clear.</p>
+            </div>
+
+            <div class="setting-group">
+                <h3>Event Profiles</h3>
+                <div class="setting-row">
+                    <button class="btn-set" style="flex:1" onclick="exportProfile()">EXPORT PROFILE</button>
+                    <button class="btn-set" style="flex:1" onclick="document.getElementById('profile-input').click()">IMPORT PROFILE</button>
+                    <input type="file" id="profile-input" accept="application/json,.json" class="hidden" onchange="importProfile(this)">
+                </div>
+                <p class="setting-hint">Export saves settings, messages, presets, agenda and logo to a JSON file. Import restores them.</p>
+            </div>
+
             <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()">DONE</button>
         </div>
     </div>
@@ -553,6 +620,7 @@
                         <button onclick="setMode('countup')" class="btn-preset" id="mode-countup">Count-Up</button>
                         <button onclick="setMode('timeofday')" class="btn-preset" id="mode-timeofday">Time of Day</button>
                         <button onclick="setMode('logo')" class="btn-preset" id="mode-logo">Show Logo/Grid</button>
+                        <button onclick="setMode('agenda')" class="btn-preset" id="mode-agenda">Agenda</button>
                     </div>
                 </div>
 
@@ -618,6 +686,28 @@
                     </div>
                 </div>
 
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">Agenda / Rundown <span id="agenda-count" style="font-weight:400;color:var(--text-dim)"></span></div>
+                    <div id="agenda-current" class="hidden" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:10px;padding:10px 14px;margin-bottom:12px">
+                        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">NOW PLAYING</div>
+                        <div style="font-weight:700" id="agenda-current-name"></div>
+                    </div>
+                    <div id="agenda-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <input type="text" id="agenda-name" placeholder="Session name..." class="custom-input">
+                        <input type="text" id="agenda-time" placeholder="MM:SS" class="custom-input" style="font-family:monospace;max-width:90px">
+                        <button onclick="addAgendaItem()" class="btn-set">ADD</button>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:12px;cursor:pointer">
+                        <input type="checkbox" id="agenda-autonext" checked onchange="setAgendaAutoNext(this.checked)"> Auto-advance to next session
+                    </label>
+                    <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr">
+                        <button onclick="agendaStart()" class="btn btn-start btn-sm" style="height:44px">▶ START</button>
+                        <button onclick="agendaNext()" class="btn btn-add btn-sm" style="height:44px">NEXT ⏭</button>
+                        <button onclick="agendaStop()" class="btn btn-reset btn-sm" style="height:44px">STOP</button>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">Messaging Control</div>
                     <input type="text" id="msg-input" placeholder="Type custom message..." class="msg-input" oninput="updateMessage()">
@@ -633,26 +723,13 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.4.2 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.5.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span>Atalhos: Espaço = GO/PAUSE · R = RESET · M = Mensagem</span>
     </footer>
 
     <script>
         const socket = io();
         let audioEnabled = false;
-
-        // --- KEYBOARD SHORTCUTS ---
-        document.addEventListener('keydown', function(e) {
-            if (e.target !== document.body && e.target !== document.documentElement) return;
-            if (e.code === 'Space') {
-                e.preventDefault();
-                api('toggle_playback');
-            } else if (e.key === 'r' || e.key === 'R') {
-                api('reset');
-            } else if (e.key === 'm' || e.key === 'M') {
-                api('message/toggle');
-            }
-        });
 
         // --- ELECTRON ---
         function togglePresenter() {
@@ -784,6 +861,8 @@
             document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
+            document.getElementById('set-audio-danger').checked = s.audioDangerEnabled !== false;
+            populateHotkeyFields(s.hotkeys);
             document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
             document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
             document.getElementById('set-timer-y').value = s.timerY !== undefined ? s.timerY : 46;
@@ -823,6 +902,7 @@
                 stopAtZero: document.getElementById('set-start-zero').checked,
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
                 audioWarningEnabled: document.getElementById('set-audio-warning').checked,
+                audioDangerEnabled: document.getElementById('set-audio-danger').checked,
                 logoFit: document.getElementById('set-logo-fit').value,
                 timerX: parseInt(document.getElementById('set-timer-x').value) || 50,
                 timerY: parseInt(document.getElementById('set-timer-y').value) || 46,
@@ -1139,10 +1219,22 @@
             }
 
             // Mode buttons
-            ['countdown','countup','timeofday','logo'].forEach(function(m) {
+            ['countdown','countup','timeofday','logo','agenda'].forEach(function(m) {
                 var btn = document.getElementById('mode-' + m);
                 if (btn) btn.classList.toggle('active', s.mode === m);
             });
+
+            // Agenda current session
+            var agCurrent = document.getElementById('agenda-current');
+            var agName = document.getElementById('agenda-current-name');
+            if (agCurrent && agName) {
+                if (s.agendaActive) {
+                    agCurrent.classList.remove('hidden');
+                    agName.textContent = s.agendaName + ' — ' + formatTimeDisplay(cfg, s.agendaTimeLeft);
+                } else {
+                    agCurrent.classList.add('hidden');
+                }
+            }
 
             // Monitor time
             var mt = document.getElementById('monitor-time');
@@ -1284,27 +1376,239 @@
             renderCustomPresets(s.customPresets);
             renderDefaultPresets(s.defaultPresets);
             updateIndicatorButtons(s.statusIndicator);
+            renderAgenda(s.agenda, s.agendaAutoNext);
+            populateHotkeyFields(s.hotkeys);
         });
 
         socket.on('audioUpdate', function(data) {
-            if (data.audioEnd) {
-                document.getElementById('audio-end-name').textContent = 'Uploaded';
-                document.getElementById('audio-end-status').textContent = 'SET';
-                document.getElementById('audio-end-status').className = 'audio-status set';
-            } else {
-                document.getElementById('audio-end-name').textContent = '';
-                document.getElementById('audio-end-status').textContent = 'None';
-                document.getElementById('audio-end-status').className = 'audio-status none';
+            var types = [
+                { key: 'audioEnd', type: 'end' },
+                { key: 'audioWarning', type: 'warning' },
+                { key: 'audioDanger', type: 'danger' }
+            ];
+            types.forEach(function(t) {
+                if (data[t.key]) {
+                    document.getElementById('audio-' + t.type + '-name').textContent = 'Uploaded';
+                    document.getElementById('audio-' + t.type + '-status').textContent = 'SET';
+                    document.getElementById('audio-' + t.type + '-status').className = 'audio-status set';
+                } else {
+                    document.getElementById('audio-' + t.type + '-name').textContent = '';
+                    document.getElementById('audio-' + t.type + '-status').textContent = 'None';
+                    document.getElementById('audio-' + t.type + '-status').className = 'audio-status none';
+                }
+            });
+        });
+
+        // --- AGENDA ---
+        function renderAgenda(items, autoNext) {
+            var list = document.getElementById('agenda-list');
+            if (!list) return;
+            var count = document.getElementById('agenda-count');
+            if (count) count.textContent = '(' + (items ? items.length : 0) + ')';
+            list.innerHTML = '';
+            (items || []).forEach(function(item, index) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(30,41,59,0.6);border:1px solid var(--border);border-radius:8px;padding:8px 10px';
+
+                var nameEl = document.createElement('span');
+                nameEl.style.cssText = 'flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+                nameEl.textContent = (index + 1) + '. ' + item.name;
+                row.appendChild(nameEl);
+
+                var timeEl = document.createElement('span');
+                timeEl.style.cssText = 'font-family:monospace;font-size:12px;color:var(--text-dim)';
+                timeEl.textContent = secondsToHMS(item.seconds);
+                row.appendChild(timeEl);
+
+                var playBtn = document.createElement('button');
+                playBtn.innerHTML = '▶';
+                playBtn.title = 'Start agenda at this session';
+                playBtn.style.cssText = 'background:rgba(16,185,129,0.15);border:none;color:var(--green);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px';
+                playBtn.onclick = function() { agendaStart(index); };
+                row.appendChild(playBtn);
+
+                var delBtn = document.createElement('button');
+                delBtn.innerHTML = '✕';
+                delBtn.title = 'Remove';
+                delBtn.style.cssText = 'background:none;border:none;color:#ef4444;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px';
+                delBtn.onclick = function() { api('agenda/remove', '?index=' + index); };
+                row.appendChild(delBtn);
+
+                list.appendChild(row);
+            });
+            var auto = document.getElementById('agenda-autonext');
+            if (auto) auto.checked = autoNext !== false;
+        }
+
+        function addAgendaItem() {
+            var name = document.getElementById('agenda-name').value.trim();
+            var raw = document.getElementById('agenda-time').value.trim();
+            if (!name || !raw) return;
+            var sec = hmsToSeconds(raw);
+            if (sec <= 0) return;
+            fetch('/api/agenda/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, seconds: sec })
+            }).then(function() {
+                document.getElementById('agenda-name').value = '';
+                document.getElementById('agenda-time').value = '';
+            });
+        }
+
+        function setAgendaAutoNext(val) {
+            api('agenda/setAutoNext', '?value=' + (val ? 'true' : 'false'));
+        }
+
+        function agendaStart(index) {
+            api('agenda/start', index !== undefined ? '?index=' + index : '');
+        }
+
+        function agendaNext() { api('agenda/next'); }
+        function agendaStop() { api('agenda/stop'); }
+
+        // --- HOTKEYS ---
+        var capturingHotkey = null;
+
+        function friendlyKey(code) {
+            if (code === 'Space') return 'Espaço';
+            if (code === 'ArrowUp') return '↑';
+            if (code === 'ArrowDown') return '↓';
+            if (code === 'ArrowLeft') return '←';
+            if (code === 'ArrowRight') return '→';
+            if (code.indexOf('Key') === 0) return code.substring(3);
+            if (code.indexOf('Digit') === 0) return code.substring(5);
+            return code;
+        }
+
+        function populateHotkeyFields(hotkeys) {
+            var hk = hotkeys || {};
+            if (document.getElementById('hotkey-toggle'))
+                document.getElementById('hotkey-toggle').value = hk.toggle ? friendlyKey(hk.toggle) : '';
+            if (document.getElementById('hotkey-reset'))
+                document.getElementById('hotkey-reset').value = hk.reset ? friendlyKey(hk.reset) : '';
+            if (document.getElementById('hotkey-message'))
+                document.getElementById('hotkey-message').value = hk.message ? friendlyKey(hk.message) : '';
+        }
+
+        function setHotkey(slot) {
+            var input = document.getElementById('hotkey-' + slot);
+            if (!input) return;
+            capturingHotkey = slot;
+            input.value = 'Press a key...';
+            input.style.borderColor = 'var(--accent)';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (capturingHotkey) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.key === 'Escape') {
+                    capturingHotkey = null;
+                    var input = document.getElementById('hotkey-' + capturingHotkey);
+                    populateHotkeyFields(currentSettings.hotkeys);
+                    var el2 = document.getElementById('hotkey-toggle');
+                    if (el2) el2.style.borderColor = '';
+                    var el3 = document.getElementById('hotkey-reset');
+                    if (el3) el3.style.borderColor = '';
+                    var el4 = document.getElementById('hotkey-message');
+                    if (el4) el4.style.borderColor = '';
+                    return;
+                }
+                var code = e.code;
+                var hotkeys = Object.assign({}, currentSettings.hotkeys || { toggle: 'Space', reset: 'KeyR', message: 'KeyM' });
+                hotkeys[capturingHotkey] = code;
+                currentSettings.hotkeys = hotkeys;
+                var inputEl = document.getElementById('hotkey-' + capturingHotkey);
+                if (inputEl) {
+                    inputEl.value = friendlyKey(code);
+                    inputEl.style.borderColor = '';
+                }
+                capturingHotkey = null;
+                fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hotkeys: hotkeys })
+                });
+                return;
             }
-            if (data.audioWarning) {
-                document.getElementById('audio-warning-name').textContent = 'Uploaded';
-                document.getElementById('audio-warning-status').textContent = 'SET';
-                document.getElementById('audio-warning-status').className = 'audio-status set';
-            } else {
-                document.getElementById('audio-warning-name').textContent = '';
-                document.getElementById('audio-warning-status').textContent = 'None';
-                document.getElementById('audio-warning-status').className = 'audio-status none';
+
+            if (e.target !== document.body && e.target !== document.documentElement) return;
+            var hk = (currentSettings && currentSettings.hotkeys) || { toggle: 'Space', reset: 'KeyR', message: 'KeyM' };
+            if (hk.toggle && e.code === hk.toggle) {
+                e.preventDefault();
+                api('toggle_playback');
+            } else if (hk.reset && e.code === hk.reset) {
+                api('reset');
+            } else if (hk.message && e.code === hk.message) {
+                api('message/toggle');
             }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!capturingHotkey) return;
+            var inputs = ['hotkey-toggle', 'hotkey-reset', 'hotkey-message'];
+            var clicked = inputs.some(function(id) {
+                var el = document.getElementById(id);
+                return el && el.contains(e.target);
+            });
+            if (!clicked) {
+                capturingHotkey = null;
+                populateHotkeyFields(currentSettings.hotkeys);
+                inputs.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) el.style.borderColor = '';
+                });
+            }
+        });
+
+        ['toggle', 'reset', 'message'].forEach(function(slot) {
+            var el = document.getElementById('hotkey-' + slot);
+            if (el) el.addEventListener('click', function() { setHotkey(slot); });
+        });
+
+        // --- PROFILES ---
+        function exportProfile() {
+            fetch('/api/profile/export')
+                .then(function(r) { return r.blob(); })
+                .then(function(blob) {
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'smart-timer-pro-profile.json';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                });
+        }
+
+        function importProfile(input) {
+            var file = input.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+                    fetch('/api/profile/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    }).then(function() {
+                        alert('Profile imported. The interface will reload.');
+                        location.reload();
+                    });
+                } catch (err) {
+                    alert('Invalid profile file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- CONNECTION BANNER ---
+        var connBanner = document.getElementById('conn-banner');
+        socket.on('disconnect', function() {
+            if (connBanner) connBanner.classList.add('visible');
+        });
+        socket.on('connect', function() {
+            if (connBanner) connBanner.classList.remove('visible');
         });
     </script>
 </body>

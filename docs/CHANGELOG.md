@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0] - 2026-09-14
+
+### New Features
+- **Agenda / Rundown mode**: Session list with per-session countdown, auto-advance, and session name on the external display
+- **Event Profiles**: Export/import the full event setup (settings, messages, presets, agenda, logo) as a JSON file
+- **Danger audio**: Third audio slot played when entering the danger zone (falls back to the warning sound)
+- **Auto-update**: The app now checks for updates via GitHub releases and offers one-click restart to install
+- **OBS integration guide**: New `docs/OBS.md` with browser source + transparent overlay setup
+- **Configurable hotkeys**: GO/Pause, Reset and Message shortcuts can be reassigned in Settings
+
+### Improvements
+- **Drift-free timer**: Countdown/count-up now run against the wall clock (`Date.now()`), eliminating drift over long events
+- **Presenter auto-recovery**: The external display window reopens automatically if it crashes or the monitor is unplugged
+- **Reconnect banner**: Both windows show a visible "connection lost" banner and recover automatically
+- Presenter window updates in place (no full DOM rebuild every second)
+
 ## [1.4.2] - 2026-09-13
 
 ### New Features

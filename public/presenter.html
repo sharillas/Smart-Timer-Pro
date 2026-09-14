@@ -37,6 +37,31 @@
             transition: opacity 0.3s;
         }
         .message.hidden { opacity: 0; }
+        .session-name {
+            position: absolute;
+            transform: translateX(-50%);
+            color: #fff;
+            font-weight: 700;
+            text-align: center;
+            max-width: 88%;
+            line-height: 1.15;
+            letter-spacing: 0.01em;
+        }
+        .conn-banner {
+            position: fixed;
+            top: 12px; right: 12px;
+            background: rgba(239, 68, 68, 0.92);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 9999;
+            display: none;
+        }
+        .conn-banner.visible { display: block; }
         .logo-display {
             width: 100%; height: 100%;
             object-fit: contain; opacity: 0.85;
@@ -86,6 +111,7 @@
 </head>
 <body>
     <div class="stage" id="stage"></div>
+    <div class="conn-banner" id="conn-banner">CONNECTION LOST — RECONNECTING...</div>
 
     <script>
         var socket = io();
@@ -306,6 +332,23 @@
                     img.id = 'logo-img';
                     img.className = 'logo-display';
                     stage.appendChild(img);
+                } else if (s.mode === 'agenda') {
+                    var sess = document.createElement('div');
+                    sess.className = 'session-name';
+                    sess.id = 'session-name';
+                    sess.style.fontSize = '5vw';
+                    stage.appendChild(sess);
+
+                    var agTimer = document.createElement('div');
+                    agTimer.className = 'timer';
+                    agTimer.id = 'timer';
+                    stage.appendChild(agTimer);
+
+                    var agMsg = document.createElement('div');
+                    agMsg.className = 'message';
+                    agMsg.id = 'msg';
+                    agMsg.style.fontSize = '4vw';
+                    stage.appendChild(agMsg);
                 } else if (s.mode === 'timeofday') {
                     var tod = document.createElement('div');
                     tod.className = 'timer';
@@ -356,7 +399,10 @@
                 applyFont(el, cfg);
                 positionTimer(el, cfg);
 
-                if (s.mode === 'timeofday') {
+                if (s.mode === 'agenda') {
+                    el.textContent = formatTime(s.agendaTimeLeft !== undefined ? s.agendaTimeLeft : 0, cfg);
+                    el.style.color = cfg.colorNormal || '#10b981';
+                } else if (s.mode === 'timeofday') {
                     el.textContent = formatTimeOfDay();
                     el.style.color = cfg.colorNormal || '#10b981';
                 } else if (s.mode === 'countdown') {
@@ -364,6 +410,12 @@
                 } else {
                     renderCountUp(s);
                 }
+            }
+
+            var sess = document.getElementById('session-name');
+            if (sess) {
+                sess.textContent = s.agendaName || '';
+                sess.style.top = (currentSettings.timerY !== undefined ? Math.max(6, currentSettings.timerY - 20) : 26) + '%';
             }
 
             var msg = getMsgEl();
@@ -386,6 +438,7 @@
             var settings = currentSettings || {};
             if (type === 'end' && settings.audioEndEnabled === false) return;
             if (type === 'warning' && settings.audioWarningEnabled === false) return;
+            if (type === 'danger' && settings.audioDangerEnabled === false) return;
             if (!audioElements[type]) return;
 
             var audio = audioElements[type];
@@ -394,30 +447,18 @@
         }
 
         function updateAudioElements(data) {
-            if (data.audioEnd) {
-                if (audioElements['end']) {
-                    audioElements['end'].src = data.audioEnd;
-                } else {
-                    var a = new Audio(data.audioEnd);
-                    audioElements['end'] = a;
+            ['end', 'warning', 'danger'].forEach(function (type) {
+                var key = type === 'end' ? 'audioEnd' : (type === 'warning' ? 'audioWarning' : 'audioDanger');
+                if (data[key]) {
+                    if (audioElements[type]) {
+                        audioElements[type].src = data[key];
+                    } else {
+                        audioElements[type] = new Audio(data[key]);
+                    }
+                } else if (audioElements[type]) {
+                    audioElements[type].src = '';
                 }
-            } else {
-                if (audioElements['end']) {
-                    audioElements['end'].src = '';
-                }
-            }
-            if (data.audioWarning) {
-                if (audioElements['warning']) {
-                    audioElements['warning'].src = data.audioWarning;
-                } else {
-                    var a = new Audio(data.audioWarning);
-                    audioElements['warning'] = a;
-                }
-            } else {
-                if (audioElements['warning']) {
-                    audioElements['warning'].src = '';
-                }
-            }
+            });
         }
 
         socket.on('stateUpdate', function(s) {
@@ -438,7 +479,23 @@
 
         socket.on('audioTrigger', function(data) {
             if (data.type === 'end') playAudio('end');
-            if (data.type === 'warning' || data.type === 'danger') playAudio('warning');
+            if (data.type === 'warning') playAudio('warning');
+            if (data.type === 'danger') {
+                if (audioElements['danger'] && audioElements['danger'].src) {
+                    playAudio('danger');
+                } else {
+                    playAudio('warning');
+                }
+            }
+        });
+
+        // Connection status banner
+        var connBanner = document.getElementById('conn-banner');
+        socket.on('disconnect', function() {
+            if (connBanner) connBanner.classList.add('visible');
+        });
+        socket.on('connect', function() {
+            if (connBanner) connBanner.classList.remove('visible');
         });
 
         // Time-of-day tick
