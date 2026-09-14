@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.0] - 2026-09-14
+
+### New Features
+- **Session log**: Records start/pause/reset, mode changes, agenda sessions and messages; export CSV from Settings
+- **Agenda in Companion**: Start/Next/Stop actions, session + time display preset, and agenda variables (name, time left, total)
+- **Prestart mode**: "STARTS IN" caption with countdown for pre-event screens
+- **Progress ring**: Optional visual ring around the timer showing remaining time (Settings > Prestart & Ring)
+- **OSC output**: Sends /stp/start, /stp/pause, /stp/warning, /stp/danger, /stp/end, /stp/reset to a configurable host/port (lighting consoles etc.)
+- **Webhooks**: POSTs JSON events (start, warning, end, ...) to a configurable URL
+- **Remote control page**: Lightweight mobile-first page at `/remote.html` (button "REMOTE" in the header)
+- **Multi-language**: English/Português toggle (Settings > Language)
+- **Undo**: Ctrl+Z reverts the last reset/add/mode/agenda action
+- **Agenda timeline**: Visual progress bar of sessions in the Agenda card
+- **HTTPS (optional)**: Self-signed certificate generated automatically; requires app restart
+- **CI/CD**: GitHub Actions runs the test suite on every push and builds + publishes releases automatically on tags
+
+### Changes
+- Companion module updated to v1.7.0
+
 ## [1.6.0] - 2026-09-14
 
 ### New Features

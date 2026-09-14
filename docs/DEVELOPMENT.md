@@ -138,6 +138,17 @@ Tests live in `tests/` and use the Node.js built-in test runner (`node:test`):
 Tests are development-only: they are not shipped in the installer and never
 touch user data (they use a fresh temporary directory for each run).
 
+## CI/CD
+
+GitHub Actions (`.github/workflows/ci.yml`):
+
+- On every push and pull request to `master`: runs `npm test`
+- On version tags (`v*`): runs the tests, builds the installer and the
+  Companion module, and publishes them to a GitHub release automatically
+
+To release: bump the version (`npm run bump:minor` etc.), commit, and push a
+tag (`git tag vX.Y.Z && git push origin vX.Y.Z`). The workflow does the rest.
+
 ## Companion Module Development
 
 ```powershell

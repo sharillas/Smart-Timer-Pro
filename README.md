@@ -3,7 +3,7 @@
 Professional Stage Timer for Windows -- developed for **smartchoice**.
 
 [![Licença](https://img.shields.io/badge/Licen%C3%A7a-Propriet%C3%A1ria-blue.svg)](LICENSE)
-[![Versão](https://img.shields.io/badge/Vers%C3%A3o-1.6.0-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
+[![Versão](https://img.shields.io/badge/Vers%C3%A3o-1.7.0-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
 [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20x64-lightgrey.svg)](https://github.com/sharillas/Smart-Timer-Pro)
 [![Electron](https://img.shields.io/badge/Electron-28-blue.svg)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
@@ -41,14 +41,19 @@ A full-featured countdown/count-up timer for live events, conferences, and stage
 | **Settings** | Customizable font family, colors (normal/warning/danger/expired), thresholds, HH/SS toggles |
 | **Stop at Zero** | Auto-pause countdown at 00:00 (configurable) |
 | **Bitfocus Companion** | Stream Deck integration via `/api/companion` endpoint |
-| **Agenda / Rundown** | Session list with per-session countdown and auto-advance |
+| **Agenda / Rundown** | Session list with per-session countdown, auto-advance and visual timeline |
+| **Session Log** | Records all timer events; CSV export for reporting |
 | **Event Profiles** | Export/import full event setup (settings, messages, presets, agenda, logo) |
 | **Access PIN** | Optional PIN to protect remote control (displays stay open) |
 | **OBS Integration** | Browser source with transparent overlay mode (see `docs/OBS.md`) |
+| **OSC Output** | Send timer events to lighting consoles (GrandMA, ETC, ...) |
+| **Webhooks** | HTTP callbacks on timer events (vMix, automation, ...) |
+| **Remote Control** | Lightweight mobile page at `/remote.html` for phone/tablet control |
+| **Multi-language** | English / Português |
+| **Undo** | Ctrl+Z reverts the last action |
 | **Keyboard Shortcuts** | Space = GO/PAUSE, R = RESET, M = message toggle (configurable) |
 | **System Tray** | Close to tray with quick controls; timer keeps running |
 | **Auto-Update** | Automatic updates via GitHub releases |
-| **Mobile / Tablet** | Responsive UI for remote control from phone/tablet on the same network |
 | **Portable** | Single `.exe` installer -- no Node.js or Electron needed on target PC |
 
 ## Tech Stack
@@ -164,7 +169,7 @@ The installer is standalone -- no Node.js, Electron, or any runtime required on 
 
 ## Installation
 
-1. Run `Smart Timer Pro Setup 1.6.0.exe`
+1. Run `Smart Timer Pro Setup 1.7.0.exe`
 2. Follow the installer wizard
 3. Launch from desktop shortcut or Start Menu
 

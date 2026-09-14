@@ -337,7 +337,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Font & Time Format</h3>
+                <h3 data-i18n="font_time">Font & Time Format</h3>
                 <div class="setting-row">
                     <span class="setting-label">Font Family</span>
                     <select id="set-font" class="setting-input" style="width:200px" onchange="onFontChange()">
@@ -390,7 +390,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Background</h3>
+                <h3 data-i18n="background">Background</h3>
                 <div class="setting-row">
                     <span class="setting-label">Mode</span>
                     <select id="set-bg-mode" class="setting-input" style="width:160px" onchange="onBgModeChange()">
@@ -496,7 +496,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Audio - End Sound</h3>
+                <h3 data-i18n="audio_end">Audio - End Sound</h3>
                 <div class="setting-row">
                     <span class="setting-label">Enabled</span>
                     <label class="toggle-switch">
@@ -514,7 +514,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Audio - Warning Sound</h3>
+                <h3 data-i18n="audio_warning">Audio - Warning Sound</h3>
                 <div class="setting-row">
                     <span class="setting-label">Enabled</span>
                     <label class="toggle-switch">
@@ -532,7 +532,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Audio - Danger Sound</h3>
+                <h3 data-i18n="audio_danger">Audio - Danger Sound</h3>
                 <div class="setting-row">
                     <span class="setting-label">Enabled</span>
                     <label class="toggle-switch">
@@ -551,7 +551,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Security - Access PIN</h3>
+                <h3 data-i18n="security">Security - Access PIN</h3>
                 <div class="setting-row">
                     <span class="setting-label">PIN (optional)</span>
                     <input type="password" id="set-pin" class="setting-input" style="width:200px" placeholder="No PIN set">
@@ -560,7 +560,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Keyboard Shortcuts</h3>
+                <h3 data-i18n="keyboard_shortcuts">Keyboard Shortcuts</h3>
                 <div class="setting-row">
                     <span class="setting-label">GO / Pause</span>
                     <input type="text" id="hotkey-toggle" class="setting-input hotkey-input" readonly placeholder="Click and press a key">
@@ -577,16 +577,90 @@
             </div>
 
             <div class="setting-group">
-                <h3>Event Profiles</h3>
+                <h3 data-i18n="event_profiles">Event Profiles</h3>
                 <div class="setting-row">
-                    <button class="btn-set" style="flex:1" onclick="exportProfile()">EXPORT PROFILE</button>
-                    <button class="btn-set" style="flex:1" onclick="document.getElementById('profile-input').click()">IMPORT PROFILE</button>
+                    <button class="btn-set" style="flex:1" onclick="exportProfile()" data-i18n="export_profile">EXPORT PROFILE</button>
+                    <button class="btn-set" style="flex:1" onclick="document.getElementById('profile-input').click()" data-i18n="import_profile">IMPORT PROFILE</button>
                     <input type="file" id="profile-input" accept="application/json,.json" class="hidden" onchange="importProfile(this)">
                 </div>
                 <p class="setting-hint">Export saves settings, messages, presets, agenda and logo to a JSON file. Import restores them.</p>
             </div>
 
-            <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()">DONE</button>
+            <div class="setting-group">
+                <h3 data-i18n="session_log">Session Log</h3>
+                <div class="setting-row">
+                    <button class="btn-set" style="flex:1" onclick="window.location.href='/api/log/export'" data-i18n="export_csv">EXPORT CSV</button>
+                    <button class="btn-set" style="flex:1" onclick="if(confirm('Clear the session log?')) api('log/clear')" data-i18n="clear_log">CLEAR LOG</button>
+                </div>
+                <p class="setting-hint">Records start/pause/reset, mode changes, agenda sessions and messages. Export downloads a CSV file.</p>
+            </div>
+
+            <div class="setting-group">
+                <h3 data-i18n="language_label">Language</h3>
+                <div class="setting-row">
+                    <span class="setting-label">EN / PT</span>
+                    <select id="set-language" class="setting-input" style="width:200px" onchange="onLanguageChange()">
+                        <option value="en">English</option>
+                        <option value="pt">Português</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Prestart & Ring</h3>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="prestart_label">Prestart caption</span>
+                    <input type="text" id="set-prestart-label" class="setting-input" style="width:200px" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="ring_label">Progress ring on display</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-ring" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Webhook & OSC</h3>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="webhook_label">Webhook URL (POST on events)</span>
+                    <input type="text" id="set-webhook" class="setting-input" style="width:100%" placeholder="http://..." onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="osc_label">OSC output</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-osc-enabled" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="osc_host">OSC host</span>
+                    <input type="text" id="set-osc-host" class="setting-input" style="width:200px" placeholder="192.168.1.10" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="osc_port">OSC port</span>
+                    <input type="number" id="set-osc-port" class="setting-input" style="width:200px" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="osc_path">OSC path prefix</span>
+                    <input type="text" id="set-osc-path" class="setting-input" style="width:200px" placeholder="/stp" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>HTTPS</h3>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="https_label">HTTPS (requires app restart)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-https" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <p class="setting-hint">Serves the app over HTTPS with a self-signed certificate (generated automatically). Browsers will show a certificate warning — accept it once.</p>
+            </div>
+
+            <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()" data-i18n="done">DONE</button>
         </div>
     </div>
 
@@ -597,44 +671,46 @@
                 <div class="brand-text">Smart Timer <strong>Pro</strong></div>
             </div>
             <div class="header-actions">
-                <button class="header-btn" id="btn-presenter" onclick="togglePresenter()">EXTERNAL DISPLAY</button>
-                <button class="header-btn" id="btn-audio" onclick="toggleAudio()">AUDIO OFF</button>
-                <button class="header-btn" onclick="openSettings()">SETTINGS</button>
+                <button class="header-btn" id="btn-presenter" onclick="togglePresenter()" data-i18n="external_display">EXTERNAL DISPLAY</button>
+                <button class="header-btn" onclick="window.open('/remote.html', '_blank')" data-i18n="remote">REMOTE</button>
+                <button class="header-btn" id="btn-audio" onclick="toggleAudio()" data-i18n="audio_off">AUDIO OFF</button>
+                <button class="header-btn" onclick="openSettings()" data-i18n="settings">SETTINGS</button>
             </div>
         </header>
 
         <div class="grid">
             <div class="side-left">
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Custom Quick Presets</div>
+                    <div class="card-header" data-i18n="custom_quick_presets">Custom Quick Presets</div>
                     <div id="default-presets-grid" class="preset-grid"></div>
                     <div class="custom-row">
-                        <input type="number" id="custom-min" placeholder="Minutes..." class="custom-input">
-                        <button onclick="setCustomTime()" class="btn-set">SET TIME</button>
+                        <input type="number" id="custom-min" class="custom-input" data-i18n-ph="minutes_ph" placeholder="Minutes...">
+                        <button onclick="setCustomTime()" class="btn-set" data-i18n="set_time">SET TIME</button>
                     </div>
                     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-                        <div class="card-header" style="margin-bottom:8px">Custom Presets <span id="preset-count" style="font-weight:400;color:var(--text-dim)"></span></div>
+                        <div class="card-header" style="margin-bottom:8px"><span data-i18n="custom_presets">Custom Presets</span> <span id="preset-count" style="font-weight:400;color:var(--text-dim)"></span></div>
                         <div class="custom-row">
                             <input type="text" id="custom-preset-time" placeholder="HH:MM:SS (ex: 00:33:15)" class="custom-input" style="font-family:monospace">
-                            <button onclick="addCustomPreset()" class="btn-set">ADD</button>
+                            <button onclick="addCustomPreset()" class="btn-set" data-i18n="add">ADD</button>
                         </div>
                         <div id="custom-presets-grid" class="preset-grid" style="margin-top:10px;margin-bottom:0"></div>
                     </div>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Display Mode</div>
+                    <div class="card-header" data-i18n="display_mode">Display Mode</div>
                     <div class="preset-grid cols4" style="margin-bottom:0">
                         <button onclick="setMode('countdown')" class="btn-preset active" id="mode-countdown">Countdown</button>
                         <button onclick="setMode('countup')" class="btn-preset" id="mode-countup">Count-Up</button>
                         <button onclick="setMode('timeofday')" class="btn-preset" id="mode-timeofday">Time of Day</button>
                         <button onclick="setMode('logo')" class="btn-preset" id="mode-logo">Show Logo/Grid</button>
                         <button onclick="setMode('agenda')" class="btn-preset" id="mode-agenda">Agenda</button>
+                        <button onclick="setMode('prestart')" class="btn-preset" id="mode-prestart">Prestart</button>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Live Monitor</div>
+                    <div class="card-header" data-i18n="live_monitor">Live Monitor</div>
                     <div class="monitor-preview" id="monitor-frame">
                         <img id="monitor-logo" src="" class="hidden">
                         <div class="monitor-time" id="monitor-time">10:00</div>
@@ -647,34 +723,34 @@
                     </div>
                     <div class="msg-preview">
                         <div style="flex:1">
-                            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">MESSAGE PREVIEW</div>
-                            <div id="msg-text" style="font-weight:600;font-style:italic">No message set</div>
+                            <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px" data-i18n="message_preview">MESSAGE PREVIEW</div>
+                            <div id="msg-text" style="font-weight:600;font-style:italic" data-i18n="no_message_set">No message set</div>
                         </div>
-                        <span id="msg-badge" class="msg-badge badge-off">OFF AIR</span>
+                        <span id="msg-badge" class="msg-badge badge-off" data-i18n="off_air">OFF AIR</span>
                     </div>
                 </div>
             </div>
 
             <div class="side-right">
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Controls</div>
+                    <div class="card-header" data-i18n="controls">Controls</div>
                     <div class="btn-grid">
                         <button id="btn-start" title="Atalho: Espaço" onclick="api('start')" class="btn btn-start">
                             <span class="btn-icon">▶</span>
-                            <span class="btn-label">GO</span>
+                            <span class="btn-label" data-i18n="go">GO</span>
                         </button>
                         <button id="btn-pause" title="Atalho: Espaço" onclick="api('pause')" class="btn btn-pause hidden">
                             <span class="btn-icon">⏸</span>
-                            <span class="btn-label">PAUSE</span>
+                            <span class="btn-label" data-i18n="pause">PAUSE</span>
                         </button>
                         <button title="Atalho: R" onclick="api('reset')" class="btn btn-reset">
                             <span class="btn-icon">↺</span>
-                            <span class="btn-label">RESET</span>
+                            <span class="btn-label" data-i18n="reset">RESET</span>
                         </button>
                     </div>
                     <div class="btn-grid" style="margin-top:12px">
-                        <button onclick="addTime(60)" class="btn btn-add btn-sm">+1 MIN</button>
-                        <button onclick="addTime(-60)" class="btn btn-sub btn-sm">-1 MIN</button>
+                        <button onclick="addTime(60)" class="btn btn-add btn-sm" data-i18n="add_min">+1 MIN</button>
+                        <button onclick="addTime(-60)" class="btn btn-sub btn-sm" data-i18n="sub_min">-1 MIN</button>
                     </div>
                     <div class="btn-grid" style="margin-top:12px">
                         <button id="btn-bar" onclick="toggleIndicator('bar')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">LOADING BAR: OFF</button>
@@ -683,47 +759,48 @@
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Event Logo</div>
+                    <div class="card-header" data-i18n="event_logo">Event Logo</div>
                     <div class="logo-preview" id="logo-container">
-                        <span class="logo-empty" id="logo-empty">No Logo Uploaded</span>
+                        <span class="logo-empty" id="logo-empty" data-i18n="no_logo">No Logo Uploaded</span>
                         <img id="logo-img" src="" class="hidden">
                     </div>
                     <div class="custom-row">
                         <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="uploadLogo(this)">
-                        <button onclick="document.getElementById('logo-input').click()" class="btn-set" style="flex:1;padding:12px">UPLOAD LOGO</button>
+                        <button onclick="document.getElementById('logo-input').click()" class="btn-set" style="flex:1;padding:12px" data-i18n="upload_logo">UPLOAD LOGO</button>
                         <button onclick="clearLogo()" class="btn-set" style="background:var(--red);flex:none;padding:0 20px">✕</button>
                     </div>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
-                    <div class="card-header">Agenda / Rundown <span id="agenda-count" style="font-weight:400;color:var(--text-dim)"></span></div>
+                    <div class="card-header"><span data-i18n="agenda">Agenda / Rundown</span> <span id="agenda-count" style="font-weight:400;color:var(--text-dim)"></span></div>
+                    <div id="agenda-timeline" style="display:flex;gap:3px;height:14px;margin-bottom:12px"></div>
                     <div id="agenda-current" class="hidden" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:10px;padding:10px 14px;margin-bottom:12px">
-                        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">NOW PLAYING</div>
+                        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px" data-i18n="now_playing">NOW PLAYING</div>
                         <div style="font-weight:700" id="agenda-current-name"></div>
                     </div>
                     <div id="agenda-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
                     <div class="custom-row" style="margin-bottom:10px">
-                        <input type="text" id="agenda-name" placeholder="Session name..." class="custom-input">
+                        <input type="text" id="agenda-name" class="custom-input" data-i18n-ph="session_name_ph" placeholder="Session name...">
                         <input type="text" id="agenda-time" placeholder="MM:SS" class="custom-input" style="font-family:monospace;max-width:90px">
-                        <button onclick="addAgendaItem()" class="btn-set">ADD</button>
+                        <button onclick="addAgendaItem()" class="btn-set" data-i18n="add">ADD</button>
                     </div>
                     <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:12px;cursor:pointer">
-                        <input type="checkbox" id="agenda-autonext" checked onchange="setAgendaAutoNext(this.checked)"> Auto-advance to next session
+                        <input type="checkbox" id="agenda-autonext" checked onchange="setAgendaAutoNext(this.checked)"> <span data-i18n="auto_advance">Auto-advance to next session</span>
                     </label>
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr">
-                        <button onclick="agendaStart()" class="btn btn-start btn-sm" style="height:44px">▶ START</button>
-                        <button onclick="agendaNext()" class="btn btn-add btn-sm" style="height:44px">NEXT ⏭</button>
-                        <button onclick="agendaStop()" class="btn btn-reset btn-sm" style="height:44px">STOP</button>
+                        <button onclick="agendaStart()" class="btn btn-start btn-sm" style="height:44px" data-i18n="start">▶ START</button>
+                        <button onclick="agendaNext()" class="btn btn-add btn-sm" style="height:44px" data-i18n="next">NEXT ⏭</button>
+                        <button onclick="agendaStop()" class="btn btn-reset btn-sm" style="height:44px" data-i18n="stop">STOP</button>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Messaging Control</div>
-                    <input type="text" id="msg-input" placeholder="Type custom message..." class="msg-input" oninput="updateMessage()">
-                    <button id="btn-msg-toggle" title="Atalho: M" onclick="toggleMessage()" class="btn-toggle btn-msg-hide">SHOW MESSAGE</button>
+                    <div class="card-header" data-i18n="messaging">Messaging Control</div>
+                    <input type="text" id="msg-input" class="msg-input" data-i18n-ph="msg_placeholder" placeholder="Type custom message..." oninput="updateMessage()">
+                    <button id="btn-msg-toggle" title="Atalho: M" onclick="toggleMessage()" class="btn-toggle btn-msg-hide" data-i18n="show_message">SHOW MESSAGE</button>
                     <div class="bank-header">
-                        <div class="card-header" style="margin-bottom:0">Quick Messages <span id="msg-count" style="color:var(--text-dim);font-weight:400">(0/5)</span></div>
-                        <button id="btn-save-msg" onclick="saveQuickMessage()" class="btn-save">+ ADD QUICK MESSAGE</button>
+                        <div class="card-header" style="margin-bottom:0"><span data-i18n="quick_messages">Quick Messages</span> <span id="msg-count" style="color:var(--text-dim);font-weight:400">(0/5)</span></div>
+                        <button id="btn-save-msg" onclick="saveQuickMessage()" class="btn-save" data-i18n="add_quick_message">+ ADD QUICK MESSAGE</button>
                     </div>
                     <div id="quick-msgs" style="display:flex;flex-direction:column;gap:6px"></div>
                 </div>
@@ -732,8 +809,8 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.6.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
-        <span>Atalhos: Espaço = GO/PAUSE · R = RESET · M = Mensagem</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.7.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
     <script>
@@ -760,6 +837,190 @@
             return apiPin ? '?pin=' + encodeURIComponent(apiPin) : '';
         }
 
+        // --- INTERNATIONALIZATION (EN / PT) ---
+        var I18N = {
+            en: {
+                external_display: 'EXTERNAL DISPLAY',
+                settings: 'SETTINGS',
+                remote: 'REMOTE',
+                audio_off: 'AUDIO OFF',
+                audio_on: 'AUDIO ON',
+                custom_quick_presets: 'Custom Quick Presets',
+                set_time: 'SET TIME',
+                custom_presets: 'Custom Presets',
+                add: 'ADD',
+                display_mode: 'Display Mode',
+                live_monitor: 'Live Monitor',
+                message_preview: 'MESSAGE PREVIEW',
+                agenda: 'Agenda / Rundown',
+                now_playing: 'NOW PLAYING',
+                auto_advance: 'Auto-advance to next session',
+                start: 'START',
+                next: 'NEXT',
+                stop: 'STOP',
+                controls: 'Controls',
+                go: 'GO',
+                pause: 'PAUSE',
+                reset: 'RESET',
+                add_min: '+1 MIN',
+                sub_min: '-1 MIN',
+                loading_bar: 'LOADING BAR',
+                semaforo: 'SEMÁFORO',
+                on: 'ON',
+                off: 'OFF',
+                event_logo: 'Event Logo',
+                no_logo: 'No Logo Uploaded',
+                upload_logo: 'UPLOAD LOGO',
+                messaging: 'Messaging Control',
+                msg_placeholder: 'Type custom message...',
+                show_message: 'SHOW MESSAGE',
+                hide_message: 'HIDE MESSAGE',
+                quick_messages: 'Quick Messages',
+                add_quick_message: '+ ADD QUICK MESSAGE',
+                live_on_stage: 'LIVE ON STAGE',
+                off_air: 'OFF AIR',
+                no_message_set: 'No message set',
+                settings_title: 'SETTINGS',
+                done: 'DONE',
+                font_time: 'Font & Time Format',
+                background: 'Background',
+                timer_thresholds: 'Timer & Thresholds',
+                audio_end: 'Audio - End Sound',
+                audio_warning: 'Audio - Warning Sound',
+                audio_danger: 'Audio - Danger Sound',
+                enabled: 'Enabled',
+                upload: 'UPLOAD',
+                clear: 'CLEAR',
+                security: 'Security - Access PIN',
+                keyboard_shortcuts: 'Keyboard Shortcuts',
+                go_pause_hk: 'GO / Pause',
+                reset_hk: 'Reset',
+                message_hk: 'Message Toggle',
+                event_profiles: 'Event Profiles',
+                export_profile: 'EXPORT PROFILE',
+                import_profile: 'IMPORT PROFILE',
+                language_label: 'Language',
+                prestart_label: 'Prestart caption',
+                ring_label: 'Progress ring on display',
+                webhook_label: 'Webhook URL (POST on events)',
+                osc_label: 'OSC output',
+                osc_host: 'OSC host',
+                osc_port: 'OSC port',
+                osc_path: 'OSC path prefix',
+                https_label: 'HTTPS (requires app restart)',
+                session_log: 'Session Log',
+                export_csv: 'EXPORT CSV',
+                clear_log: 'CLEAR LOG',
+                shortcuts_hint: 'Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo',
+                minutes_ph: 'Minutes...',
+                session_name_ph: 'Session name...',
+                pin_ph: 'No PIN set',
+                pin_set_ph: 'PIN is set (type new to change, leave empty to keep)'
+            },
+            pt: {
+                external_display: 'ECRÃ EXTERNO',
+                settings: 'DEFINIÇÕES',
+                remote: 'REMOTO',
+                audio_off: 'ÁUDIO OFF',
+                audio_on: 'ÁUDIO ON',
+                custom_quick_presets: 'Presets Rápidos',
+                set_time: 'DEFINIR TEMPO',
+                custom_presets: 'Presets Personalizados',
+                add: 'ADICIONAR',
+                display_mode: 'Modo de Ecrã',
+                live_monitor: 'Monitor ao Vivo',
+                message_preview: 'PRÉ-VISUALIZAÇÃO',
+                agenda: 'Agenda / Alinhamento',
+                now_playing: 'A DECORRER',
+                auto_advance: 'Avançar automaticamente para a próxima sessão',
+                start: 'INICIAR',
+                next: 'SEGUINTE',
+                stop: 'PARAR',
+                controls: 'Controlos',
+                go: 'GO',
+                pause: 'PAUSA',
+                reset: 'RESET',
+                add_min: '+1 MIN',
+                sub_min: '-1 MIN',
+                loading_bar: 'BARRA DE PROGRESSO',
+                semaforo: 'SEMÁFORO',
+                on: 'ON',
+                off: 'OFF',
+                event_logo: 'Logótipo do Evento',
+                no_logo: 'Sem Logótipo',
+                upload_logo: 'CARREGAR LOGÓTIPO',
+                messaging: 'Controlo de Mensagens',
+                msg_placeholder: 'Escreve uma mensagem...',
+                show_message: 'MOSTRAR MENSAGEM',
+                hide_message: 'ESCONDER MENSAGEM',
+                quick_messages: 'Mensagens Rápidas',
+                add_quick_message: '+ ADICIONAR MENSAGEM',
+                live_on_stage: 'EM DIRETO NO PALCO',
+                off_air: 'FORA DO AR',
+                no_message_set: 'Sem mensagem definida',
+                settings_title: 'DEFINIÇÕES',
+                done: 'CONCLUÍDO',
+                font_time: 'Tipo de Letra & Formato de Hora',
+                background: 'Fundo',
+                timer_thresholds: 'Temporizador & Limiares',
+                audio_end: 'Áudio - Som de Fim',
+                audio_warning: 'Áudio - Som de Aviso',
+                audio_danger: 'Áudio - Som de Perigo',
+                enabled: 'Ativado',
+                upload: 'CARREGAR',
+                clear: 'LIMPAR',
+                security: 'Segurança - PIN de Acesso',
+                keyboard_shortcuts: 'Atalhos de Teclado',
+                go_pause_hk: 'GO / Pausa',
+                reset_hk: 'Reset',
+                message_hk: 'Alternar Mensagem',
+                event_profiles: 'Perfis de Evento',
+                export_profile: 'EXPORTAR PERFIL',
+                import_profile: 'IMPORTAR PERFIL',
+                language_label: 'Idioma',
+                prestart_label: 'Legenda de pré-evento',
+                ring_label: 'Anel de progresso no ecrã',
+                webhook_label: 'URL Webhook (POST nos eventos)',
+                osc_label: 'Saída OSC',
+                osc_host: 'Host OSC',
+                osc_port: 'Porta OSC',
+                osc_path: 'Prefixo do caminho OSC',
+                https_label: 'HTTPS (requer reiniciar a app)',
+                session_log: 'Registo de Sessões',
+                export_csv: 'EXPORTAR CSV',
+                clear_log: 'LIMPAR REGISTO',
+                shortcuts_hint: 'Atalhos: Espaço = GO/PAUSA · R = RESET · M = Mensagem · Ctrl+Z = Anular',
+                minutes_ph: 'Minutos...',
+                session_name_ph: 'Nome da sessão...',
+                pin_ph: 'Sem PIN definido',
+                pin_set_ph: 'PIN definido (escreve novo para alterar, vazio mantém)'
+            }
+        };
+
+        function t(key) {
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var dict = I18N[lang] || I18N.en;
+            return dict[key] || I18N.en[key] || key;
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(function(el) {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+                el.placeholder = t(el.getAttribute('data-i18n-ph'));
+            });
+            var pinEl = document.getElementById('set-pin');
+            if (pinEl) {
+                pinEl.placeholder = (currentSettings && currentSettings.apiPinEnabled) ? t('pin_set_ph') : t('pin_ph');
+            }
+            updateIndicatorButtons(currentSettings.statusIndicator);
+            var go = document.getElementById('btn-go');
+            if (go && !go.classList.contains('hidden')) go.textContent = t('go');
+            var pause = document.getElementById('btn-pause');
+            if (pause && !pause.classList.contains('hidden')) pause.textContent = t('pause');
+        }
+
         // --- ELECTRON ---
         function togglePresenter() {
             if (window.electronAPI) {
@@ -776,10 +1037,10 @@
             audioEnabled = !audioEnabled;
             var btn = document.getElementById('btn-audio');
             if (audioEnabled) {
-                btn.textContent = 'AUDIO ON';
+                btn.textContent = t('audio_on');
                 btn.style.color = 'var(--green)';
             } else {
-                btn.textContent = 'AUDIO OFF';
+                btn.textContent = t('audio_off');
                 btn.style.color = '';
             }
         }
@@ -864,6 +1125,11 @@
             autoSaveSettings();
         }
 
+        function onLanguageChange() {
+            autoSaveSettings();
+            applyLanguage();
+        }
+
         function populateSettingsForm(s) {
             document.getElementById('set-font').value = fontToDropdown(s.fontFamily);
             if (fontToDropdown(s.fontFamily) === 'custom') {
@@ -896,6 +1162,15 @@
                 pinEl.value = '';
                 pinEl.placeholder = s.apiPinEnabled ? 'PIN is set (type new to change, leave empty to keep)' : 'No PIN set';
             }
+            document.getElementById('set-language').value = s.language || 'en';
+            document.getElementById('set-prestart-label').value = s.prestartLabel || 'STARTS IN';
+            document.getElementById('set-ring').checked = s.ringEnabled === true;
+            document.getElementById('set-webhook').value = s.webhookUrl || '';
+            document.getElementById('set-osc-enabled').checked = s.oscEnabled === true;
+            document.getElementById('set-osc-host').value = s.oscHost || '';
+            document.getElementById('set-osc-port').value = s.oscPort !== undefined ? s.oscPort : 9000;
+            document.getElementById('set-osc-path').value = s.oscPath || '/stp';
+            document.getElementById('set-https').checked = s.httpsEnabled === true;
             populateHotkeyFields(s.hotkeys);
             document.getElementById('set-logo-fit').value = s.logoFit || 'contain';
             document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
@@ -947,7 +1222,16 @@
                 barHeight: parseInt(document.getElementById('set-bar-height').value) || 14,
                 semaforoX: parseInt(document.getElementById('set-semaforo-x').value) || 50,
                 semaforoY: parseInt(document.getElementById('set-semaforo-y').value) || 88,
-                semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46
+                semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46,
+                language: document.getElementById('set-language').value,
+                prestartLabel: document.getElementById('set-prestart-label').value,
+                ringEnabled: document.getElementById('set-ring').checked,
+                webhookUrl: document.getElementById('set-webhook').value.trim(),
+                oscEnabled: document.getElementById('set-osc-enabled').checked,
+                oscHost: document.getElementById('set-osc-host').value.trim(),
+                oscPort: parseInt(document.getElementById('set-osc-port').value) || 9000,
+                oscPath: document.getElementById('set-osc-path').value.trim() || '/stp',
+                httpsEnabled: document.getElementById('set-https').checked
             };
             var pinInput = document.getElementById('set-pin');
             if (pinInput && pinInput.value !== '') {
@@ -1016,24 +1300,24 @@
             var barBtn = document.getElementById('btn-bar');
             var semBtn = document.getElementById('btn-semaforo');
             if (val === 'bar') {
-                barBtn.textContent = 'LOADING BAR: ON';
+                barBtn.textContent = t('loading_bar') + ': ' + t('on');
                 barBtn.style.background = 'var(--green)';
                 barBtn.style.color = '#fff';
-                semBtn.textContent = 'SEMÁFORO: OFF';
+                semBtn.textContent = t('semaforo') + ': ' + t('off');
                 semBtn.style.background = '#334155';
                 semBtn.style.color = '#cbd5e1';
             } else if (val === 'semaforo') {
-                barBtn.textContent = 'LOADING BAR: OFF';
+                barBtn.textContent = t('loading_bar') + ': ' + t('off');
                 barBtn.style.background = '#334155';
                 barBtn.style.color = '#cbd5e1';
-                semBtn.textContent = 'SEMÁFORO: ON';
+                semBtn.textContent = t('semaforo') + ': ' + t('on');
                 semBtn.style.background = 'var(--green)';
                 semBtn.style.color = '#fff';
             } else {
-                barBtn.textContent = 'LOADING BAR: OFF';
+                barBtn.textContent = t('loading_bar') + ': ' + t('off');
                 barBtn.style.background = '#334155';
                 barBtn.style.color = '#cbd5e1';
-                semBtn.textContent = 'SEMÁFORO: OFF';
+                semBtn.textContent = t('semaforo') + ': ' + t('off');
                 semBtn.style.background = '#334155';
                 semBtn.style.color = '#cbd5e1';
             }
@@ -1267,7 +1551,7 @@
             }
 
             // Mode buttons
-            ['countdown','countup','timeofday','logo','agenda'].forEach(function(m) {
+            ['countdown','countup','timeofday','logo','agenda','prestart'].forEach(function(m) {
                 var btn = document.getElementById('mode-' + m);
                 if (btn) btn.classList.toggle('active', s.mode === m);
             });
@@ -1283,6 +1567,8 @@
                     agCurrent.classList.add('hidden');
                 }
             }
+            agendaState = { agendaActive: !!s.agendaActive, agendaIndex: s.agendaIndex };
+            renderAgendaTimeline();
 
             // Monitor time
             var mt = document.getElementById('monitor-time');
@@ -1324,18 +1610,18 @@
             renderMonitorIndicator(s);
 
             // Message
-            document.getElementById('msg-text').textContent = s.message || 'No message set';
+            document.getElementById('msg-text').textContent = s.message || t('no_message_set');
             var badge = document.getElementById('msg-badge');
             var toggleBtn = document.getElementById('btn-msg-toggle');
             if (s.showMessage) {
-                badge.textContent = 'LIVE ON STAGE';
+                badge.textContent = t('live_on_stage');
                 badge.className = 'msg-badge badge-live';
-                toggleBtn.textContent = 'HIDE MESSAGE';
+                toggleBtn.textContent = t('hide_message');
                 toggleBtn.className = 'btn-toggle btn-msg-show';
             } else {
-                badge.textContent = 'OFF AIR';
+                badge.textContent = t('off_air');
                 badge.className = 'msg-badge badge-off';
-                toggleBtn.textContent = 'SHOW MESSAGE';
+                toggleBtn.textContent = t('show_message');
                 toggleBtn.className = 'btn-toggle btn-msg-hide';
             }
 
@@ -1426,6 +1712,7 @@
             updateIndicatorButtons(s.statusIndicator);
             renderAgenda(s.agenda, s.agendaAutoNext);
             populateHotkeyFields(s.hotkeys);
+            applyLanguage();
         });
 
         socket.on('audioUpdate', function(data) {
@@ -1448,12 +1735,17 @@
         });
 
         // --- AGENDA ---
+        var agendaItems = [];
+        var agendaState = { agendaActive: false, agendaIndex: -1 };
+
         function renderAgenda(items, autoNext) {
             var list = document.getElementById('agenda-list');
             if (!list) return;
             var count = document.getElementById('agenda-count');
             if (count) count.textContent = '(' + (items ? items.length : 0) + ')';
             list.innerHTML = '';
+            var total = 0;
+            (items || []).forEach(function(item) { total += item.seconds; });
             (items || []).forEach(function(item, index) {
                 var row = document.createElement('div');
                 row.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(30,41,59,0.6);border:1px solid var(--border);border-radius:8px;padding:8px 10px';
@@ -1484,8 +1776,29 @@
 
                 list.appendChild(row);
             });
+            agendaItems = items || [];
+            renderAgendaTimeline();
             var auto = document.getElementById('agenda-autonext');
             if (auto) auto.checked = autoNext !== false;
+        }
+
+        function renderAgendaTimeline() {
+            var tl = document.getElementById('agenda-timeline');
+            if (!tl) return;
+            tl.innerHTML = '';
+            if (!agendaItems || !agendaItems.length) return;
+            var total = agendaItems.reduce(function(sum, i) { return sum + i.seconds; }, 0);
+            if (!total) return;
+            var currentIndex = agendaState.agendaActive ? agendaState.agendaIndex : -1;
+            agendaItems.forEach(function(item, index) {
+                var seg = document.createElement('div');
+                var w = Math.max(2, (item.seconds / total) * 100);
+                seg.style.cssText = 'flex:' + w + ' 0 0;background:#334155;border-radius:4px;height:100%;cursor:default;';
+                seg.title = item.name + ' (' + secondsToHMS(item.seconds) + ')';
+                if (index === currentIndex) seg.style.background = 'var(--green)';
+                else if (index < currentIndex) seg.style.background = '#475569';
+                tl.appendChild(seg);
+            });
         }
 
         function addAgendaItem() {
@@ -1582,6 +1895,11 @@
             }
 
             if (e.target !== document.body && e.target !== document.documentElement) return;
+            if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+                e.preventDefault();
+                api('undo');
+                return;
+            }
             var hk = (currentSettings && currentSettings.hotkeys) || { toggle: 'Space', reset: 'KeyR', message: 'KeyM' };
             if (hk.toggle && e.code === hk.toggle) {
                 e.preventDefault();

@@ -8,6 +8,9 @@ let serverInstance = null;
 let tray = null;
 let isQuitting = false;
 let presenterEnabled = false;
+let httpsEnabled = false;
+
+const pageProtocol = () => (httpsEnabled ? 'https' : 'http');
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -23,7 +26,7 @@ if (!gotTheLock) {
 }
 
 function sendTimerCommand(cmd) {
-    fetch(`http://127.0.0.1:3000/api/${cmd}`).catch(() => {});
+    fetch(pageProtocol() + `://127.0.0.1:3000/api/${cmd}`).catch(() => {});
 }
 
 function createTray() {
@@ -54,6 +57,20 @@ function startServer() {
         const server = require('./server.js');
         server.init({ dataDir: userDataPath });
         serverInstance = server;
+
+        // If HTTPS is enabled, Electron needs to accept the self-signed certificate
+        try {
+            const settingsPath = path.join(userDataPath, 'settings.json');
+            const saved = JSON.parse(require('fs').readFileSync(settingsPath, 'utf8'));
+            httpsEnabled = saved.httpsEnabled === true;
+        } catch (e) {
+            httpsEnabled = false;
+        }
+        if (httpsEnabled) {
+            app.commandLine.appendSwitch('ignore-certificate-errors');
+        }
+
+        server.startListening();
     } catch (e) {
         dialog.showErrorBox(
             'Smart Timer Pro',
@@ -80,7 +97,7 @@ function createMainWindow() {
         show: false
     });
 
-    mainWindow.loadURL('http://127.0.0.1:3000/');
+    mainWindow.loadURL(pageProtocol() + '://127.0.0.1:3000/');
     mainWindow.setMenuBarVisibility(false);
 
     mainWindow.once('ready-to-show', () => {
@@ -163,7 +180,7 @@ function createPresenterWindow() {
 
     presenterWindow = new BrowserWindow(windowOpts);
 
-    presenterWindow.loadURL('http://127.0.0.1:3000/presenter.html');
+    presenterWindow.loadURL(pageProtocol() + '://127.0.0.1:3000/presenter.html');
 
     presenterWindow.once('ready-to-show', () => {
         presenterWindow.show();

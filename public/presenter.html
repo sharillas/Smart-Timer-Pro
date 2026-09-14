@@ -47,6 +47,16 @@
             line-height: 1.15;
             letter-spacing: 0.01em;
         }
+        .ring {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .ring circle {
+            fill: none;
+            stroke-width: 3;
+            transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
+        }
         .conn-banner {
             position: fixed;
             top: 12px; right: 12px;
@@ -367,6 +377,28 @@
                     applyFont(timerDiv, currentSettings);
                     stage.appendChild(timerDiv);
 
+                    if (s.mode === 'prestart') {
+                        var cap = document.createElement('div');
+                        cap.className = 'session-name';
+                        cap.id = 'prestart-caption';
+                        cap.style.fontSize = '4vw';
+                        stage.appendChild(cap);
+                    }
+
+                    if ((s.settings && s.settings.ringEnabled) && s.mode !== 'countup') {
+                        var ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        ring.setAttribute('class', 'ring');
+                        ring.setAttribute('id', 'ring');
+                        ring.setAttribute('viewBox', '0 0 100 100');
+                        var circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circ.setAttribute('cx', '50');
+                        circ.setAttribute('cy', '50');
+                        circ.setAttribute('r', '47');
+                        circ.setAttribute('stroke-dasharray', '295.3');
+                        ring.appendChild(circ);
+                        stage.appendChild(ring);
+                    }
+
                     var msgDiv = document.createElement('div');
                     msgDiv.className = 'message';
                     msgDiv.id = 'msg';
@@ -405,10 +437,40 @@
                 } else if (s.mode === 'timeofday') {
                     el.textContent = formatTimeOfDay();
                     el.style.color = cfg.colorNormal || '#10b981';
-                } else if (s.mode === 'countdown') {
+                } else if (s.mode === 'countdown' || s.mode === 'prestart') {
                     renderCountdown(s);
                 } else {
                     renderCountUp(s);
+                }
+            }
+
+            var cap = document.getElementById('prestart-caption');
+            if (cap) {
+                cap.textContent = (s.settings && s.settings.prestartLabel) || 'STARTS IN';
+                cap.style.left = (currentSettings.timerX !== undefined ? currentSettings.timerX : 50) + '%';
+                cap.style.top = (currentSettings.timerY !== undefined ? Math.max(6, currentSettings.timerY - 18) : 28) + '%';
+            }
+
+            var ring = document.getElementById('ring');
+            if (ring) {
+                var cfg3 = s.settings || {};
+                ring.style.left = (cfg3.timerX !== undefined ? cfg3.timerX : 50) + '%';
+                ring.style.top = (cfg3.timerY !== undefined ? cfg3.timerY : 46) + '%';
+                var ringSize = getTimerSize(cfg3) * 7.2;
+                ring.style.width = ringSize + 'vw';
+                ring.style.height = ringSize + 'vw';
+                var pct = 1;
+                if (s.mode !== 'countup' && s.initialTime > 0) {
+                    pct = Math.max(0, Math.min(1, s.activeTime / s.initialTime));
+                }
+                var circ = ring.querySelector('circle');
+                if (circ) {
+                    circ.setAttribute('stroke-dashoffset', String(295.3 * (1 - pct)));
+                    var ringColor = cfg3.colorNormal || '#10b981';
+                    if (s.alertLevel === 'expired') ringColor = cfg3.colorExpired || '#ef4444';
+                    else if (s.alertLevel === 'danger') ringColor = cfg3.colorDanger || '#f97316';
+                    else if (s.alertLevel === 'warning') ringColor = cfg3.colorWarning || '#f59e0b';
+                    circ.setAttribute('stroke', ringColor);
                 }
             }
 

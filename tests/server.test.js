@@ -144,6 +144,40 @@ test('CSRF: foreign origin blocked', async () => {
     assert.strictEqual(r.status, 200);
 });
 
+test('undo restores previous state', async () => {
+    await api('/api/reset?sec=300');
+    await api('/api/start');
+    await api('/api/reset?sec=99');
+    let r = await json('/api/state');
+    assert.strictEqual(r.body.timeLeft, 99);
+    r = await api('/api/undo');
+    assert.strictEqual(r.status, 200);
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timeLeft, 300);
+});
+
+test('session log records events and exports CSV', async () => {
+    await api('/api/log/clear');
+    await api('/api/reset?sec=10');
+    await api('/api/start');
+    const r = await json('/api/log');
+    assert.ok(Array.isArray(r.body));
+    assert.ok(r.body.some((e) => e.type === 'reset'));
+    assert.ok(r.body.some((e) => e.type === 'start'));
+    const csv = await api('/api/log/export');
+    assert.strictEqual(csv.status, 200);
+    const text = await csv.text();
+    assert.ok(text.startsWith('time,type,label'));
+});
+
+test('prestart mode and undo on mode change', async () => {
+    await api('/api/mode?set=prestart');
+    let r = await json('/api/state');
+    assert.strictEqual(r.body.mode, 'prestart');
+    r = await api('/api/undo');
+    assert.strictEqual(r.status, 200);
+});
+
 test('PIN protection', async () => {
     // Set PIN
     let r = await api('/api/settings', {

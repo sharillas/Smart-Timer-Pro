@@ -1,13 +1,16 @@
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const dgram = require('dgram');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
 const server = http.createServer(app);
+let httpsServer = null;
 const io = new Server(server);
 
 const appVersion = (() => {
@@ -56,6 +59,15 @@ let settings = {
     timerSize: 22,
     bgMode: 'color',
     apiPin: '',
+    language: 'en',
+    prestartLabel: 'STARTS IN',
+    ringEnabled: false,
+    webhookUrl: '',
+    oscEnabled: false,
+    oscHost: '',
+    oscPort: 9000,
+    oscPath: '/stp',
+    httpsEnabled: false,
     defaultPresets: [
         { label: '00:00', seconds: 0 },
         { label: '1m', seconds: 60 },
@@ -83,6 +95,7 @@ function initPersistence() {
     audioEndFile = path.join(dataDir, 'audio_end.json');
     audioWarningFile = path.join(dataDir, 'audio_warning.json');
     audioDangerFile = path.join(dataDir, 'audio_danger.json');
+    sessionLogFile = path.join(dataDir, 'session_log.json');
 
     // Messages
     try {
@@ -129,6 +142,14 @@ function initPersistence() {
             if (data && data.audio) audioDanger = data.audio;
         }
     } catch (e) { console.error('Could not load audio_danger.json', e); }
+
+    // Session log
+    try {
+        if (fs.existsSync(sessionLogFile)) {
+            const parsed = JSON.parse(fs.readFileSync(sessionLogFile, 'utf8'));
+            if (Array.isArray(parsed)) sessionLog = parsed;
+        }
+    } catch (e) { console.error('Could not load session log', e); }
 }
 
 function saveMessages() {
@@ -194,6 +215,100 @@ let state = {
 
 let lastAlertLevel = 'normal';
 
+// --- SESSION LOG ---
+let sessionLog = [];
+let sessionLogFile = '';
+
+function logEvent(type, label) {
+    const entry = { time: new Date().toISOString(), type, label: label || '' };
+    sessionLog.push(entry);
+    if (sessionLog.length > 5000) sessionLog.shift();
+    if (sessionLogFile) {
+        try { fs.writeFileSync(sessionLogFile, JSON.stringify(sessionLog)); }
+        catch (e) { console.error('Could not save session log', e); }
+    }
+    io.emit('sessionLogUpdate', entry);
+    sendWebhook(type, label);
+}
+
+// --- WEBHOOKS (HTTP callbacks) ---
+function sendWebhook(event, label) {
+    const url = settings.webhookUrl;
+    if (!url) return;
+    const payload = { app: 'smart-timer-pro', event, label, time: new Date().toISOString() };
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(3000),
+    }).catch(() => {});
+}
+
+// --- OSC OUTPUT ---
+let oscSocket = null;
+
+function encodeOSC(address, args) {
+    const parts = [Buffer.from(address), Buffer.from(',' + args.map((a) => (typeof a === 'number' ? 'i' : 's')).join(''))];
+    for (const a of args) {
+        if (typeof a === 'number') {
+            const b = Buffer.alloc(4);
+            b.writeInt32BE(a);
+            parts.push(b);
+        } else {
+            parts.push(Buffer.from(String(a)));
+        }
+    }
+    const total = parts.reduce((sum, p) => sum + Math.ceil(p.length / 4) * 4, 0);
+    const out = Buffer.alloc(total);
+    let off = 0;
+    for (const p of parts) {
+        p.copy(out, off);
+        off += Math.ceil(p.length / 4) * 4;
+    }
+    return out;
+}
+
+function sendOSC(event, seconds) {
+    if (!settings.oscEnabled || !settings.oscHost) return;
+    try {
+        if (!oscSocket) oscSocket = dgram.createSocket('udp4');
+        const msg = encodeOSC(`${settings.oscPath || '/stp'}/${event}`, [typeof seconds === 'number' ? seconds : 0]);
+        oscSocket.send(msg, settings.oscPort || 9000, settings.oscHost);
+    } catch (e) { console.error('OSC send failed', e); }
+}
+
+// --- UNDO ---
+let undoSnapshot = null;
+
+function captureUndo() {
+    undoSnapshot = {
+        timeLeft: state.timeLeft,
+        countupTime: state.countupTime,
+        isRunning: state.isRunning,
+        mode: state.mode,
+        initialTime: state.initialTime,
+        message: state.message,
+        showMessage: state.showMessage,
+        agendaActive: state.agendaActive,
+        agendaIndex: state.agendaIndex,
+        agendaName: state.agendaName,
+        agendaTimeLeft: state.agendaTimeLeft,
+        agendaTotal: state.agendaTotal
+    };
+}
+
+function restoreUndo() {
+    if (!undoSnapshot) return false;
+    Object.assign(state, undoSnapshot);
+    state.isRunning = false;
+    countdownEndTime = null;
+    countupStartTime = null;
+    state.agendaEndTime = null;
+    undoSnapshot = null;
+    broadcast();
+    return true;
+}
+
 // --- CROSS-SITE REQUEST PROTECTION ---
 // Blocks browser requests coming from foreign origins (CSRF) while
 // allowing same-origin UI, Companion polling and LAN tools (no Origin header).
@@ -240,7 +355,9 @@ const PIN_PROTECTED = [
     '/agenda/next',
     '/agenda/stop',
     '/agenda/setAutoNext',
-    '/profile/import'
+    '/profile/import',
+    '/undo',
+    '/log/clear'
 ];
 
 app.use('/api', (req, res, next) => {
@@ -315,12 +432,12 @@ setInterval(() => {
 }, 200);
 
 function computeAlertLevel() {
-    if (state.mode === 'countdown' && state.isRunning) {
+    if ((state.mode === 'countdown' || state.mode === 'prestart') && state.isRunning) {
         if (state.timeLeft <= 0) return 'expired';
         if (state.timeLeft <= settings.dangerThreshold) return 'danger';
         if (state.timeLeft <= settings.warningThreshold) return 'warning';
     }
-    if (state.mode === 'countdown' && !state.isRunning && state.timeLeft <= 0) return 'expired';
+    if ((state.mode === 'countdown' || state.mode === 'prestart') && !state.isRunning && state.timeLeft <= 0) return 'expired';
     return 'normal';
 }
 
@@ -330,14 +447,17 @@ function broadcast() {
     state.settings = publicSettings();
     state.activeTime = state.mode === 'countup' ? state.countupTime : state.timeLeft;
 
-    // Audio triggers
-    if (state.isRunning && state.mode === 'countdown') {
+    // Audio triggers + OSC
+    if (state.isRunning && (state.mode === 'countdown' || state.mode === 'prestart')) {
         if (state.alertLevel === 'expired' && prevAlert !== 'expired') {
             io.emit('audioTrigger', { type: 'end' });
+            sendOSC('end', 0);
         } else if (state.alertLevel === 'danger' && prevAlert === 'warning') {
             io.emit('audioTrigger', { type: 'danger' });
+            sendOSC('danger', state.timeLeft);
         } else if (state.alertLevel === 'warning' && prevAlert === 'normal') {
             io.emit('audioTrigger', { type: 'warning' });
+            sendOSC('warning', state.timeLeft);
         }
     }
 
@@ -357,12 +477,16 @@ app.get('/api/start', (req, res) => {
         state.agendaEndTime = now + state.agendaTimeLeft * 1000;
     }
     state.isRunning = true;
+    logEvent('start', state.mode === 'agenda' && state.agendaActive ? state.agendaName : '');
+    sendOSC('start', state.mode === 'countdown' ? state.timeLeft : 0);
     broadcast();
     res.send('Started');
 });
 
 app.get('/api/pause', (req, res) => {
     state.isRunning = false;
+    logEvent('pause', '');
+    sendOSC('pause', 0);
     broadcast();
     res.send('Paused');
 });
@@ -370,6 +494,8 @@ app.get('/api/pause', (req, res) => {
 app.get('/api/toggle_playback', (req, res) => {
     if (state.isRunning) {
         state.isRunning = false;
+        logEvent('pause', '');
+        sendOSC('pause', 0);
     } else {
         const now = Date.now();
         if (state.mode === 'countdown') {
@@ -380,12 +506,15 @@ app.get('/api/toggle_playback', (req, res) => {
             state.agendaEndTime = now + state.agendaTimeLeft * 1000;
         }
         state.isRunning = true;
+        logEvent('start', state.mode === 'agenda' && state.agendaActive ? state.agendaName : '');
+        sendOSC('start', state.mode === 'countdown' ? state.timeLeft : 0);
     }
     broadcast();
     res.send(state.isRunning ? 'Started' : 'Paused');
 });
 
 app.get('/api/reset', (req, res) => {
+    captureUndo();
     let sec;
     if (req.query.sec !== undefined) {
         sec = parseInt(req.query.sec) || 0;
@@ -403,11 +532,14 @@ app.get('/api/reset', (req, res) => {
         state.timeLeft = sec;
         state.initialTime = sec;
     }
+    logEvent('reset', String(sec));
+    sendOSC('reset', sec);
     broadcast();
     res.send('Reset');
 });
 
 app.get('/api/add', (req, res) => {
+    captureUndo();
     const sec = parseInt(req.query.sec) || 0;
     if (state.mode === 'countup') {
         state.countupTime += sec;
@@ -419,13 +551,24 @@ app.get('/api/add', (req, res) => {
         state.agendaTimeLeft += sec;
         if (state.isRunning) state.agendaEndTime += sec * 1000;
     }
+    logEvent(sec >= 0 ? 'add' : 'subtract', String(Math.abs(sec)));
     broadcast();
     res.send('Adjusted');
 });
 
+app.get('/api/undo', (req, res) => {
+    if (restoreUndo()) {
+        logEvent('undo', '');
+        res.send('Undone');
+    } else {
+        res.status(400).send('Nothing to undo');
+    }
+});
+
 app.get('/api/mode', (req, res) => {
-    const validModes = ['countdown', 'countup', 'timeofday', 'logo', 'agenda'];
+    const validModes = ['countdown', 'countup', 'timeofday', 'logo', 'agenda', 'prestart'];
     if (validModes.includes(req.query.set)) {
+        captureUndo();
         if (state.isRunning) {
             const now = Date.now();
             if (req.query.set === 'countdown') {
@@ -437,6 +580,7 @@ app.get('/api/mode', (req, res) => {
             }
         }
         state.mode = req.query.set;
+        logEvent('mode', req.query.set);
         broadcast();
         res.send('Mode updated');
     } else {
@@ -460,9 +604,11 @@ app.get('/api/message/set', (req, res) => {
 app.get('/api/message/trigger', (req, res) => {
     const index = parseInt(req.query.index);
     if (!isNaN(index) && index >= 0 && index < quickMessages.length) {
+        captureUndo();
         state.message = quickMessages[index];
         state.showMessage = true;
         state.messageIsPermanent = true;
+        logEvent('message', quickMessages[index]);
         broadcast();
         res.send('Message Triggered Live');
     } else {
@@ -664,6 +810,7 @@ function advanceAgenda() {
         state.agendaTotal = items[next].seconds || 0;
         state.agendaTimeLeft = state.agendaTotal;
         state.agendaEndTime = Date.now() + state.agendaTotal * 1000;
+        logEvent('agenda_session', state.agendaName);
         if (state.agendaTotal === 0) {
             advanceAgenda();
             return;
@@ -676,6 +823,7 @@ function advanceAgenda() {
         state.agendaTotal = 0;
         state.agendaEndTime = null;
         state.isRunning = false;
+        logEvent('agenda_end', '');
     }
 }
 
@@ -766,6 +914,7 @@ app.get('/api/agenda/setAutoNext', (req, res) => {
 app.get('/api/agenda/start', (req, res) => {
     const items = settings.agenda || [];
     if (items.length === 0) return res.status(400).send('Agenda is empty');
+    captureUndo();
     let index = parseInt(req.query.index);
     if (isNaN(index) || index < 0 || index >= items.length) index = 0;
     state.agendaIndex = index;
@@ -776,18 +925,21 @@ app.get('/api/agenda/start', (req, res) => {
     state.agendaActive = true;
     state.mode = 'agenda';
     state.isRunning = true;
+    logEvent('agenda_start', state.agendaName);
     broadcast();
     res.send('Agenda started');
 });
 
 app.get('/api/agenda/next', (req, res) => {
     if (!state.agendaActive) return res.status(400).send('Agenda not active');
+    captureUndo();
     advanceAgenda();
     broadcast();
     res.send('Next session');
 });
 
 app.get('/api/agenda/stop', (req, res) => {
+    captureUndo();
     state.agendaActive = false;
     state.agendaIndex = -1;
     state.agendaName = '';
@@ -795,6 +947,7 @@ app.get('/api/agenda/stop', (req, res) => {
     state.agendaTotal = 0;
     state.agendaEndTime = null;
     state.isRunning = false;
+    logEvent('agenda_stop', '');
     broadcast();
     res.send('Agenda stopped');
 });
@@ -873,8 +1026,33 @@ app.get('/api/companion', (req, res) => {
         over_time: overTimeStr,
         mode: state.mode,
         alertLevel: state.alertLevel,
-        messages: quickMessages
+        messages: quickMessages,
+        agendaActive: state.agendaActive,
+        agendaName: state.agendaName,
+        agendaTimeLeft: state.agendaTimeLeft,
+        agendaTotal: state.agendaTotal
     });
+});
+
+// --- SESSION LOG API ---
+app.get('/api/log', (req, res) => res.json(sessionLog));
+
+app.get('/api/log/export', (req, res) => {
+    const rows = ['time,type,label'];
+    sessionLog.forEach((e) => {
+        rows.push([e.time, e.type, '"' + String(e.label).replace(/"/g, '""') + '"'].join(','));
+    });
+    res.setHeader('Content-Disposition', 'attachment; filename="smart-timer-pro-session-log.csv"');
+    res.setHeader('Content-Type', 'text/csv');
+    res.send(rows.join('\r\n'));
+});
+
+app.get('/api/log/clear', (req, res) => {
+    sessionLog = [];
+    if (sessionLogFile) {
+        try { fs.writeFileSync(sessionLogFile, JSON.stringify([])); } catch (e) {}
+    }
+    res.send('Log cleared');
 });
 
 // --- SOCKET.IO ---
@@ -892,21 +1070,69 @@ app.use(express.static(path.join(__dirname, 'public')));
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-server.on('error', (e) => {
-    if (e && e.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use. Is another instance of Smart Timer Pro running?`);
-    } else {
-        console.error('Server error:', e);
+function ensureCertificate(dir) {
+    const forge = require('node-forge');
+    const certFile = path.join(dir, 'https-cert.pem');
+    const keyFile = path.join(dir, 'https-key.pem');
+    if (fs.existsSync(certFile) && fs.existsSync(keyFile)) {
+        return { cert: fs.readFileSync(certFile, 'utf8'), key: fs.readFileSync(keyFile, 'utf8') };
     }
-});
+    const pki = forge.pki;
+    const keys = pki.rsa.generateKeyPair(2048);
+    const cert = pki.createCertificate();
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = '01' + forge.util.bytesToHex(forge.random.getBytesSync(8));
+    cert.validity.notBefore = new Date(Date.now() - 86400000);
+    cert.validity.notAfter = new Date(Date.now() + 10 * 365 * 86400000);
+    const attrs = [
+        { name: 'commonName', value: 'Smart Timer Pro' },
+        { name: 'organizationName', value: 'smartchoice' },
+    ];
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.setExtensions([
+        { name: 'basicConstraints', cA: true },
+        { name: 'subjectAltName', altNames: [{ type: 2, value: 'localhost' }, { type: 7, ip: '127.0.0.1' }] },
+    ]);
+    cert.sign(keys.privateKey, forge.md.sha256.create());
+    const pemCert = pki.certificateToPem(cert);
+    const pemKey = pki.privateKeyToPem(keys.privateKey);
+    fs.writeFileSync(certFile, pemCert);
+    fs.writeFileSync(keyFile, pemKey);
+    return { cert: pemCert, key: pemKey };
+}
 
-server.listen(PORT, HOST, () => console.log(`Smart Timer Pro server running on port ${PORT}`));
+function startListening() {
+    server.on('error', (e) => {
+        if (e && e.code === 'EADDRINUSE') {
+            console.error(`Port ${PORT} is already in use. Is another instance of Smart Timer Pro running?`);
+        } else {
+            console.error('Server error:', e);
+        }
+    });
+
+    if (settings.httpsEnabled) {
+        try {
+            const { key, cert } = ensureCertificate(dataDir);
+            httpsServer = https.createServer({ key, cert }, app);
+            httpsServer.on('error', server.listeners('error')[0]);
+            io.attach(httpsServer);
+            httpsServer.listen(PORT, HOST, () => console.log(`Smart Timer Pro secure server running on port ${PORT}`));
+            return;
+        } catch (e) {
+            console.error('Could not start HTTPS, falling back to HTTP:', e);
+        }
+    }
+
+    server.listen(PORT, HOST, () => console.log(`Smart Timer Pro server running on port ${PORT}`));
+}
 
 if (!messagesFile) {
     init({ dataDir: process.env.STP_DATA_DIR || __dirname });
 }
+startListening();
 
-module.exports = { app, server, io, state, init, getSettings };
+module.exports = { app, io, state, init, getSettings, startListening, get server() { return httpsServer || server; } };
 
 function getSettings() {
     return settings;

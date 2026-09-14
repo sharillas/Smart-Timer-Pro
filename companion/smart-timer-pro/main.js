@@ -89,6 +89,8 @@ class SmartTimerProInstance extends InstanceBase {
 
 					const raw = data.raw_seconds || 0;
 					const abs = Math.abs(raw);
+					const agLeft = data.agendaTimeLeft || 0;
+					const agAbs = Math.abs(agLeft);
 
 					const updates = {
 						time: data.time,
@@ -99,6 +101,15 @@ class SmartTimerProInstance extends InstanceBase {
 						hours: Math.floor(abs / 3600).toString().padStart(2, '0'),
 						minutes: Math.floor((abs % 3600) / 60).toString().padStart(2, '0'),
 						seconds: (abs % 60).toString().padStart(2, '0'),
+						agenda_name: data.agendaActive ? data.agendaName || '' : '',
+						agenda_time:
+							Math.floor(agAbs / 60).toString().padStart(2, '0') +
+							':' +
+							(agAbs % 60).toString().padStart(2, '0'),
+						agenda_total:
+							Math.floor((data.agendaTotal || 0) / 60).toString().padStart(2, '0') +
+							':' +
+							((data.agendaTotal || 0) % 60).toString().padStart(2, '0'),
 					};
 
 					for (let i = 0; i < 10; i++) {
@@ -130,6 +141,9 @@ class SmartTimerProInstance extends InstanceBase {
 			{ name: 'Minutes (MM)', variableId: 'minutes' },
 			{ name: 'Seconds (SS)', variableId: 'seconds' },
 			{ name: 'Sign (- when overtime)', variableId: 'sign' },
+			{ name: 'Agenda Session Name', variableId: 'agenda_name' },
+			{ name: 'Agenda Time Left (MM:SS)', variableId: 'agenda_time' },
+			{ name: 'Agenda Session Total (MM:SS)', variableId: 'agenda_total' },
 		];
 
 		for (let i = 1; i <= 10; i++) {
@@ -335,6 +349,38 @@ class SmartTimerProInstance extends InstanceBase {
 				],
 				callback: async (action) => {
 					await sendCmd(`indicator?type=${action.options.type}&action=${action.options.action}`);
+				},
+			},
+			agenda_start: {
+				name: 'Agenda - Start Session',
+				options: [
+					{
+						type: 'number',
+						label: 'Session Index (0 = first, empty = from the beginning)',
+						id: 'index',
+						default: 0,
+						min: 0,
+						max: 99,
+						required: false,
+					},
+				],
+				callback: async (action) => {
+					const idx = action.options.index;
+					await sendCmd(`agenda/start${idx !== undefined && idx !== null && idx !== '' ? '?index=' + idx : ''}`);
+				},
+			},
+			agenda_next: {
+				name: 'Agenda - Next Session',
+				options: [],
+				callback: async () => {
+					await sendCmd('agenda/next');
+				},
+			},
+			agenda_stop: {
+				name: 'Agenda - Stop Rundown',
+				options: [],
+				callback: async () => {
+					await sendCmd('agenda/stop');
 				},
 			},
 		});
@@ -602,6 +648,50 @@ class SmartTimerProInstance extends InstanceBase {
 				feedbacks: [],
 			};
 		});
+
+		// Agenda Controls
+		presets['agenda_start'] = {
+			type: 'layered',
+			category: 'Agenda',
+			name: 'Agenda - Start',
+			elements: [box([16, 185, 129]), iconElement('play_circle_filled'), labelElement('AGENDA', { fontsize: 34 })],
+			steps: [
+				{ down: [{ actionId: 'agenda_start', options: {} }], up: [] },
+			],
+			feedbacks: [],
+		};
+		presets['agenda_next'] = {
+			type: 'layered',
+			category: 'Agenda',
+			name: 'Agenda - Next Session',
+			elements: [box([0, 163, 224]), iconElement('av_timer'), labelElement('NEXT', { fontsize: 40 })],
+			steps: [
+				{ down: [{ actionId: 'agenda_next', options: {} }], up: [] },
+			],
+			feedbacks: [],
+		};
+		presets['agenda_stop'] = {
+			type: 'layered',
+			category: 'Agenda',
+			name: 'Agenda - Stop',
+			elements: [box([200, 50, 50]), iconElement('remove_circle_outline'), labelElement('STOP', { fontsize: 40 })],
+			steps: [
+				{ down: [{ actionId: 'agenda_stop', options: {} }], up: [] },
+			],
+			feedbacks: [],
+		};
+		presets['agenda_display'] = {
+			type: 'layered',
+			category: 'Agenda',
+			name: 'Agenda - Session + Time Display',
+			elements: [
+				box([51, 65, 85]),
+				labelElement('$(smart-timer-pro:agenda_time)', { y: 6, height: 60, fontsize: 46, font: 'companion-mono' }),
+				labelElement('$(smart-timer-pro:agenda_name)', { y: 66, height: 34, fontsize: 30 }),
+			],
+			steps: [],
+			feedbacks: [],
+		};
 
 		this.setPresetDefinitions(presets);
 	}
