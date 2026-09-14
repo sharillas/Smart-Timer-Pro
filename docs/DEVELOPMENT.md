@@ -111,7 +111,12 @@ npm start
 node server.js
 # Then open http://127.0.0.1:3000
 
-# Auto-bump version (1.0.0 → 1.1.0)
+# Run the automated test suite
+npm test
+
+# Auto-bump version (patch / minor / major)
+npm run bump:patch
+npm run bump:minor
 npm run bump
 
 # Build installer (bumps version + compiles)
@@ -119,6 +124,19 @@ npm run build
 ```
 
 The build outputs to `dist/Smart Timer Pro Setup X.Y.0.exe`.
+
+## Automated Tests
+
+Tests live in `tests/` and use the Node.js built-in test runner (`node:test`):
+
+- `tests/server.test.js` — spawns the real server on a dedicated port with a
+  temporary data directory (`STP_DATA_DIR`), then exercises the timer engine,
+  agenda, messages, audio, profiles, CSRF protection and PIN protection.
+- `tests/frontend.test.js` — parses the frontend scripts and the module files
+  to catch syntax errors.
+
+Tests are development-only: they are not shipped in the installer and never
+touch user data (they use a fresh temporary directory for each run).
 
 ## Companion Module Development
 

@@ -55,6 +55,7 @@ let settings = {
     timerY: 46,
     timerSize: 22,
     bgMode: 'color',
+    apiPin: '',
     defaultPresets: [
         { label: '00:00', seconds: 0 },
         { label: '1m', seconds: 60 },
@@ -208,6 +209,60 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
+// --- OPTIONAL PIN PROTECTION ---
+// When a PIN is configured (Settings > Security), control endpoints require it.
+// Read-only endpoints (state, settings, messages, audio, agenda, companion,
+// profile export) stay open so displays and monitoring keep working.
+// Note: req.path here is relative to the '/api' mount (e.g. '/reset').
+const PIN_PROTECTED = [
+    '/start',
+    '/pause',
+    '/toggle_playback',
+    '/reset',
+    '/add',
+    '/mode',
+    '/message',
+    '/messages/add',
+    '/messages/remove',
+    '/messages/edit',
+    '/indicator',
+    '/presets/add',
+    '/presets/remove',
+    '/presets/default/edit',
+    '/audio/upload',
+    '/audio/clear',
+    '/system/logo/upload',
+    '/system/logo/clear',
+    '/agenda/add',
+    '/agenda/remove',
+    '/agenda/edit',
+    '/agenda/start',
+    '/agenda/next',
+    '/agenda/stop',
+    '/agenda/setAutoNext',
+    '/profile/import'
+];
+
+app.use('/api', (req, res, next) => {
+    const pin = settings.apiPin;
+    if (!pin) return next();
+    const isSettingsPost = req.path === '/settings' && req.method === 'POST';
+    const isProtected = isSettingsPost || PIN_PROTECTED.some((p) => req.path === p || req.path.startsWith(p + '/'));
+    if (!isProtected) return next();
+
+    const provided = req.query.pin || req.headers['x-pin'] || '';
+    if (provided !== pin) {
+        return res.status(401).send('Invalid PIN');
+    }
+    next();
+});
+
+// Strip the PIN from any settings object that leaves the server
+function publicSettings() {
+    const out = { ...settings, apiPin: undefined, apiPinEnabled: !!settings.apiPin };
+    return out;
+}
+
 // --- TICK ENGINE (drift-free, based on wall clock) ---
 let countdownEndTime = null;
 let countupStartTime = null;
@@ -272,7 +327,7 @@ function computeAlertLevel() {
 function broadcast() {
     const prevAlert = state.alertLevel;
     state.alertLevel = computeAlertLevel();
-    state.settings = settings;
+    state.settings = publicSettings();
     state.activeTime = state.mode === 'countup' ? state.countupTime : state.timeLeft;
 
     // Audio triggers
@@ -481,16 +536,16 @@ app.get('/api/messages/edit', (req, res) => {
 });
 
 // --- SETTINGS API ---
-app.get('/api/settings', (req, res) => res.json(settings));
+app.get('/api/settings', (req, res) => res.json(publicSettings()));
 
 app.post('/api/settings', (req, res) => {
     if (!req.body) return res.status(400).send('Missing body');
     Object.assign(settings, req.body);
     saveSettings();
-    state.settings = settings;
+    state.settings = publicSettings();
     broadcast();
-    io.emit('settingsUpdate', settings);
-    res.json(settings);
+    io.emit('settingsUpdate', publicSettings());
+    res.json(publicSettings());
 });
 
 // --- INDICATOR API ---
@@ -506,9 +561,9 @@ app.get('/api/indicator', (req, res) => {
     }
 
     saveSettings();
-    state.settings = settings;
+    state.settings = publicSettings();
     broadcast();
-    io.emit('settingsUpdate', settings);
+    io.emit('settingsUpdate', publicSettings());
     res.send('Indicator updated');
 });
 
@@ -524,8 +579,8 @@ app.get('/api/presets/default/edit', (req, res) => {
     if (isNaN(sec) || sec < 0) return res.status(400).send('Invalid seconds');
     settings.defaultPresets[index] = { label: label || formatPresetLabel(sec), seconds: sec };
     saveSettings();
-    state.settings = settings;
-    io.emit('settingsUpdate', settings);
+    state.settings = publicSettings();
+    io.emit('settingsUpdate', publicSettings());
     res.send('Preset edited');
 });
 
@@ -539,8 +594,8 @@ app.get('/api/presets/add', (req, res) => {
     if (!Array.isArray(settings.customPresets)) settings.customPresets = [];
     settings.customPresets.push({ label: label || formatPresetLabel(sec), seconds: sec });
     saveSettings();
-    state.settings = settings;
-    io.emit('settingsUpdate', settings);
+    state.settings = publicSettings();
+    io.emit('settingsUpdate', publicSettings());
     res.send('Preset added');
 });
 
@@ -550,8 +605,8 @@ app.get('/api/presets/remove', (req, res) => {
     if (!isNaN(index) && index >= 0 && index < settings.customPresets.length) {
         settings.customPresets.splice(index, 1);
         saveSettings();
-        state.settings = settings;
-        io.emit('settingsUpdate', settings);
+        state.settings = publicSettings();
+        io.emit('settingsUpdate', publicSettings());
     }
     res.send('Preset removed');
 });
@@ -563,7 +618,7 @@ app.get('/api/profile/export', (req, res) => {
         app: 'Smart Timer Pro',
         profileVersion: 1,
         exportedAt: new Date().toISOString(),
-        settings,
+        settings: publicSettings(),
         quickMessages,
         logoData
     });
@@ -593,9 +648,9 @@ app.post('/api/profile/import', (req, res) => {
         saveSettings();
     }
 
-    state.settings = settings;
+    state.settings = publicSettings();
     broadcast();
-    io.emit('settingsUpdate', settings);
+    io.emit('settingsUpdate', publicSettings());
     res.send('Profile imported');
 });
 
@@ -645,9 +700,9 @@ app.post('/api/agenda/add', (req, res) => {
     if (!Array.isArray(settings.agenda)) settings.agenda = [];
     settings.agenda.push({ name: name.trim(), seconds });
     saveSettings();
-    state.settings = settings;
+    state.settings = publicSettings();
     broadcast();
-    io.emit('settingsUpdate', settings);
+    io.emit('settingsUpdate', publicSettings());
     res.send('Agenda item added');
 });
 
@@ -667,9 +722,9 @@ app.get('/api/agenda/remove', (req, res) => {
             state.agendaIndex--;
         }
         saveSettings();
-        state.settings = settings;
+        state.settings = publicSettings();
         broadcast();
-        io.emit('settingsUpdate', settings);
+        io.emit('settingsUpdate', publicSettings());
     }
     res.send('Removed');
 });
@@ -693,9 +748,9 @@ app.post('/api/agenda/edit', (req, res) => {
         state.agendaEndTime = Date.now() + seconds * 1000;
     }
     saveSettings();
-    state.settings = settings;
+    state.settings = publicSettings();
     broadcast();
-    io.emit('settingsUpdate', settings);
+    io.emit('settingsUpdate', publicSettings());
     res.send('Agenda item edited');
 });
 
@@ -703,8 +758,8 @@ app.get('/api/agenda/setAutoNext', (req, res) => {
     state.agendaAutoNext = req.query.value === 'true' || req.query.value === '1';
     settings.agendaAutoNext = state.agendaAutoNext;
     saveSettings();
-    state.settings = settings;
-    io.emit('settingsUpdate', settings);
+    state.settings = publicSettings();
+    io.emit('settingsUpdate', publicSettings());
     res.send('Auto-next updated');
 });
 
@@ -824,10 +879,10 @@ app.get('/api/companion', (req, res) => {
 
 // --- SOCKET.IO ---
 io.on('connection', (socket) => {
-    state.settings = settings;
+    state.settings = publicSettings();
     socket.emit('stateUpdate', state);
     socket.emit('messagesUpdate', quickMessages);
-    socket.emit('settingsUpdate', settings);
+    socket.emit('settingsUpdate', publicSettings());
     socket.emit('audioUpdate', { audioEnd, audioWarning, audioDanger });
 });
 
@@ -847,8 +902,8 @@ server.on('error', (e) => {
 
 server.listen(PORT, HOST, () => console.log(`Smart Timer Pro server running on port ${PORT}`));
 
-if (!messagesFile && dataDir === __dirname) {
-    init({});
+if (!messagesFile) {
+    init({ dataDir: process.env.STP_DATA_DIR || __dirname });
 }
 
 module.exports = { app, server, io, state, init, getSettings };

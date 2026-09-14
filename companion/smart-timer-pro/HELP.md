@@ -50,9 +50,10 @@ sudo systemctl restart companion
 1. Open Companion Web UI
 2. Go to Connections
 3. Add new connection: search "Smart Timer Pro"
-4. Enter the IP address of the PC running Smart Timer Pro
+4. Enter the IP address of the PC running Smart Timer Pro (use `127.0.0.1` if Companion runs on the same PC)
 5. Port: 3000 (default)
-6. Click Save
+6. PIN: leave empty unless you configured an access PIN in the Smart Timer Pro app (Settings > Security). If a PIN is configured, enter the same PIN here.
+7. Click Save
 
 ## Presets
 
@@ -81,7 +82,7 @@ sudo systemctl restart companion
 
 ## Requirements
 
-- Smart Timer Pro v1.4.0 or later running on the same network
+- Smart Timer Pro v1.6.0 or later running on the same network
 - Bitfocus Companion v3.4 or later (for colored button borders)
 - Elgato Stream Deck
 

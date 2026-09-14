@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0] - 2026-09-14
+
+### New Features
+- **Optional access PIN**: Configurable in Settings > Security. When set, control commands require the PIN; displays and monitoring stay open. The Companion module has a matching PIN field. The PIN never leaves the server (not in broadcasts, API responses or profile exports)
+- **Automated test suite**: `npm test` runs 12 tests covering the timer engine, agenda, messages, audio, profiles, CSRF and PIN protection (development only, never touches user data)
+
+### Changes
+- Companion module updated to v1.6.0 (PIN support)
+
 ## [1.5.0] - 2026-09-14
 
 ### New Features

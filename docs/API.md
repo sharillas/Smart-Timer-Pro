@@ -12,6 +12,18 @@ All endpoints return plain text or JSON. No authentication required.
 > requests) are rejected with `403`. API clients (Companion, curl, OBS) don't
 > send an Origin header and work normally.
 
+## Access PIN (optional)
+
+When a PIN is configured in the app (Settings > Security), control endpoints
+require `?pin=...` (or the `x-pin` header) and return `401` otherwise.
+
+| Protection | Endpoints |
+|---|---|
+| **Requires PIN** | `/api/start`, `/api/pause`, `/api/toggle_playback`, `/api/reset`, `/api/add`, `/api/mode`, `/api/message/*`, `/api/messages/add\|remove\|edit`, `/api/indicator`, `/api/presets/add\|remove\|default/edit`, `/api/audio/upload\|clear`, `/api/system/logo/upload\|clear`, `/api/agenda/add\|remove\|edit\|start\|next\|stop\|setAutoNext`, `/api/profile/import`, `POST /api/settings` |
+| **Always open** | `/api/state`, `/api/companion`, `GET /api/settings`, `/api/messages`, `/api/audio`, `/api/agenda`, `/api/presets`, `/api/profile/export` |
+
+The PIN is never included in API responses, settings broadcasts or profile exports.
+
 ---
 
 ## Timer State

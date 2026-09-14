@@ -63,6 +63,13 @@ class SmartTimerProInstance extends InstanceBase {
 				default: '3000',
 				regex: Regex.PORT,
 			},
+			{
+				type: 'textinput',
+				id: 'pin',
+				label: 'PIN (only if configured in the app)',
+				width: 4,
+				default: '',
+			},
 		];
 	}
 
@@ -182,11 +189,13 @@ class SmartTimerProInstance extends InstanceBase {
 
 	initActions() {
 		const port = this.config ? this.config.port || '3000' : '3000';
+		const pin = this.config ? this.config.pin || '' : '';
 
 		const sendCmd = async (cmd) => {
 			if (!this.config || !this.config.host) return;
+			const sep = cmd.includes('?') ? '&' : '?';
 			try {
-				await fetch(`http://${this.config.host}:${port}/api/${cmd}`);
+				await fetch(`http://${this.config.host}:${port}/api/${cmd}${pin ? sep + 'pin=' + encodeURIComponent(pin) : ''}`);
 			} catch (e) {}
 		};
 
