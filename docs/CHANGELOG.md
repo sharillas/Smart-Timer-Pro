@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.3] - 2026-09-15
+
+### Bug Fixes
+- **Prestart frozen timer**: switching to Prestart while the countdown was running stopped the tick (the display froze). Prestart now counts down like countdown (stop-at-zero included) and switching back continues normally
+- **Ring overlap in Prestart**: the progress ring was centered on the whole stack, crossing the timer text when a caption was visible. The ring now wraps the timer text itself and renders behind it
+
 ## [1.7.2] - 2026-09-15
 
 ### Improvements

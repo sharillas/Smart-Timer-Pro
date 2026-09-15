@@ -178,6 +178,19 @@ test('prestart mode and undo on mode change', async () => {
     assert.strictEqual(r.status, 200);
 });
 
+test('prestart mode keeps the countdown ticking', async () => {
+    await api('/api/reset?sec=3');
+    await api('/api/start');
+    await new Promise((r) => setTimeout(r, 500));
+    await api('/api/mode?set=prestart');
+    await new Promise((r) => setTimeout(r, 1200));
+    const r = await json('/api/state');
+    assert.strictEqual(r.body.mode, 'prestart');
+    assert.ok(r.body.timeLeft < 3, 'prestart should keep counting down');
+    await api('/api/mode?set=countdown');
+    await api('/api/pause');
+});
+
 test('PIN protection', async () => {
     // Set PIN
     let r = await api('/api/settings', {

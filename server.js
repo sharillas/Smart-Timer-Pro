@@ -389,7 +389,7 @@ setInterval(() => {
     if (!state.isRunning) return;
     const now = Date.now();
 
-    if (state.mode === 'countdown') {
+    if (state.mode === 'countdown' || state.mode === 'prestart') {
         if (countdownEndTime === null) {
             countdownEndTime = now + state.timeLeft * 1000;
         }
@@ -470,7 +470,7 @@ app.get('/api/state', (req, res) => res.json(state));
 
 app.get('/api/start', (req, res) => {
     const now = Date.now();
-    if (state.mode === 'countdown') {
+    if (state.mode === 'countdown' || state.mode === 'prestart') {
         countdownEndTime = now + state.timeLeft * 1000;
     } else if (state.mode === 'countup') {
         countupStartTime = now - state.countupTime * 1000;
@@ -499,7 +499,7 @@ app.get('/api/toggle_playback', (req, res) => {
         sendOSC('pause', 0);
     } else {
         const now = Date.now();
-        if (state.mode === 'countdown') {
+        if (state.mode === 'countdown' || state.mode === 'prestart') {
             countdownEndTime = now + state.timeLeft * 1000;
         } else if (state.mode === 'countup') {
             countupStartTime = now - state.countupTime * 1000;
@@ -545,7 +545,7 @@ app.get('/api/add', (req, res) => {
     if (state.mode === 'countup') {
         state.countupTime += sec;
         if (state.isRunning) countupStartTime -= sec * 1000;
-    } else if (state.mode === 'countdown') {
+    } else if (state.mode === 'countdown' || state.mode === 'prestart') {
         state.timeLeft += sec;
         if (state.isRunning) countdownEndTime += sec * 1000;
     } else if (state.mode === 'agenda' && state.agendaActive) {
@@ -572,7 +572,7 @@ app.get('/api/mode', (req, res) => {
         captureUndo();
         if (state.isRunning) {
             const now = Date.now();
-            if (req.query.set === 'countdown') {
+            if (req.query.set === 'countdown' || req.query.set === 'prestart') {
                 countdownEndTime = now + state.timeLeft * 1000;
             } else if (req.query.set === 'countup') {
                 countupStartTime = now - state.countupTime * 1000;

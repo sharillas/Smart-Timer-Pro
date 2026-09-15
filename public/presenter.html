@@ -45,6 +45,12 @@
             justify-content: center;
             text-align: center;
         }
+        .timer-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .timer {
             font-weight: 700;
             letter-spacing: -0.02em;
@@ -52,6 +58,8 @@
             line-height: 1;
             text-align: center;
             white-space: nowrap;
+            position: relative;
+            z-index: 2;
         }
         .caption {
             color: #fff;
@@ -78,8 +86,11 @@
         .message.hidden { opacity: 0; }
         .ring {
             position: absolute;
+            left: 50%;
+            top: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            z-index: 1;
         }
         .ring circle {
             fill: none;
@@ -397,10 +408,10 @@
                     cap.id = 'caption';
                     stack.appendChild(cap);
 
-                    var timerDiv = document.createElement('div');
-                    timerDiv.className = 'timer';
-                    timerDiv.id = 'timer';
-                    stack.appendChild(timerDiv);
+                    var timerWrap = document.createElement('div');
+                    timerWrap.className = 'timer-wrap';
+                    timerWrap.id = 'timer-wrap';
+                    stack.appendChild(timerWrap);
 
                     if ((s.settings && s.settings.ringEnabled) && s.mode !== 'countup') {
                         var ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -413,8 +424,13 @@
                         circ.setAttribute('r', '47');
                         circ.setAttribute('stroke-dasharray', '295.3');
                         ring.appendChild(circ);
-                        stage.appendChild(ring);
+                        timerWrap.appendChild(ring);
                     }
+
+                    var timerDiv = document.createElement('div');
+                    timerDiv.className = 'timer';
+                    timerDiv.id = 'timer';
+                    timerWrap.appendChild(timerDiv);
 
                     var msgDiv = document.createElement('div');
                     msgDiv.className = 'message';
@@ -481,14 +497,14 @@
 
             var ring = document.getElementById('ring');
             if (ring) {
-                var cfg3 = cfg;
-                ring.style.left = (cfg3.timerX !== undefined ? cfg3.timerX : 50) + '%';
-                ring.style.top = (cfg3.timerY !== undefined ? cfg3.timerY : 46) + '%';
-                var ringSize = getTimerSize(cfg3) * 7.2;
-                ring.style.width = ringSize + 'vw';
-                ring.style.height = ringSize + 'vw';
-                ring.style.maxWidth = '70vh';
-                ring.style.maxHeight = '70vh';
+                var el2 = getTimerEl();
+                if (el2) {
+                    // Size the ring around the actual timer text (resolution independent)
+                    var rect = el2.getBoundingClientRect();
+                    var ringSize = Math.max(rect.height * 3.2, 60);
+                    ring.style.width = ringSize + 'px';
+                    ring.style.height = ringSize + 'px';
+                }
                 var pct = 1;
                 if (s.mode !== 'countup' && s.initialTime > 0) {
                     pct = Math.max(0, Math.min(1, s.activeTime / s.initialTime));
@@ -496,10 +512,10 @@
                 var circ = ring.querySelector('circle');
                 if (circ) {
                     circ.setAttribute('stroke-dashoffset', String(295.3 * (1 - pct)));
-                    var ringColor = cfg3.colorNormal || '#10b981';
-                    if (s.alertLevel === 'expired') ringColor = cfg3.colorExpired || '#ef4444';
-                    else if (s.alertLevel === 'danger') ringColor = cfg3.colorDanger || '#f97316';
-                    else if (s.alertLevel === 'warning') ringColor = cfg3.colorWarning || '#f59e0b';
+                    var ringColor = cfg.colorNormal || '#10b981';
+                    if (s.alertLevel === 'expired') ringColor = cfg.colorExpired || '#ef4444';
+                    else if (s.alertLevel === 'danger') ringColor = cfg.colorDanger || '#f97316';
+                    else if (s.alertLevel === 'warning') ringColor = cfg.colorWarning || '#f59e0b';
                     circ.setAttribute('stroke', ringColor);
                 }
             }
