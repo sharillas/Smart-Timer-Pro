@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.4] - 2026-09-15
+
+### Changes
+- **New app icon everywhere**: clock logo (dark blue rounded square at 50% opacity + original clock artwork) applied to the window title bar, in-app header, system tray, installer and desktop/Start Menu shortcuts
+
 ## [1.7.3] - 2026-09-15
 
 ### Bug Fixes
