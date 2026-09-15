@@ -62,9 +62,11 @@ sudo systemctl restart companion
 | Timer Display | Hours (HH), Minutes (MM), Seconds (SS) -- big read-only display buttons |
 | Smart Controls | Smart Timer Button (toggle + time), GO (start), Pause, Reset Time, Toggle Message |
 | Quick Messages | Instant triggers for slots 1-5 |
-| Display Modes | Countdown, Count-Up, Time of Day, Idle/Logo |
+| Display Modes | Countdown, Count-Up, Time of Day, Idle/Logo, Agenda, Prestart |
 | Quick Times | Reset to 1m, 5m, 10m, 15m, 30m, 60m |
 | Manual Adjustments | +1 Minute, -1 Minute |
+| Status Indicator | Loading Bar ON/OFF, Semáforo ON/OFF |
+| Agenda | Start rundown, Next session, Stop, Session + Time display |
 
 ## Variables
 

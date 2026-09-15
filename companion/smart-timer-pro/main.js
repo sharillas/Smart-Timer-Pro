@@ -389,82 +389,36 @@ class SmartTimerProInstance extends InstanceBase {
 	initPresets() {
 		const presets = {};
 
-		const box = (border) => ({
-			id: 'bg',
-			type: 'box',
-			color: BLACK,
-			borderColor: combineRgb(...border),
-			borderWidth: 4,
-			borderPosition: 'inside',
-			x: 0,
-			y: 0,
-			width: 100,
-			height: 100,
-		});
-
-		const iconElement = (icon) => ({
-			id: 'ic',
-			type: 'image',
-			base64Image: ICONS[icon],
-			halign: 'center',
-			valign: 'center',
-			fillMode: 'fit',
-			x: 0,
-			y: 3,
-			width: 100,
-			height: 62,
-		});
-
-		const labelElement = (text, opts = {}) => ({
-			id: 'tx',
-			type: 'text',
-			text,
+		const iconStyle = (icon, text, size) => ({
+			text: text || '',
+			size: size || '14',
 			color: WHITE,
-			halign: 'center',
-			valign: 'center',
-			fontsizeAllowShrink: true,
-			x: 0,
-			y: 64,
-			width: 100,
-			height: 36,
-			fontsize: 42,
-			...opts,
+			bgcolor: BLACK,
+			png64: ICONS[icon] || undefined,
+			pngalignment: 'top:center',
+			alignment: 'center:bottom',
+			show_topbar: false,
+		});
+
+		const textStyle = (text, size) => ({
+			text,
+			size: size || '14',
+			color: WHITE,
+			bgcolor: BLACK,
+			show_topbar: false,
 		});
 
 		// Timer Display (HH : MM : SS read-only)
-		presets['display_hours'] = {
-			type: 'layered',
-			category: 'Timer Display',
-			name: 'Timer Display - Hours (HH)',
-			elements: [box([0, 200, 255]), labelElement('$(smart-timer-pro:sign)$(smart-timer-pro:hours)', { y: 0, height: 100, fontsize: 88, font: 'companion-mono' })],
-			steps: [],
-			feedbacks: [],
-		};
-		presets['display_minutes'] = {
-			type: 'layered',
-			category: 'Timer Display',
-			name: 'Timer Display - Minutes (MM)',
-			elements: [box([16, 185, 129]), labelElement('$(smart-timer-pro:minutes)', { y: 0, height: 100, fontsize: 88, font: 'companion-mono' })],
-			steps: [],
-			feedbacks: [],
-		};
-		presets['display_seconds'] = {
-			type: 'layered',
-			category: 'Timer Display',
-			name: 'Timer Display - Seconds (SS)',
-			elements: [box([245, 158, 11]), labelElement('$(smart-timer-pro:seconds)', { y: 0, height: 100, fontsize: 88, font: 'companion-mono' })],
-			steps: [],
-			feedbacks: [],
-		};
+		presets['display_hours'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Hours (HH)', style: textStyle('$(smart-timer-pro:sign)$(smart-timer-pro:hours)', '40'), steps: [], feedbacks: [] };
+		presets['display_minutes'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Minutes (MM)', style: textStyle('$(smart-timer-pro:minutes)', '40'), steps: [], feedbacks: [] };
+		presets['display_seconds'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Seconds (SS)', style: textStyle('$(smart-timer-pro:seconds)', '40'), steps: [], feedbacks: [] };
 
 		presets['smart_timer'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Smart Controls',
 			name: 'Smart Timer Button (toggle + time display)',
-			elements: [box([51, 65, 85]), iconElement('play_circle_filled'), labelElement('$(smart-timer-pro:time)', { fontsize: 46, font: 'companion-mono' })],
-			steps: [
-				{ down: [{ actionId: 'toggle_playback', options: {} }], up: [] },
-			],
+			style: iconStyle('play_circle_filled', '$(smart-timer-pro:time)', '16'),
+			steps: [{ down: [{ actionId: 'toggle_playback', options: {} }], up: [] }],
 			feedbacks: [{ feedbackId: 'timer_state', options: {} }],
 		};
 
@@ -472,16 +426,8 @@ class SmartTimerProInstance extends InstanceBase {
 			type: 'button',
 			category: 'Smart Controls',
 			name: 'GO (Start)',
-			style: {
-				text: '▶\\nGO',
-				size: 'auto',
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(16, 185, 129),
-				show_topbar: false,
-			},
-			steps: [
-				{ down: [{ actionId: 'start', options: {} }], up: [] },
-			],
+			style: { text: 'GO', size: '20', color: WHITE, bgcolor: combineRgb(16, 185, 129), png64: ICONS['play_circle_filled'], pngalignment: 'top:center', alignment: 'center:bottom', show_topbar: false },
+			steps: [{ down: [{ actionId: 'start', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 
@@ -489,27 +435,17 @@ class SmartTimerProInstance extends InstanceBase {
 			type: 'button',
 			category: 'Smart Controls',
 			name: 'Pause',
-			style: {
-				text: '⏸\\nPAUSE',
-				size: 'auto',
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(245, 158, 11),
-				show_topbar: false,
-			},
-			steps: [
-				{ down: [{ actionId: 'pause', options: {} }], up: [] },
-			],
+			style: { text: 'PAUSE', size: '18', color: WHITE, bgcolor: combineRgb(245, 158, 11), png64: ICONS['stop'], pngalignment: 'top:center', alignment: 'center:bottom', show_topbar: false },
+			steps: [{ down: [{ actionId: 'pause', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 
 		presets['smart_message'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Smart Controls',
 			name: 'Toggle Message',
-			elements: [box([0, 163, 224]), iconElement('chat'), labelElement('MSG', { fontsize: 46 })],
-			steps: [
-				{ down: [{ actionId: 'toggle_msg', options: {} }], up: [] },
-			],
+			style: iconStyle('chat', 'MSG', '16'),
+			steps: [{ down: [{ actionId: 'toggle_msg', options: {} }], up: [] }],
 			feedbacks: [{ feedbackId: 'msg_state', options: {} }],
 		};
 
@@ -517,59 +453,39 @@ class SmartTimerProInstance extends InstanceBase {
 			type: 'button',
 			category: 'Smart Controls',
 			name: 'Reset Time',
-			style: {
-				text: '⟳\\nRESET Time',
-				size: '14',
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(200, 50, 50),
-				show_topbar: false,
-			},
-			steps: [
-				{ down: [{ actionId: 'reset_last', options: {} }], up: [] },
-			],
+			style: { text: 'RESET', size: '16', color: WHITE, bgcolor: combineRgb(200, 50, 50), png64: ICONS['refresh'], pngalignment: 'top:center', alignment: 'center:bottom', show_topbar: false },
+			steps: [{ down: [{ actionId: 'reset_last', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 
 		// Quick Messages Triggers (Slots 1-5)
 		for (let i = 1; i <= 5; i++) {
 			presets[`trigger_msg_${i}`] = {
-				type: 'layered',
+				type: 'button',
 				category: 'Quick Messages',
 				name: `Trigger Quick Message ${i}`,
-				elements: [box([0, 150, 200]), labelElement(`[${i}] $(smart-timer-pro:msg_${i})`, { y: 0, height: 100, fontsize: 34 })],
-				steps: [
-					{
-						down: [
-							{ actionId: 'trigger_msg', options: { slot: i } },
-						],
-						up: [],
-					},
-				],
+				style: textStyle(`[${i}] $(smart-timer-pro:msg_${i})`, '12'),
+				steps: [{ down: [{ actionId: 'trigger_msg', options: { slot: i } }], up: [] }],
 				feedbacks: [],
 			};
 		}
 
 		// Display Modes
 		const modes = [
-			{ id: 'countdown', label: 'Countdown', icon: 'timer', color: [16, 185, 129] },
-			{ id: 'countup', label: 'Count-Up', icon: 'trending_up', color: [0, 163, 224] },
-			{ id: 'timeofday', label: 'Clock', icon: 'schedule', color: [139, 92, 246] },
-			{ id: 'logo', label: 'Logo', icon: 'image', color: [100, 116, 139] },
+			{ id: 'countdown', label: 'Countdown', icon: 'timer' },
+			{ id: 'countup', label: 'Count-Up', icon: 'trending_up' },
+			{ id: 'timeofday', label: 'Clock', icon: 'schedule' },
+			{ id: 'logo', label: 'Logo', icon: 'image' },
+			{ id: 'agenda', label: 'Agenda', icon: 'event_note' },
+			{ id: 'prestart', label: 'Prestart', icon: 'movie' },
 		];
 		modes.forEach((mode) => {
 			presets[`mode_${mode.id}`] = {
-				type: 'layered',
+				type: 'button',
 				category: 'Display Modes',
 				name: `${mode.label} Mode`,
-				elements: [box(mode.color), iconElement(mode.icon), labelElement(mode.label, { fontsize: 40 })],
-				steps: [
-					{
-						down: [
-							{ actionId: 'set_mode', options: { mode: mode.id } },
-						],
-						up: [],
-					},
-				],
+				style: iconStyle(mode.icon, mode.label, '12'),
+				steps: [{ down: [{ actionId: 'set_mode', options: { mode: mode.id } }], up: [] }],
 				feedbacks: [],
 			};
 		});
@@ -586,109 +502,83 @@ class SmartTimerProInstance extends InstanceBase {
 
 		quickTimes.forEach((t) => {
 			presets[`reset_${t.sec}`] = {
-				type: 'layered',
+				type: 'button',
 				category: 'Quick Times',
 				name: `Reset to ${t.label}`,
-				elements: [box([51, 65, 85]), iconElement('av_timer'), labelElement(t.label, { fontsize: 48 })],
-				steps: [
-					{
-						down: [
-							{ actionId: 'reset', options: { sec: t.sec } },
-						],
-						up: [],
-					},
-				],
+				style: iconStyle('av_timer', t.label, '16'),
+				steps: [{ down: [{ actionId: 'reset', options: { sec: t.sec } }], up: [] }],
 				feedbacks: [],
 			};
 		});
 
 		// Manual Adjustments
 		presets['add_min'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Manual Adjustments',
 			name: '+1 Minute',
-			elements: [box([16, 185, 129]), iconElement('add_circle_outline'), labelElement('+1m', { fontsize: 46 })],
-			steps: [
-				{ down: [{ actionId: 'add', options: { sec: 60 } }], up: [] },
-			],
+			style: iconStyle('add_circle_outline', '+1m', '16'),
+			steps: [{ down: [{ actionId: 'add', options: { sec: 60 } }], up: [] }],
 			feedbacks: [],
 		};
 
 		presets['sub_min'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Manual Adjustments',
 			name: '-1 Minute',
-			elements: [box([245, 158, 11]), iconElement('remove_circle_outline'), labelElement('-1m', { fontsize: 46 })],
-			steps: [
-				{ down: [{ actionId: 'add', options: { sec: -60 } }], up: [] },
-			],
+			style: iconStyle('remove_circle_outline', '-1m', '16'),
+			steps: [{ down: [{ actionId: 'add', options: { sec: -60 } }], up: [] }],
 			feedbacks: [],
 		};
 
 		// Status Indicator Controls
 		const indicators = [
-			{ id: 'bar_on', label: 'Bar ON', icon: 'linear_scale', type: 'bar', action: 'on', border: [16, 185, 129] },
-			{ id: 'bar_off', label: 'Bar OFF', icon: 'linear_scale', type: 'bar', action: 'off', border: [100, 116, 139] },
-			{ id: 'semaforo_on', label: 'Semáforo ON', icon: 'traffic', type: 'semaforo', action: 'on', border: [16, 185, 129] },
-			{ id: 'semaforo_off', label: 'Semáforo OFF', icon: 'traffic', type: 'semaforo', action: 'off', border: [100, 116, 139] },
+			{ id: 'bar_on', label: 'Bar ON', icon: 'linear_scale', type: 'bar', action: 'on' },
+			{ id: 'bar_off', label: 'Bar OFF', icon: 'linear_scale', type: 'bar', action: 'off' },
+			{ id: 'semaforo_on', label: 'Semáforo ON', icon: 'traffic', type: 'semaforo', action: 'on' },
+			{ id: 'semaforo_off', label: 'Semáforo OFF', icon: 'traffic', type: 'semaforo', action: 'off' },
 		];
 
 		indicators.forEach((ind) => {
 			presets[ind.id] = {
-				type: 'layered',
+				type: 'button',
 				category: 'Status Indicator',
 				name: ind.label,
-				elements: [box(ind.border), iconElement(ind.icon), labelElement(ind.label, { fontsize: 34 })],
-				steps: [
-					{
-						down: [{ actionId: 'set_indicator', options: { type: ind.type, action: ind.action } }],
-						up: [],
-					},
-				],
+				style: iconStyle(ind.icon, ind.label, '12'),
+				steps: [{ down: [{ actionId: 'set_indicator', options: { type: ind.type, action: ind.action } }], up: [] }],
 				feedbacks: [],
 			};
 		});
 
 		// Agenda Controls
 		presets['agenda_start'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Agenda',
 			name: 'Agenda - Start',
-			elements: [box([16, 185, 129]), iconElement('play_circle_filled'), labelElement('AGENDA', { fontsize: 34 })],
-			steps: [
-				{ down: [{ actionId: 'agenda_start', options: {} }], up: [] },
-			],
+			style: iconStyle('play_circle_filled', 'AGENDA', '14'),
+			steps: [{ down: [{ actionId: 'agenda_start', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 		presets['agenda_next'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Agenda',
 			name: 'Agenda - Next Session',
-			elements: [box([0, 163, 224]), iconElement('av_timer'), labelElement('NEXT', { fontsize: 40 })],
-			steps: [
-				{ down: [{ actionId: 'agenda_next', options: {} }], up: [] },
-			],
+			style: iconStyle('skip_next', 'NEXT', '16'),
+			steps: [{ down: [{ actionId: 'agenda_next', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 		presets['agenda_stop'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Agenda',
 			name: 'Agenda - Stop',
-			elements: [box([200, 50, 50]), iconElement('remove_circle_outline'), labelElement('STOP', { fontsize: 40 })],
-			steps: [
-				{ down: [{ actionId: 'agenda_stop', options: {} }], up: [] },
-			],
+			style: iconStyle('stop', 'STOP', '16'),
+			steps: [{ down: [{ actionId: 'agenda_stop', options: {} }], up: [] }],
 			feedbacks: [],
 		};
 		presets['agenda_display'] = {
-			type: 'layered',
+			type: 'button',
 			category: 'Agenda',
 			name: 'Agenda - Session + Time Display',
-			elements: [
-				box([51, 65, 85]),
-				labelElement('$(smart-timer-pro:agenda_time)', { id: 'tx-time', y: 6, height: 60, fontsize: 46, font: 'companion-mono' }),
-				labelElement('$(smart-timer-pro:agenda_name)', { id: 'tx-name', y: 66, height: 34, fontsize: 30 }),
-			],
+			style: textStyle('$(smart-timer-pro:agenda_time)\n$(smart-timer-pro:agenda_name)', '14'),
 			steps: [],
 			feedbacks: [],
 		};
