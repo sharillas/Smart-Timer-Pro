@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2] - 2026-09-15
+
+### Improvements
+- **Presenter layout reworked**: caption, timer and message are now stacked vertically (no more message overlapping the timer). Sizes clamp by viewport height, so the layout fits short windows (e.g. the 800x300 fallback window) and low-resolution external monitors
+- **Modern embedded fonts**: Orbitron, Anton, Bebas Neue and Montserrat ship with the app (work offline on any machine). New "Caption / Message Font" setting and new options in the timer font dropdown
+- Prestart caption and agenda session name now use the caption font (Anton by default)
+
 ## [1.7.1] - 2026-09-14
 
 ### New Features

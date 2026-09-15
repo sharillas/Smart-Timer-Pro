@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="/socket.io/socket.io.js"></script>
     <style>
+        @font-face {
+            font-family: 'Orbitron';
+            src: url('/fonts/orbitron.ttf') format('truetype');
+            font-weight: 400 900;
+        }
+        @font-face {
+            font-family: 'Anton';
+            src: url('/fonts/anton.ttf') format('truetype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('/fonts/bebas-neue.ttf') format('truetype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('/fonts/montserrat.ttf') format('truetype');
+            font-weight: 100 900;
+        }
         :root {
             --bg: #171a21; --card: #232833; --border: #3b424e;
             --text: #f3f4f6; --text-dim: #9ca3af;
@@ -354,12 +374,25 @@
                         <option value="'Times New Roman', serif">Times New Roman</option>
                         <option value="Impact, sans-serif">Impact</option>
                         <option value="Orbitron, sans-serif">Orbitron (digital)</option>
+                        <option value="'Anton', sans-serif">Anton (moderno)</option>
+                        <option value="'Bebas Neue', sans-serif">Bebas Neue (moderno)</option>
+                        <option value="Montserrat, sans-serif">Montserrat (moderno)</option>
                         <option value="custom">Custom...</option>
                     </select>
                 </div>
                 <div class="setting-row hidden" id="custom-font-row">
                     <span class="setting-label">Custom Font</span>
                     <input type="text" id="set-font-custom" class="setting-input wide" placeholder="'My Font', monospace" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Caption / Message Font</span>
+                    <select id="set-caption-font" class="setting-input" style="width:200px" onchange="autoSaveSettings()">
+                        <option value="'Anton', sans-serif">Anton (default)</option>
+                        <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+                        <option value="Montserrat, sans-serif">Montserrat</option>
+                        <option value="Orbitron, sans-serif">Orbitron</option>
+                        <option value="same">Same as Timer</option>
+                    </select>
                 </div>
                 <div class="setting-row">
                     <span class="setting-label">Show Seconds</span>
@@ -821,7 +854,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.7.1 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.7.2 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1104,7 +1137,10 @@
                 "Georgia, serif": "Georgia, serif",
                 "'Times New Roman', serif": "'Times New Roman', serif",
                 "Impact, sans-serif": "Impact, sans-serif",
-                "Orbitron, sans-serif": "Orbitron, sans-serif"
+                "Orbitron, sans-serif": "Orbitron, sans-serif",
+                "'Anton', sans-serif": "'Anton', sans-serif",
+                "'Bebas Neue', sans-serif": "'Bebas Neue', sans-serif",
+                "Montserrat, sans-serif": "Montserrat, sans-serif"
             };
             return map[f] || 'custom';
         }
@@ -1175,6 +1211,15 @@
                 pinEl.placeholder = s.apiPinEnabled ? 'PIN is set (type new to change, leave empty to keep)' : 'No PIN set';
             }
             document.getElementById('set-language').value = s.language || 'en';
+            var capFontEl = document.getElementById('set-caption-font');
+            if (capFontEl) {
+                var capFont = s.captionFont || "'Anton', sans-serif";
+                if (s.fontFamily && capFont === s.fontFamily) {
+                    capFontEl.value = 'same';
+                } else {
+                    capFontEl.value = fontToDropdown(capFont) === 'custom' ? "'Anton', sans-serif" : capFont;
+                }
+            }
             document.getElementById('set-prestart-label').value = s.prestartLabel || 'STARTS IN';
             document.getElementById('set-ring').checked = s.ringEnabled === true;
             document.getElementById('set-webhook').value = s.webhookUrl || '';
@@ -1237,6 +1282,11 @@
                 semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46,
                 language: document.getElementById('set-language').value,
                 prestartLabel: document.getElementById('set-prestart-label').value,
+                captionFont: (function() {
+                    var v = document.getElementById('set-caption-font').value;
+                    if (v === 'same') return getSelectedFont();
+                    return v;
+                })(),
                 ringEnabled: document.getElementById('set-ring').checked,
                 webhookUrl: document.getElementById('set-webhook').value.trim(),
                 oscEnabled: document.getElementById('set-osc-enabled').checked,
@@ -1586,6 +1636,9 @@
             var mt = document.getElementById('monitor-time');
             var ml = document.getElementById('monitor-logo');
             var mf = document.getElementById('monitor-frame');
+            if (mt) {
+                mt.style.fontFamily = cfg.fontFamily || "'Courier New', monospace";
+            }
             if (mf) {
                 if (cfg.bgMode === 'transparent') {
                     mf.style.background = 'transparent';

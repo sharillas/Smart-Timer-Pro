@@ -58,6 +58,7 @@ let settings = {
     timerY: 46,
     timerSize: 22,
     bgMode: 'color',
+    captionFont: "'Anton', sans-serif",
     apiPin: '',
     language: 'en',
     prestartLabel: 'STARTS IN',

@@ -5,6 +5,26 @@
     <title>Smart Timer Pro | Presenter</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
+        @font-face {
+            font-family: 'Orbitron';
+            src: url('/fonts/orbitron.ttf') format('truetype');
+            font-weight: 400 900;
+        }
+        @font-face {
+            font-family: 'Anton';
+            src: url('/fonts/anton.ttf') format('truetype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('/fonts/bebas-neue.ttf') format('truetype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('/fonts/montserrat.ttf') format('truetype');
+            font-weight: 100 900;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%; height: 100%;
@@ -16,37 +36,46 @@
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: #000;
         }
-        .timer {
+        .stack {
             position: absolute;
             transform: translate(-50%, -50%);
-            font-weight: 900;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .timer {
+            font-weight: 700;
             letter-spacing: -0.02em;
             transition: color 0.3s;
             line-height: 1;
             text-align: center;
             white-space: nowrap;
         }
-        .message {
-            position: absolute;
-            transform: translateX(-50%);
+        .caption {
             color: #fff;
-            font-weight: 600;
-            opacity: 0.9;
-            text-align: center;
-            max-width: 90%;
-            transition: opacity 0.3s;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+            max-width: 92%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .message.hidden { opacity: 0; }
-        .session-name {
-            position: absolute;
-            transform: translateX(-50%);
+        .message {
             color: #fff;
-            font-weight: 700;
+            font-weight: 400;
+            opacity: 0.92;
             text-align: center;
-            max-width: 88%;
+            max-width: 92%;
             line-height: 1.15;
+            transition: opacity 0.3s;
+            text-transform: uppercase;
             letter-spacing: 0.01em;
         }
+        .message.hidden { opacity: 0; }
         .ring {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -64,7 +93,7 @@
             color: #fff;
             padding: 8px 16px;
             border-radius: 8px;
-            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Montserrat', -apple-system, 'Segoe UI', Roboto, sans-serif;
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.5px;
@@ -175,7 +204,7 @@
             var el = getTimerEl();
             if (!el) return;
             var cfg = s.settings || currentSettings;
-            el.style.fontSize = getTimerSize(cfg) + 'vw';
+            el.style.fontSize = timerFontSize(cfg);
 
             var color = cfg.colorNormal || '#10b981';
             if (s.alertLevel === 'expired') {
@@ -198,20 +227,35 @@
             var el = getTimerEl();
             if (!el) return;
             var cfg = s.settings || currentSettings;
-            el.style.fontSize = getTimerSize(cfg) + 'vw';
+            el.style.fontSize = timerFontSize(cfg);
             el.textContent = formatTime(s.activeTime, cfg);
             el.style.color = cfg.colorNormal || '#10b981';
         }
 
-        function positionTimer(el, cfg) {
-            el.style.left = (cfg.timerX !== undefined ? cfg.timerX : 50) + '%';
-            el.style.top = (cfg.timerY !== undefined ? cfg.timerY : 46) + '%';
+        // Responsive sizing: vw on normal screens, clamped by vh so the stack
+        // always fits short windows (e.g. the 800x300 fallback window).
+        function timerFontSize(cfg) {
+            var t = getTimerSize(cfg);
+            return 'min(' + t + 'vw, ' + (t * 1.7) + 'vh)';
+        }
+        function captionFontSize(cfg) {
+            var t = getTimerSize(cfg);
+            return 'min(' + (t * 0.3) + 'vw, ' + (t * 0.5) + 'vh)';
+        }
+        function messageFontSize(cfg) {
+            var t = getTimerSize(cfg);
+            return 'min(' + (t * 0.22) + 'vw, ' + (t * 0.36) + 'vh)';
+        }
+        function captionFont(cfg) {
+            return (cfg && cfg.captionFont) || "'Anton', sans-serif";
         }
 
-        function positionMessage(el, cfg) {
-            el.style.left = (cfg.timerX !== undefined ? cfg.timerX : 50) + '%';
-            var y = (cfg.timerY !== undefined ? cfg.timerY : 46);
-            el.style.top = (y + 13) + '%';
+        function positionStack(cfg) {
+            var stack = document.getElementById('stack');
+            if (!stack) return;
+            stack.style.left = (cfg.timerX !== undefined ? cfg.timerX : 50) + '%';
+            stack.style.top = (cfg.timerY !== undefined ? cfg.timerY : 46) + '%';
+            stack.style.gap = 'min(1.2vw, 2vh)';
         }
 
         function createLoadbar() {
@@ -342,48 +386,21 @@
                     img.id = 'logo-img';
                     img.className = 'logo-display';
                     stage.appendChild(img);
-                } else if (s.mode === 'agenda') {
-                    var sess = document.createElement('div');
-                    sess.className = 'session-name';
-                    sess.id = 'session-name';
-                    sess.style.fontSize = '5vw';
-                    stage.appendChild(sess);
-
-                    var agTimer = document.createElement('div');
-                    agTimer.className = 'timer';
-                    agTimer.id = 'timer';
-                    stage.appendChild(agTimer);
-
-                    var agMsg = document.createElement('div');
-                    agMsg.className = 'message';
-                    agMsg.id = 'msg';
-                    agMsg.style.fontSize = '4vw';
-                    stage.appendChild(agMsg);
-                } else if (s.mode === 'timeofday') {
-                    var tod = document.createElement('div');
-                    tod.className = 'timer';
-                    tod.id = 'timer';
-                    stage.appendChild(tod);
-
-                    var msgDiv2 = document.createElement('div');
-                    msgDiv2.className = 'message';
-                    msgDiv2.id = 'msg';
-                    msgDiv2.style.fontSize = '4vw';
-                    stage.appendChild(msgDiv2);
                 } else {
+                    var stack = document.createElement('div');
+                    stack.className = 'stack';
+                    stack.id = 'stack';
+                    stage.appendChild(stack);
+
+                    var cap = document.createElement('div');
+                    cap.className = 'caption';
+                    cap.id = 'caption';
+                    stack.appendChild(cap);
+
                     var timerDiv = document.createElement('div');
                     timerDiv.className = 'timer';
                     timerDiv.id = 'timer';
-                    applyFont(timerDiv, currentSettings);
-                    stage.appendChild(timerDiv);
-
-                    if (s.mode === 'prestart') {
-                        var cap = document.createElement('div');
-                        cap.className = 'session-name';
-                        cap.id = 'prestart-caption';
-                        cap.style.fontSize = '4vw';
-                        stage.appendChild(cap);
-                    }
+                    stack.appendChild(timerDiv);
 
                     if ((s.settings && s.settings.ringEnabled) && s.mode !== 'countup') {
                         var ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -402,8 +419,7 @@
                     var msgDiv = document.createElement('div');
                     msgDiv.className = 'message';
                     msgDiv.id = 'msg';
-                    msgDiv.style.fontSize = '4vw';
-                    stage.appendChild(msgDiv);
+                    stack.appendChild(msgDiv);
                 }
 
                 builtMode = s.mode;
@@ -424,19 +440,21 @@
                 return;
             }
 
+            var cfg = s.settings || {};
+            positionStack(cfg);
+
             var el = getTimerEl();
             if (el) {
-                var cfg = s.settings || {};
-                el.style.fontSize = getTimerSize(cfg) + 'vw';
                 applyFont(el, cfg);
-                positionTimer(el, cfg);
 
                 if (s.mode === 'agenda') {
                     el.textContent = formatTime(s.agendaTimeLeft !== undefined ? s.agendaTimeLeft : 0, cfg);
                     el.style.color = cfg.colorNormal || '#10b981';
+                    el.style.fontSize = timerFontSize(cfg);
                 } else if (s.mode === 'timeofday') {
                     el.textContent = formatTimeOfDay();
                     el.style.color = cfg.colorNormal || '#10b981';
+                    el.style.fontSize = timerFontSize(cfg);
                 } else if (s.mode === 'countdown' || s.mode === 'prestart') {
                     renderCountdown(s);
                 } else {
@@ -444,21 +462,33 @@
                 }
             }
 
-            var cap = document.getElementById('prestart-caption');
+            // Caption (session name in agenda, label in prestart, hidden otherwise)
+            var cap = document.getElementById('caption');
             if (cap) {
-                cap.textContent = (s.settings && s.settings.prestartLabel) || 'STARTS IN';
-                cap.style.left = (currentSettings.timerX !== undefined ? currentSettings.timerX : 50) + '%';
-                cap.style.top = (currentSettings.timerY !== undefined ? Math.max(6, currentSettings.timerY - 18) : 28) + '%';
+                cap.style.fontFamily = captionFont(cfg);
+                cap.style.fontSize = captionFontSize(cfg);
+                if (s.mode === 'prestart') {
+                    cap.textContent = (cfg.prestartLabel) || 'STARTS IN';
+                    cap.style.display = '';
+                } else if (s.mode === 'agenda') {
+                    cap.textContent = s.agendaName || '';
+                    cap.style.display = '';
+                } else {
+                    cap.textContent = '';
+                    cap.style.display = 'none';
+                }
             }
 
             var ring = document.getElementById('ring');
             if (ring) {
-                var cfg3 = s.settings || {};
+                var cfg3 = cfg;
                 ring.style.left = (cfg3.timerX !== undefined ? cfg3.timerX : 50) + '%';
                 ring.style.top = (cfg3.timerY !== undefined ? cfg3.timerY : 46) + '%';
                 var ringSize = getTimerSize(cfg3) * 7.2;
                 ring.style.width = ringSize + 'vw';
                 ring.style.height = ringSize + 'vw';
+                ring.style.maxWidth = '70vh';
+                ring.style.maxHeight = '70vh';
                 var pct = 1;
                 if (s.mode !== 'countup' && s.initialTime > 0) {
                     pct = Math.max(0, Math.min(1, s.activeTime / s.initialTime));
@@ -474,21 +504,16 @@
                 }
             }
 
-            var sess = document.getElementById('session-name');
-            if (sess) {
-                sess.textContent = s.agendaName || '';
-                sess.style.top = (currentSettings.timerY !== undefined ? Math.max(6, currentSettings.timerY - 20) : 26) + '%';
-            }
-
             var msg = getMsgEl();
             if (msg) {
-                var cfg2 = s.settings || {};
-                positionMessage(msg, cfg2);
+                msg.style.fontFamily = captionFont(cfg);
+                msg.style.fontSize = messageFontSize(cfg);
                 if (s.showMessage && s.message) {
                     msg.textContent = s.message;
-                    msg.classList.remove('hidden');
+                    msg.style.display = '';
                 } else {
-                    msg.classList.add('hidden');
+                    msg.textContent = '';
+                    msg.style.display = 'none';
                 }
             }
 
