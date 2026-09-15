@@ -51,6 +51,10 @@ manifest.runtime.entrypoint = '../main.js';
 manifest.version = srcPackageJson.version;
 manifest.runtime.api = 'nodejs-ipc';
 manifest.runtime.apiVersion = frameworkPkg.version;
+// Display name carries the current version (Companion shows "manufacturer: name")
+const displayName = `Smart Timer.v${srcPackageJson.version} [ by Nelson Teixeira ]`;
+manifest.name = displayName;
+manifest.products = [displayName];
 fs.writeFileSync(path.join(companionDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 // 4. Create minimal package.json in pkg/

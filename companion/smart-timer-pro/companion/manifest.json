@@ -1,6 +1,6 @@
 {
   "id": "smart-timer-pro",
-  "name": "Smart Timer Pro | by Nelson Teixeira",
+  "name": "Smart Timer.v1.7.3 [ by Nelson Teixeira ]",
   "shortname": "smart-timer-pro",
   "description": "Control Smart Timer Pro stage timer from Bitfocus Companion",
   "version": "1.4.0",
@@ -19,7 +19,7 @@
     "apiVersion": "1.0.0",
     "entrypoint": "../main.js"
   },
-  "manufacturer": "Nelson Teixeira",
-  "products": ["Smart Timer Pro"],
+  "manufacturer": "Smartchoice",
+  "products": ["Smart Timer.v1.7.3 [ by Nelson Teixeira ]"],
   "keywords": ["timer", "countdown", "stage", "production", "stream deck"]
 }
