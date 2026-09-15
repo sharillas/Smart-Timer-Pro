@@ -63,6 +63,6 @@ e a **piscar** quando expira.
 
 ## 7. Encerrar
 
-- Fechar a janela **não desliga a app** — ela fica no **system tray**
-  (clique direito: GO/Pause, Reset, Quit). Usar **Quit** para sair mesmo.
+- Fechar a janela (X) fecha **também o ecrã externo**; a app continua no
+  **system tray** (clique direito: GO/Pause, Reset, Quit). Usar **Quit** para sair mesmo.
 - As atualizações chegam sozinhas: Settings > Updates > CHECK FOR UPDATES.

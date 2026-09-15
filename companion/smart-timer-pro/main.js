@@ -686,8 +686,8 @@ class SmartTimerProInstance extends InstanceBase {
 			name: 'Agenda - Session + Time Display',
 			elements: [
 				box([51, 65, 85]),
-				labelElement('$(smart-timer-pro:agenda_time)', { y: 6, height: 60, fontsize: 46, font: 'companion-mono' }),
-				labelElement('$(smart-timer-pro:agenda_name)', { y: 66, height: 34, fontsize: 30 }),
+				labelElement('$(smart-timer-pro:agenda_time)', { id: 'tx-time', y: 6, height: 60, fontsize: 46, font: 'companion-mono' }),
+				labelElement('$(smart-timer-pro:agenda_name)', { id: 'tx-name', y: 66, height: 34, fontsize: 30 }),
 			],
 			steps: [],
 			feedbacks: [],

@@ -63,8 +63,10 @@ const pkgJson = {
 };
 fs.writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify(pkgJson, null, 2));
 
-// 5. Copy HELP.md to pkg/
+// 5. Copy HELP.md to pkg/ (root, for older Companion versions) and
+//    pkg/companion/ (required by Companion 3.3+ for the Help button)
 fs.copyFileSync(path.join(root, 'HELP.md'), path.join(pkgDir, 'HELP.md'));
+fs.copyFileSync(path.join(root, 'HELP.md'), path.join(companionDir, 'HELP.md'));
 
 // 6. Create .tgz
 const outName = path.join(root, `companion-module-smart-timer-pro-${srcPackageJson.version}.tgz`);

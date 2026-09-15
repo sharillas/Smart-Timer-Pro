@@ -17,16 +17,22 @@ if (!gotTheLock) {
     app.quit();
 } else {
     app.on('second-instance', () => {
-        if (mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
-            mainWindow.show();
-            mainWindow.focus();
-        }
+        showMainWindow();
     });
 }
 
 function sendTimerCommand(cmd) {
     fetch(pageProtocol() + `://127.0.0.1:3000/api/${cmd}`).catch(() => {});
+}
+
+function showMainWindow() {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        if (!mainWindow.isVisible()) mainWindow.show();
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+    } else {
+        createMainWindow();
+    }
 }
 
 function createTray() {
@@ -35,7 +41,7 @@ function createTray() {
     tray.setToolTip('Smart Timer Pro');
 
     const menu = Menu.buildFromTemplate([
-        { label: 'Open Smart Timer Pro', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+        { label: 'Open Smart Timer Pro', click: () => showMainWindow() },
         { type: 'separator' },
         { label: 'GO / Pause', click: () => sendTimerCommand('toggle_playback') },
         { label: 'Reset Timer', click: () => sendTimerCommand('reset') },
@@ -43,12 +49,7 @@ function createTray() {
         { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
     ]);
     tray.setContextMenu(menu);
-    tray.on('click', () => {
-        if (mainWindow) {
-            if (!mainWindow.isVisible()) mainWindow.show();
-            mainWindow.focus();
-        }
-    });
+    tray.on('click', () => showMainWindow());
 }
 
 function startServer() {
@@ -104,10 +105,16 @@ function createMainWindow() {
         mainWindow.show();
     });
 
-    // Closing the window hides it to the system tray; the timer keeps running
+    // Closing the window (X) closes the main window AND the external display.
+    // The app keeps running in the system tray; "Open Smart Timer Pro" brings it back.
     mainWindow.on('close', (e) => {
         if (!isQuitting) {
             e.preventDefault();
+            presenterEnabled = false;
+            if (presenterWindow && !presenterWindow.isDestroyed()) {
+                presenterWindow.close();
+                presenterWindow = null;
+            }
             mainWindow.hide();
         }
     });

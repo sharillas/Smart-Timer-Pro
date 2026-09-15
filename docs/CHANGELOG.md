@@ -5,6 +5,10 @@
 ### New Features
 - **Update from the GUI**: Settings > Updates shows the current version, a "CHECK FOR UPDATES" button and live status (checking, downloading, ready, up-to-date). The automatic check at launch remains active.
 
+### Bug Fixes
+- **Close button (X)**: now closes both the main window and the external display (previously the presenter stayed on the external monitor). The app remains in the system tray.
+- **Companion module**: HELP page now displays correctly (`companion/HELP.md` placement) and the agenda display preset no longer uses duplicate element ids (which broke the preset list).
+
 ## [1.7.0] - 2026-09-14
 
 ### New Features
