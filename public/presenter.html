@@ -97,19 +97,6 @@
             opacity: 0.95;
             z-index: 5;
         }
-        .ring {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        .ring circle {
-            fill: none;
-            stroke-width: 3;
-            transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
-        }
         .conn-banner {
             position: fixed;
             top: 12px; right: 12px;
@@ -426,20 +413,6 @@
                     timerWrap.id = 'timer-wrap';
                     stack.appendChild(timerWrap);
 
-                    if ((s.settings && s.settings.ringEnabled) && s.mode !== 'countup') {
-                        var ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        ring.setAttribute('class', 'ring');
-                        ring.setAttribute('id', 'ring');
-                        ring.setAttribute('viewBox', '0 0 100 100');
-                        var circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circ.setAttribute('cx', '50');
-                        circ.setAttribute('cy', '50');
-                        circ.setAttribute('r', '47');
-                        circ.setAttribute('stroke-dasharray', '295.3');
-                        ring.appendChild(circ);
-                        timerWrap.appendChild(ring);
-                    }
-
                     var timerDiv = document.createElement('div');
                     timerDiv.className = 'timer';
                     timerDiv.id = 'timer';
@@ -505,31 +478,6 @@
                 } else {
                     cap.textContent = '';
                     cap.style.display = 'none';
-                }
-            }
-
-            var ring = document.getElementById('ring');
-            if (ring) {
-                var el2 = getTimerEl();
-                if (el2) {
-                    // Size the ring around the actual timer text (resolution independent)
-                    var rect = el2.getBoundingClientRect();
-                    var ringSize = Math.max(rect.height * 3.2, 60);
-                    ring.style.width = ringSize + 'px';
-                    ring.style.height = ringSize + 'px';
-                }
-                var pct = 1;
-                if (s.mode !== 'countup' && s.initialTime > 0) {
-                    pct = Math.max(0, Math.min(1, s.activeTime / s.initialTime));
-                }
-                var circ = ring.querySelector('circle');
-                if (circ) {
-                    circ.setAttribute('stroke-dashoffset', String(295.3 * (1 - pct)));
-                    var ringColor = cfg.colorNormal || '#10b981';
-                    if (s.alertLevel === 'expired') ringColor = cfg.colorExpired || '#ef4444';
-                    else if (s.alertLevel === 'danger') ringColor = cfg.colorDanger || '#f97316';
-                    else if (s.alertLevel === 'warning') ringColor = cfg.colorWarning || '#f59e0b';
-                    circ.setAttribute('stroke', ringColor);
                 }
             }
 

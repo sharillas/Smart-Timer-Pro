@@ -61,7 +61,6 @@ app.whenReady().then(async () => {
             warningThreshold: 120,
             dangerThreshold: 30,
             prestartLabel: 'STARTS IN',
-            ringEnabled: true,
         }),
     });
 
@@ -113,7 +112,7 @@ app.whenReady().then(async () => {
     await api('/api/mode?set=countdown');
     await capture(BASE + '/', 'screenshot_settings.png', 1280, 850, 'openSettings(); true', 1500);
 
-    // --- 4. Presenter countdown with ring (green) ---
+    // --- 4. Presenter countdown (green) ---
     console.log('step 4');
     await api('/api/reset?sec=300');
     await api('/api/mode?set=countdown');

@@ -29,8 +29,8 @@ Full settings modal: fonts, colors, thresholds, audio slots, PIN, shortcuts, pro
 
 ![Settings](assets/screenshot_settings.png)
 
-### Presenter - Countdown with Progress Ring
-External display in countdown mode with the progress ring around the timer.
+### Presenter - Countdown
+External display in countdown mode.
 
 ![Presenter Countdown](assets/screenshot_presenter.png)
 

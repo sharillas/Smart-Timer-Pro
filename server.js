@@ -65,7 +65,6 @@ let settings = {
     apiPin: '',
     language: 'en',
     prestartLabel: 'STARTS IN',
-    ringEnabled: false,
     webhookUrl: '',
     oscEnabled: false,
     oscHost: '',

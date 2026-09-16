@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.1] - 2026-09-15
+
+### Removed
+- **Progress ring**: removed entirely (setting, rendering and docs) — it overlapped the layout and did not fit the project vision
+
 ## [1.8.0] - 2026-09-15
 
 ### New Features

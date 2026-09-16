@@ -656,13 +656,6 @@
             <div class="setting-group">
                 <h3>Display</h3>
                 <div class="setting-row">
-                    <span class="setting-label" data-i18n="ring_label">Progress ring on display</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="set-ring" onchange="autoSaveSettings()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="setting-row">
                     <span class="setting-label" data-i18n="auto_presenter_label">Open external display on app start</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="set-auto-presenter" onchange="autoSaveSettings()">
@@ -914,7 +907,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.8.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.8.1 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1006,7 +999,6 @@
                 import_profile: 'IMPORT PROFILE',
                 language_label: 'Language',
                 prestart_label: 'Prestart caption',
-                ring_label: 'Progress ring on display',
                 webhook_label: 'Webhook URL (POST on events)',
                 osc_label: 'OSC output',
                 osc_host: 'OSC host',
@@ -1092,7 +1084,6 @@
                 import_profile: 'IMPORTAR PERFIL',
                 language_label: 'Idioma',
                 prestart_label: 'Legenda de pré-evento',
-                ring_label: 'Anel de progresso no ecrã',
                 webhook_label: 'URL Webhook (POST nos eventos)',
                 osc_label: 'Saída OSC',
                 osc_host: 'Host OSC',
@@ -1313,7 +1304,6 @@
                     capFontEl.value = fontToDropdown(capFont) === 'custom' ? "'Anton', sans-serif" : capFont;
                 }
             }
-            document.getElementById('set-ring').checked = s.ringEnabled === true;
             document.getElementById('set-auto-presenter').checked = s.autoOpenPresenter === true;
             document.getElementById('set-color-theme').value = s.colorTheme || 'default';
             document.getElementById('set-webhook').value = s.webhookUrl || '';
@@ -1382,7 +1372,6 @@
                     if (v === 'same') return getSelectedFont();
                     return v;
                 })(),
-                ringEnabled: document.getElementById('set-ring').checked,
                 webhookUrl: document.getElementById('set-webhook').value.trim(),
                 oscEnabled: document.getElementById('set-osc-enabled').checked,
                 oscHost: document.getElementById('set-osc-host').value.trim(),
