@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.0] - 2026-09-15
+
+### New Features
+- **Show Clock**: toggle in Controls — displays the current time (top-right) on the external display in countdown/count-up modes, in the GUI preview and on the remote page
+- **Prestart card**: dedicated card in the main panel with caption presets (STARTS IN, COMEÇA EM, OPENING SOON, custom), live preview and a button to start the mode (moved out of Settings)
+- **Preset badges**: time presets redesigned as outline badges with large text ("10 MIN", "2 H", "45 SEG") in the current language; the active preset is highlighted; editing and persistence unchanged
+- **Color themes**: quick color palettes in Settings (Default, Cyan, Magenta, Lime, Monochrome)
+- **Message fade**: messages now fade in/out smoothly on the external display (layout stays stable)
+- **Agenda progress on remote**: the remote page shows a progress bar of the current session
+- **Auto-open external display**: option in Settings to open the presenter window when the app starts
+- **Tutorial**: in-app tutorial button in Settings (EN/PT) + Quick Start in the Companion module help
+
+### Removed
+- "Minutes... / SET TIME" input (redundant with the preset badges and custom HH:MM:SS)
+- Dead code: "both" indicator state and the unused message flag
+
 ## [1.7.5] - 2026-09-15
 
 ### Bug Fixes

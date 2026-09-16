@@ -40,6 +40,21 @@
         .msg { background: #0ea5e9; }
         .msg:active { background: #0284c7; }
         .hidden { display: none; }
+        .clock-top {
+            position: fixed; top: 12px; right: 16px; color: #fff;
+            font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
+            opacity: 0.9; display: none;
+        }
+        .clock-top.visible { display: block; }
+        .agenda-bar {
+            width: 100%; max-width: 640px; height: 6px; background: #1f2937;
+            border-radius: 999px; overflow: hidden; display: none;
+        }
+        .agenda-bar.visible { display: block; }
+        .agenda-bar-fill {
+            height: 100%; background: #10b981; border-radius: 999px;
+            transition: width 0.5s linear;
+        }
         .banner {
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
             background: rgba(239, 68, 68, 0.95); color: #fff;
@@ -51,9 +66,11 @@
 </head>
 <body>
     <div class="banner" id="banner">CONNECTION LOST — RECONNECTING...</div>
+    <div class="clock-top" id="clock-top"></div>
 
     <div class="session" id="session"></div>
     <div class="time" id="time">--:--</div>
+    <div class="agenda-bar" id="agenda-bar"><div class="agenda-bar-fill" id="agenda-bar-fill"></div></div>
 
     <div class="row">
         <button class="go" id="btn-go" onclick="cmd('toggle_playback')">GO</button>
@@ -125,6 +142,25 @@
             }
             document.getElementById('btn-go').classList.toggle('hidden', !!s.isRunning);
             document.getElementById('btn-pause').classList.toggle('hidden', !s.isRunning);
+
+            var clock = document.getElementById('clock-top');
+            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup' || s.mode === 'prestart')) {
+                clock.classList.add('visible');
+                var d = new Date();
+                clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            } else {
+                clock.classList.remove('visible');
+            }
+
+            var agBar = document.getElementById('agenda-bar');
+            var agFill = document.getElementById('agenda-bar-fill');
+            if (s.agendaActive && s.mode === 'agenda' && s.agendaTotal > 0) {
+                agBar.classList.add('visible');
+                var pct = Math.max(0, Math.min(100, (s.agendaTimeLeft / s.agendaTotal) * 100));
+                agFill.style.width = pct + '%';
+            } else {
+                agBar.classList.remove('visible');
+            }
         }
 
         socket.on('stateUpdate', render);
@@ -133,6 +169,11 @@
 
         setInterval(function() {
             if (currentState && currentState.mode === 'timeofday') render(currentState);
+            var clock = document.getElementById('clock-top');
+            if (clock && clock.classList.contains('visible')) {
+                var d = new Date();
+                clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            }
         }, 1000);
     </script>
 </body>

@@ -134,15 +134,16 @@
         .btn-sub { background: #334155; color: #94a3b8; }
         .btn-add:hover { background: rgba(0,163,224,0.25); }
         .btn-sub:hover { background: #475569; }
-        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
         .preset-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
         .btn-preset {
-            background: rgba(30,41,59,0.6); border: 1px solid var(--border);
-            padding: 12px; border-radius: 10px; color: #cbd5e1; font-weight: 700;
-            cursor: pointer; transition: all 0.15s; font-size: 13px; text-align: center;
+            background: rgba(30,41,59,0.5); border: 1.5px solid var(--border);
+            padding: 14px 6px; border-radius: 10px; color: #e5e7eb; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; font-size: 15px; text-align: center;
+            letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .btn-preset:hover { background: rgba(0,163,224,0.1); border-color: var(--accent); color: #fff; }
-        .btn-preset.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-preset:hover { background: rgba(59,130,246,0.12); border-color: var(--accent); color: #fff; }
+        .btn-preset.active { border-color: var(--green); color: #6ee7b7; background: rgba(16,185,129,0.10); }
         .custom-row { display: flex; gap: 8px; }
         .custom-input {
             flex: 1; background: #0f172a; border: 1px solid var(--border);
@@ -328,6 +329,19 @@
         .conn-banner.visible { display: block; }
         .hotkey-input { cursor: pointer; }
         .setting-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
+        .prestart-preview {
+            height: 110px; background: #000; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            border: 1px solid #1a1a2e;
+        }
+        .prestart-preview #prestart-preview-cap {
+            color: #fff; font-family: 'Anton', sans-serif; font-size: 20px;
+            letter-spacing: 0.04em; text-transform: uppercase; max-width: 95%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .prestart-preview #prestart-preview-time {
+            font-family: 'Courier New', monospace; font-size: 30px; font-weight: 900; color: #10b981;
+        }
 
         /* --- MOBILE / TABLET --- */
         @media (max-width: 720px) {
@@ -640,11 +654,7 @@
             </div>
 
             <div class="setting-group">
-                <h3>Prestart & Ring</h3>
-                <div class="setting-row">
-                    <span class="setting-label" data-i18n="prestart_label">Prestart caption</span>
-                    <input type="text" id="set-prestart-label" class="setting-input" style="width:200px" onchange="autoSaveSettings()">
-                </div>
+                <h3>Display</h3>
                 <div class="setting-row">
                     <span class="setting-label" data-i18n="ring_label">Progress ring on display</span>
                     <label class="toggle-switch">
@@ -652,8 +662,31 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="auto_presenter_label">Open external display on app start</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-auto-presenter" onchange="autoSaveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="color_theme_label">Color theme</span>
+                    <select id="set-color-theme" class="setting-input" style="width:200px" onchange="onThemeChange()">
+                        <option value="default">Default (green/amber)</option>
+                        <option value="cyan">Cyan</option>
+                        <option value="magenta">Magenta</option>
+                        <option value="lime">Lime</option>
+                        <option value="mono">Monochrome white</option>
+                    </select>
+                </div>
             </div>
 
+            <div class="setting-group">
+                <h3 data-i18n="tutorial">Tutorial</h3>
+                <div class="setting-row">
+                    <button class="btn-set" style="flex:1" onclick="openTutorial()" data-i18n="tutorial_btn">TUTORIAL</button>
+                </div>
+            </div>
             <div class="setting-group">
                 <h3>Webhook & OSC</h3>
                 <div class="setting-row">
@@ -709,6 +742,17 @@
         </div>
     </div>
 
+    <!-- TUTORIAL MODAL -->
+    <div class="modal-overlay" id="tutorial-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <span id="tutorial-title">TUTORIAL</span>
+                <button class="modal-close" onclick="closeTutorial()">&times;</button>
+            </div>
+            <div id="tutorial-body" style="max-height:70vh;overflow-y:auto;font-size:13px;line-height:1.8;color:var(--text)"></div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <div class="brand">
@@ -728,10 +772,6 @@
                 <div class="card" style="margin-bottom:24px">
                     <div class="card-header" data-i18n="custom_quick_presets">Custom Quick Presets</div>
                     <div id="default-presets-grid" class="preset-grid"></div>
-                    <div class="custom-row">
-                        <input type="number" id="custom-min" class="custom-input" data-i18n-ph="minutes_ph" placeholder="Minutes...">
-                        <button onclick="setCustomTime()" class="btn-set" data-i18n="set_time">SET TIME</button>
-                    </div>
                     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
                         <div class="card-header" style="margin-bottom:8px"><span data-i18n="custom_presets">Custom Presets</span> <span id="preset-count" style="font-weight:400;color:var(--text-dim)"></span></div>
                         <div class="custom-row">
@@ -800,7 +840,27 @@
                     <div class="btn-grid" style="margin-top:12px">
                         <button id="btn-bar" onclick="toggleIndicator('bar')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">LOADING BAR: OFF</button>
                         <button id="btn-semaforo" onclick="toggleIndicator('semaforo')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">SEMÁFORO: OFF</button>
+                        <button id="btn-clock" onclick="toggleClock()" class="btn btn-sm" style="background:#334155;color:#cbd5e1">SHOW CLOCK: OFF</button>
                     </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header"><span data-i18n="prestart_card">Prestart / Pré-evento</span></div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <select id="prestart-select" class="custom-input" style="flex:1" onchange="onPrestartSelect()">
+                            <option value="">STARTS IN</option>
+                            <option value="COMEÇA EM">COMEÇA EM</option>
+                            <option value="OPENING SOON">OPENING SOON</option>
+                            <option value="WE START IN">WE START IN</option>
+                            <option value="custom" data-i18n="custom_opt">Custom...</option>
+                        </select>
+                    </div>
+                    <input type="text" id="prestart-input" class="custom-input" style="margin-bottom:10px" data-i18n-ph="prestart_ph" placeholder="Custom caption..." onchange="onPrestartInput()">
+                    <div class="prestart-preview" id="prestart-preview">
+                        <div id="prestart-preview-cap">STARTS IN</div>
+                        <div id="prestart-preview-time">10:00</div>
+                    </div>
+                    <button class="btn-set" style="width:100%;padding:12px;margin-top:10px" onclick="setMode('prestart')" data-i18n="prestart_go">INICIAR MODO PRESTART</button>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
@@ -854,7 +914,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.7.5 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.8.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -960,7 +1020,15 @@
                 minutes_ph: 'Minutes...',
                 session_name_ph: 'Session name...',
                 pin_ph: 'No PIN set',
-                pin_set_ph: 'PIN is set (type new to change, leave empty to keep)'
+                pin_set_ph: 'PIN is set (type new to change, leave empty to keep)',
+                prestart_card: 'Prestart / Pre-event',
+                custom_opt: 'Custom...',
+                prestart_ph: 'Custom caption...',
+                prestart_go: 'START PRESTART MODE',
+                auto_presenter_label: 'Open external display on app start',
+                color_theme_label: 'Color theme',
+                tutorial: 'Tutorial',
+                tutorial_btn: 'TUTORIAL'
             },
             pt: {
                 external_display: 'ECRÃ EXTERNO',
@@ -1038,7 +1106,15 @@
                 minutes_ph: 'Minutos...',
                 session_name_ph: 'Nome da sessão...',
                 pin_ph: 'Sem PIN definido',
-                pin_set_ph: 'PIN definido (escreve novo para alterar, vazio mantém)'
+                pin_set_ph: 'PIN definido (escreve novo para alterar, vazio mantém)',
+                prestart_card: 'Prestart / Pré-evento',
+                custom_opt: 'Personalizado...',
+                prestart_ph: 'Legenda personalizada...',
+                prestart_go: 'INICIAR MODO PRESTART',
+                auto_presenter_label: 'Abrir ecrã externo ao iniciar a app',
+                color_theme_label: 'Tema de cor',
+                tutorial: 'Tutorial',
+                tutorial_btn: 'TUTORIAL'
             }
         };
 
@@ -1178,6 +1254,24 @@
             applyLanguage();
         }
 
+        var COLOR_THEMES = {
+            default: { normal: '#10b981', warning: '#f59e0b', danger: '#f97316', expired: '#ef4444' },
+            cyan: { normal: '#06b6d4', warning: '#22d3ee', danger: '#f59e0b', expired: '#ef4444' },
+            magenta: { normal: '#e879f9', warning: '#f59e0b', danger: '#f43f5e', expired: '#ef4444' },
+            lime: { normal: '#84cc16', warning: '#facc15', danger: '#f97316', expired: '#ef4444' },
+            mono: { normal: '#f8fafc', warning: '#cbd5e1', danger: '#94a3b8', expired: '#ef4444' }
+        };
+
+        function onThemeChange() {
+            var theme = COLOR_THEMES[document.getElementById('set-color-theme').value];
+            if (!theme) return;
+            document.getElementById('set-color-normal').value = theme.normal;
+            document.getElementById('set-color-warning').value = theme.warning;
+            document.getElementById('set-color-danger').value = theme.danger;
+            document.getElementById('set-color-expired').value = theme.expired;
+            autoSaveSettings();
+        }
+
         function populateSettingsForm(s) {
             document.getElementById('set-font').value = fontToDropdown(s.fontFamily);
             if (fontToDropdown(s.fontFamily) === 'custom') {
@@ -1211,8 +1305,7 @@
                 pinEl.placeholder = s.apiPinEnabled ? 'PIN is set (type new to change, leave empty to keep)' : 'No PIN set';
             }
             document.getElementById('set-language').value = s.language || 'en';
-            var capFontEl = document.getElementById('set-caption-font');
-            if (capFontEl) {
+            var capFontEl = document.getElementById('set-caption-font');            if (capFontEl) {
                 var capFont = s.captionFont || "'Anton', sans-serif";
                 if (s.fontFamily && capFont === s.fontFamily) {
                     capFontEl.value = 'same';
@@ -1220,8 +1313,9 @@
                     capFontEl.value = fontToDropdown(capFont) === 'custom' ? "'Anton', sans-serif" : capFont;
                 }
             }
-            document.getElementById('set-prestart-label').value = s.prestartLabel || 'STARTS IN';
             document.getElementById('set-ring').checked = s.ringEnabled === true;
+            document.getElementById('set-auto-presenter').checked = s.autoOpenPresenter === true;
+            document.getElementById('set-color-theme').value = s.colorTheme || 'default';
             document.getElementById('set-webhook').value = s.webhookUrl || '';
             document.getElementById('set-osc-enabled').checked = s.oscEnabled === true;
             document.getElementById('set-osc-host').value = s.oscHost || '';
@@ -1281,7 +1375,8 @@
                 semaforoY: parseInt(document.getElementById('set-semaforo-y').value) || 88,
                 semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46,
                 language: document.getElementById('set-language').value,
-                prestartLabel: document.getElementById('set-prestart-label').value,
+                colorTheme: document.getElementById('set-color-theme').value,
+                autoOpenPresenter: document.getElementById('set-auto-presenter').checked,
                 captionFont: (function() {
                     var v = document.getElementById('set-caption-font').value;
                     if (v === 'same') return getSelectedFont();
@@ -1384,9 +1479,70 @@
                 semBtn.style.color = '#cbd5e1';
             }
         }
-        function setCustomTime() {
-            var mins = document.getElementById('custom-min').value;
-            if (mins) api('reset', '?sec=' + parseInt(mins) * 60);
+
+        function toggleClock() {
+            var cur = !!(currentSettings && currentSettings.showClock);
+            fetchApi('/api/settings' + pinQuery(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ showClock: !cur })
+            });
+        }
+
+        function updateClockButton(val) {
+            var btn = document.getElementById('btn-clock');
+            if (!btn) return;
+            if (val) {
+                btn.textContent = 'SHOW CLOCK: ON';
+                btn.style.background = 'var(--green)';
+                btn.style.color = '#fff';
+            } else {
+                btn.textContent = 'SHOW CLOCK: OFF';
+                btn.style.background = '#334155';
+                btn.style.color = '#cbd5e1';
+            }
+        }
+
+        function updatePrestartPreview() {
+            var cap = document.getElementById('prestart-preview-cap');
+            var tm = document.getElementById('prestart-preview-time');
+            if (cap) cap.textContent = (currentSettings && currentSettings.prestartLabel) || 'STARTS IN';
+            if (tm && lastState) {
+                tm.textContent = formatTimeDisplay(currentSettings || {}, lastState.timeLeft !== undefined ? lastState.timeLeft : 600);
+            }
+        }
+
+        function onPrestartSelect() {
+            var sel = document.getElementById('prestart-select');
+            var input = document.getElementById('prestart-input');
+            if (sel.value === 'custom') {
+                input.focus();
+                return;
+            }
+            input.value = sel.value;
+            onPrestartInput();
+        }
+
+        function onPrestartInput() {
+            var val = document.getElementById('prestart-input').value.trim();
+            fetchApi('/api/settings' + pinQuery(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prestartLabel: val })
+            });
+            updatePrestartPreview();
+        }
+
+        function populatePrestartCard() {
+            var input = document.getElementById('prestart-input');
+            var sel = document.getElementById('prestart-select');
+            var label = (currentSettings && currentSettings.prestartLabel) || 'STARTS IN';
+            if (input) input.value = label;
+            if (sel) {
+                var preset = Array.prototype.slice.call(sel.options).some(function(o) { return o.value === label; });
+                sel.value = preset ? label : 'custom';
+            }
+            updatePrestartPreview();
         }
         function addCustomPreset() {
             var raw = document.getElementById('custom-preset-time').value.trim();
@@ -1409,12 +1565,14 @@
             api('presets/remove', '?index=' + index);
         }
         function presetLabel(totalSeconds) {
+            var lang = (currentSettings && currentSettings.language) || 'en';
             var h = Math.floor(totalSeconds / 3600);
             var m = Math.floor((totalSeconds % 3600) / 60);
             var s = totalSeconds % 60;
-            if (h > 0) return h + 'h' + String(m).padStart(2, '0') + 'm' + String(s).padStart(2, '0') + 's';
-            if (m > 0) return m + 'm' + String(s).padStart(2, '0') + 's';
-            return s + 's';
+            if (h > 0) return h + ' H';
+            if (m > 0) return m + ' MIN';
+            if (s > 0) return s + (lang === 'pt' ? ' SEG' : ' SEC');
+            return '0';
         }
         function renderCustomPresets(presets) {
             var grid = document.getElementById('custom-presets-grid');
@@ -1430,6 +1588,7 @@
                 btn.className = 'btn-preset';
                 btn.style.cssText = 'width:100%;position:relative;padding-right:22px';
                 btn.textContent = p.label || presetLabel(p.seconds);
+                btn.dataset.sec = p.seconds;
                 btn.onclick = function() { resetTime(p.seconds); };
                 var del = document.createElement('button');
                 del.innerHTML = '&times;';
@@ -1454,6 +1613,7 @@
                 btn.className = 'btn-preset';
                 btn.style.cssText = 'width:100%;position:relative;padding-right:20px';
                 btn.textContent = p.label || presetLabel(p.seconds);
+                btn.dataset.sec = p.seconds;
                 btn.onclick = function() { resetTime(p.seconds); };
 
                 var edit = document.createElement('button');
@@ -1467,6 +1627,12 @@
                 wrapper.appendChild(btn);
                 wrapper.appendChild(edit);
                 grid.appendChild(wrapper);
+            });
+        }
+
+        function updatePresetActive(sec) {
+            document.querySelectorAll('#default-presets-grid .btn-preset, #custom-presets-grid .btn-preset').forEach(function(b) {
+                b.classList.toggle('active', parseInt(b.dataset.sec, 10) === sec);
             });
         }
 
@@ -1564,7 +1730,7 @@
             var sem = document.getElementById('monitor-semaforo');
             var ind = (s.settings && s.settings.statusIndicator) || 'none';
 
-            if (ind === 'bar' || ind === 'both') {
+            if (ind === 'bar') {
                 bar.classList.remove('hidden');
                 var pct = 100;
                 if (s.mode === 'countdown' && s.initialTime > 0) {
@@ -1578,7 +1744,7 @@
                 bar.classList.add('hidden');
             }
 
-            if (ind === 'semaforo' || ind === 'both') {
+            if (ind === 'semaforo') {
                 sem.classList.remove('hidden');
                 var red = document.getElementById('ml-red');
                 var amber = document.getElementById('ml-amber');
@@ -1618,6 +1784,25 @@
                 var btn = document.getElementById('mode-' + m);
                 if (btn) btn.classList.toggle('active', s.mode === m);
             });
+            updatePresetActive(s.mode === 'countdown' || s.mode === 'prestart' ? s.initialTime : -1);
+
+            // Clock overlay in monitor preview
+            var mClock = document.getElementById('monitor-clock');
+            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup' || s.mode === 'prestart')) {
+                if (!mClock) {
+                    mClock = document.createElement('div');
+                    mClock.id = 'monitor-clock';
+                    mClock.style.cssText = 'position:absolute;top:8px;right:12px;color:#fff;font-family:Orbitron,Courier New,monospace;font-size:13px;font-weight:700;opacity:0.9;z-index:4;letter-spacing:1px;';
+                    document.getElementById('monitor-frame').appendChild(mClock);
+                }
+                var mnow = new Date();
+                mClock.textContent =
+                    String(mnow.getHours()).padStart(2, '0') + ':' +
+                    String(mnow.getMinutes()).padStart(2, '0') + ':' +
+                    String(mnow.getSeconds()).padStart(2, '0');
+            } else if (mClock && mClock.parentNode) {
+                mClock.parentNode.removeChild(mClock);
+            }
 
             // Agenda current session
             var agCurrent = document.getElementById('agenda-current');
@@ -1632,6 +1817,7 @@
             }
             agendaState = { agendaActive: !!s.agendaActive, agendaIndex: s.agendaIndex };
             renderAgendaTimeline();
+            updatePrestartPreview();
 
             // Monitor time
             var mt = document.getElementById('monitor-time');
@@ -1776,6 +1962,8 @@
             renderCustomPresets(s.customPresets);
             renderDefaultPresets(s.defaultPresets);
             updateIndicatorButtons(s.statusIndicator);
+            updateClockButton(s.showClock);
+            populatePrestartCard();
             renderAgenda(s.agenda, s.agendaAutoNext);
             populateHotkeyFields(s.hotkeys);
             applyLanguage();
@@ -2043,6 +2231,14 @@
                     mt.textContent = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 }
             }
+            var mClock = document.getElementById('monitor-clock');
+            if (mClock) {
+                var now = new Date();
+                mClock.textContent =
+                    String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0') + ':' +
+                    String(now.getSeconds()).padStart(2, '0');
+            }
         }, 1000);
 
         var connBanner = document.getElementById('conn-banner');
@@ -2053,9 +2249,57 @@
             if (connBanner) connBanner.classList.remove('visible');
         });
 
+        // --- TUTORIAL ---
+        var TUTORIAL_TEXT = {
+            en: [
+                '<h4>1. Prepare the room</h4>',
+                'Open <b>EXTERNAL DISPLAY</b> for the projector/monitor. Configure fonts, colors and thresholds in <b>SETTINGS</b>.',
+                '<h4>2. Set the times</h4>',
+                'Click a preset badge (10 MIN, 5 MIN...) or add your own with HH:MM:SS. Fine-tune with <b>+1 MIN / -1 MIN</b>.',
+                '<h4>3. Agenda (optional)</h4>',
+                'Add sessions in <b>AGENDA / RUNDOWN</b> and press <b>START</b> — the display shows the session name and time. <b>NEXT</b> skips, <b>STOP</b> ends.',
+                '<h4>4. Prestart (optional)</h4>',
+                'The <b>PRESTART</b> card shows a "STARTS IN" caption before the event begins.',
+                '<h4>5. During the event</h4>',
+                '<b>Space</b> = GO/PAUSE · <b>R</b> = RESET · <b>M</b> = message · <b>Ctrl+Z</b> = undo. The <b>REMOTE</b> button opens the mobile control page.',
+                '<h4>6. Close</h4>',
+                'Closing the window (X) also closes the external display — the app stays in the system tray.',
+                '<h4>7. Updates</h4>',
+                'SETTINGS &rarr; Updates: the app updates itself automatically.'
+            ],
+            pt: [
+                '<h4>1. Preparar a sala</h4>',
+                'Abre <b>ECRÃ EXTERNO</b> para o projetor/monitor. Configura fontes, cores e limiares em <b>DEFINIÇÕES</b>.',
+                '<h4>2. Definir os tempos</h4>',
+                'Clica num preset (10 MIN, 5 MIN...) ou adiciona os teus em HH:MM:SS. Ajusta com <b>+1 MIN / -1 MIN</b>.',
+                '<h4>3. Agenda (opcional)</h4>',
+                'Adiciona sessões em <b>AGENDA / ALINHAMENTO</b> e prime <b>INICIAR</b> — o ecrã mostra o nome da sessão e o tempo. <b>SEGUINTE</b> salta, <b>PARAR</b> termina.',
+                '<h4>4. Pré-evento (opcional)</h4>',
+                'O cartão <b>PRESTART / PRÉ-EVENTO</b> mostra uma legenda "COMEÇA EM" antes do evento.',
+                '<h4>5. Durante o evento</h4>',
+                '<b>Espaço</b> = GO/PAUSA · <b>R</b> = RESET · <b>M</b> = mensagem · <b>Ctrl+Z</b> = anular. O botão <b>REMOTO</b> abre a página de controlo mobile.',
+                '<h4>6. Fechar</h4>',
+                'Fechar a janela (X) fecha também o ecrã externo — a app fica no system tray.',
+                '<h4>7. Atualizações</h4>',
+                'DEFINIÇÕES &rarr; Updates: a app atualiza-se automaticamente.'
+            ]
+        };
+
+        function openTutorial() {
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var body = document.getElementById('tutorial-body');
+            if (body) body.innerHTML = (TUTORIAL_TEXT[lang] || TUTORIAL_TEXT.en).join('');
+            var title = document.getElementById('tutorial-title');
+            if (title) title.textContent = lang === 'pt' ? 'TUTORIAL' : 'TUTORIAL';
+            document.getElementById('tutorial-modal').classList.add('active');
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-modal').classList.remove('active');
+        }
+
         // --- UPDATES ---
-        if (window.electronAPI) {
-            window.electronAPI.getAppInfo().then(function(info) {
+        if (window.electronAPI) {            window.electronAPI.getAppInfo().then(function(info) {
                 var el = document.getElementById('app-version');
                 if (el) el.textContent = 'v' + info.version + (info.packaged ? '' : ' (dev mode)');
             });

@@ -2,6 +2,13 @@
 
 Bitfocus Companion module to control **Smart Timer Pro** stage timer from an Elgato Stream Deck.
 
+## Quick Start
+
+1. Import this module (Modules > Import Module Package) and restart Companion
+2. Add a connection: search "Smart Timer Pro", enter the app's IP (127.0.0.1 if on the same PC), port 3000
+3. Drag presets onto your Stream Deck: **GO**, **PAUSE**, **RESET**, the HH/MM/SS display and the quick messages
+4. In the Smart Timer Pro app: SETTINGS > Tutorial for a full walkthrough of the software
+
 ## Features
 
 - **GO / Pause** -- Start/pause buttons with GO and PAUSE icons

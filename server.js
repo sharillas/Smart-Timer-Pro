@@ -59,6 +59,9 @@ let settings = {
     timerSize: 22,
     bgMode: 'color',
     captionFont: "'Anton', sans-serif",
+    showClock: false,
+    colorTheme: 'default',
+    autoOpenPresenter: false,
     apiPin: '',
     language: 'en',
     prestartLabel: 'STARTS IN',
@@ -198,7 +201,6 @@ let state = {
     isRunning: false,
     message: '',
     showMessage: false,
-    messageIsPermanent: false,
     mode: 'countdown',
     logoData: logoData,
     alertLevel: 'normal',
@@ -591,7 +593,6 @@ app.get('/api/mode', (req, res) => {
 
 app.get('/api/message/toggle', (req, res) => {
     state.showMessage = !state.showMessage;
-    state.messageIsPermanent = false;
     broadcast();
     res.send(state.showMessage ? 'Message Shown' : 'Message Hidden');
 });
@@ -608,7 +609,6 @@ app.get('/api/message/trigger', (req, res) => {
         captureUndo();
         state.message = quickMessages[index];
         state.showMessage = true;
-        state.messageIsPermanent = true;
         logEvent('message', quickMessages[index]);
         broadcast();
         res.send('Message Triggered Live');
@@ -619,7 +619,6 @@ app.get('/api/message/trigger', (req, res) => {
 
 app.get('/api/message/hide', (req, res) => {
     state.showMessage = false;
-    state.messageIsPermanent = false;
     broadcast();
     res.send('Message Hidden');
 });

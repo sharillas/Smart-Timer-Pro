@@ -269,6 +269,17 @@ app.whenReady().then(() => {
     createTray();
     createMainWindow();
 
+    // Optionally open the external display automatically at startup
+    try {
+        const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+        const saved = JSON.parse(require('fs').readFileSync(settingsPath, 'utf8'));
+        if (saved.autoOpenPresenter === true) {
+            setTimeout(() => createPresenterWindow(), 1500);
+        }
+    } catch (e) {
+        // no saved settings yet
+    }
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createMainWindow();
