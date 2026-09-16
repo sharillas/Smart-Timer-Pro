@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.5] - 2026-09-15
+
+### Bug Fixes
+- **Agenda stop blocked the timer**: after starting and stopping the rundown, the display stayed in agenda mode with no active session, so the main timer transport stopped working. Stopping the agenda (or reaching the last session) now returns the display to countdown mode
+- **Time of Day frozen in the live monitor**: the GUI preview clock only updated when a state event arrived. It now ticks every second in Time of Day mode (like the presenter)
+
 ## [1.7.4] - 2026-09-15
 
 ### Changes

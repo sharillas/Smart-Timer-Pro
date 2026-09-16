@@ -854,7 +854,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.7.4 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.7.5 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1594,6 +1594,7 @@
 
         socket.on('stateUpdate', function(s) {
             var cfg = s.settings || {};
+            lastState = s;
             if (s.version) {
                 document.getElementById('footer-text').textContent =
                     'Copyright © Smart Timer Pro v' + s.version + ' - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026';
@@ -2034,6 +2035,16 @@
         }
 
         // --- CONNECTION BANNER ---
+        var lastState = null;
+        setInterval(function() {
+            if (lastState && lastState.mode === 'timeofday') {
+                var mt = document.getElementById('monitor-time');
+                if (mt) {
+                    mt.textContent = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+            }
+        }, 1000);
+
         var connBanner = document.getElementById('conn-banner');
         socket.on('disconnect', function() {
             if (connBanner) connBanner.classList.add('visible');

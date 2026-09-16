@@ -178,6 +178,29 @@ test('prestart mode and undo on mode change', async () => {
     assert.strictEqual(r.status, 200);
 });
 
+test('agenda stop returns to countdown and timer works again', async () => {
+    await api('/api/agenda/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'T1', seconds: 5 }),
+    });
+    await api('/api/agenda/start');
+    let r = await json('/api/state');
+    assert.strictEqual(r.body.mode, 'agenda');
+    await api('/api/agenda/stop');
+    r = await json('/api/state');
+    assert.strictEqual(r.body.mode, 'countdown');
+    assert.strictEqual(r.body.agendaActive, false);
+
+    // transport works again after stop
+    await api('/api/reset?sec=2');
+    await api('/api/start');
+    await new Promise((res) => setTimeout(res, 2500));
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timeLeft, 0);
+    assert.strictEqual(r.body.isRunning, false);
+});
+
 test('prestart mode keeps the countdown ticking', async () => {
     await api('/api/reset?sec=3');
     await api('/api/start');

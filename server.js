@@ -824,6 +824,7 @@ function advanceAgenda() {
         state.agendaTotal = 0;
         state.agendaEndTime = null;
         state.isRunning = false;
+        state.mode = 'countdown';
         logEvent('agenda_end', '');
     }
 }
@@ -948,6 +949,7 @@ app.get('/api/agenda/stop', (req, res) => {
     state.agendaTotal = 0;
     state.agendaEndTime = null;
     state.isRunning = false;
+    state.mode = 'countdown';
     logEvent('agenda_stop', '');
     broadcast();
     res.send('Agenda stopped');
