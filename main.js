@@ -138,7 +138,21 @@ function createPresenterWindow() {
     presenterEnabled = true;
 
     const hasExternalMonitor = displays.length > 1;
-    const targetDisplay = hasExternalMonitor ? displays[1] : displays[0];
+
+    // Choose the display: saved choice first, then the second display, then primary
+    let targetDisplay = displays[1] || displays[0];
+    try {
+        if (serverInstance && serverInstance.getSettings) {
+            const savedId = serverInstance.getSettings().presenterDisplayId;
+            if (savedId !== undefined && savedId !== null && savedId !== '') {
+                const found = displays.find((d) => d.id === Number(savedId));
+                if (found) targetDisplay = found;
+            }
+        }
+    } catch (e) {
+        // ignore, use default
+    }
+
     const { x, y, width, height } = targetDisplay.bounds;
 
     let bgMode = 'color';
@@ -236,6 +250,16 @@ ipcMain.handle('toggle-presenter', () => {
 
 ipcMain.handle('get-presenter-status', () => {
     return presenterWindow !== null;
+});
+
+ipcMain.handle('get-displays', () => {
+    return screen.getAllDisplays().map((d, i) => ({
+        id: d.id,
+        index: i,
+        width: d.bounds.width,
+        height: d.bounds.height,
+        primary: i === 0
+    }));
 });
 
 ipcMain.handle('get-app-info', () => {

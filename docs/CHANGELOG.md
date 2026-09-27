@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.2] - 2026-09-15
+
+### New Features
+- **External display selection**: choose which monitor receives the presenter when multiple displays are connected. Available in two places: a quick "▾" dropdown next to the EXTERNAL DISPLAY button (header) and a dropdown in Settings > Display. The choice is saved and used on the next open; falls back to the primary display if the chosen monitor is disconnected
+
 ## [1.8.1] - 2026-09-15
 
 ### Removed

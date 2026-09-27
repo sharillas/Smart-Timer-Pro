@@ -342,6 +342,20 @@
         .prestart-preview #prestart-preview-time {
             font-family: 'Courier New', monospace; font-size: 30px; font-weight: 900; color: #10b981;
         }
+        .header-dropdown { position: relative; display: flex; }
+        .header-caret { padding: 8px 10px; }
+        .header-menu {
+            position: absolute; top: calc(100% + 4px); right: 0;
+            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            min-width: 250px; z-index: 200; padding: 6px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+        }
+        .header-menu button {
+            display: block; width: 100%; background: none; border: none; color: var(--text);
+            padding: 9px 12px; text-align: left; cursor: pointer; border-radius: 6px; font-size: 12px;
+        }
+        .header-menu button:hover { background: rgba(59,130,246,0.15); }
+        .header-menu button.selected { color: var(--green); font-weight: 700; }
 
         /* --- MOBILE / TABLET --- */
         @media (max-width: 720px) {
@@ -656,6 +670,10 @@
             <div class="setting-group">
                 <h3>Display</h3>
                 <div class="setting-row">
+                    <span class="setting-label" data-i18n="presenter_display_label">External display</span>
+                    <select id="set-presenter-display" class="setting-input" style="width:240px" onchange="autoSaveSettings()"></select>
+                </div>
+                <div class="setting-row">
                     <span class="setting-label" data-i18n="auto_presenter_label">Open external display on app start</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="set-auto-presenter" onchange="autoSaveSettings()">
@@ -753,7 +771,11 @@
                 <div class="brand-text">Smart Timer <strong>Pro</strong></div>
             </div>
             <div class="header-actions">
-                <button class="header-btn" id="btn-presenter" onclick="togglePresenter()" data-i18n="external_display">EXTERNAL DISPLAY</button>
+                <div class="header-dropdown">
+                    <button class="header-btn" id="btn-presenter" onclick="togglePresenter()" data-i18n="external_display">EXTERNAL DISPLAY</button>
+                    <button class="header-btn header-caret" onclick="toggleDisplayMenu(event)" title="Choose display">▾</button>
+                    <div class="header-menu hidden" id="display-menu"></div>
+                </div>
                 <button class="header-btn" onclick="window.open('/remote.html', '_blank')" data-i18n="remote">REMOTE</button>
                 <button class="header-btn" id="btn-audio" onclick="toggleAudio()" data-i18n="audio_off">AUDIO OFF</button>
                 <button class="header-btn" onclick="openSettings()" data-i18n="settings">SETTINGS</button>
@@ -907,7 +929,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.8.1 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.8.2 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1018,6 +1040,7 @@
                 prestart_ph: 'Custom caption...',
                 prestart_go: 'START PRESTART MODE',
                 auto_presenter_label: 'Open external display on app start',
+                presenter_display_label: 'External display',
                 color_theme_label: 'Color theme',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
@@ -1103,6 +1126,7 @@
                 prestart_ph: 'Legenda personalizada...',
                 prestart_go: 'INICIAR MODO PRESTART',
                 auto_presenter_label: 'Abrir ecrã externo ao iniciar a app',
+                presenter_display_label: 'Ecrã externo',
                 color_theme_label: 'Tema de cor',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
@@ -1143,6 +1167,83 @@
                 window.open('/presenter.html', 'presenter', 'fullscreen=yes');
             }
         }
+
+        // --- DISPLAY SELECTION ---
+        var displayList = [];
+
+        function displayLabel(d, lang) {
+            var name = (lang === 'pt' ? 'Ecrã ' : 'Display ') + (d.index + 1);
+            name += ' — ' + d.width + '×' + d.height;
+            if (d.primary) name += ' (' + (lang === 'pt' ? 'principal' : 'primary') + ')';
+            return name;
+        }
+
+        function populateDisplaySelects() {
+            if (!window.electronAPI) return;
+            window.electronAPI.getDisplays().then(function(displays) {
+                displayList = displays || [];
+                var lang = (currentSettings && currentSettings.language) || 'en';
+                var currentId = currentSettings ? currentSettings.presenterDisplayId : null;
+                var options = displayList.map(function(d) {
+                    var sel = currentId !== null && currentId !== undefined && Number(currentId) === d.id ? ' selected' : '';
+                    return '<option value="' + d.id + '"' + sel + '>' + displayLabel(d, lang) + '</option>';
+                }).join('');
+                var sel = document.getElementById('set-presenter-display');
+                if (sel) sel.innerHTML = options;
+                buildDisplayMenu();
+            });
+        }
+
+        function buildDisplayMenu() {
+            var menu = document.getElementById('display-menu');
+            if (!menu || !window.electronAPI) return;
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var currentId = currentSettings ? currentSettings.presenterDisplayId : null;
+            menu.innerHTML = '';
+            displayList.forEach(function(d) {
+                var b = document.createElement('button');
+                b.textContent = displayLabel(d, lang);
+                if (currentId !== null && currentId !== undefined && Number(currentId) === d.id) b.classList.add('selected');
+                b.onclick = function(e) { e.stopPropagation(); selectPresenterDisplay(d.id); };
+                menu.appendChild(b);
+            });
+        }
+
+        function toggleDisplayMenu(e) {
+            if (e) e.stopPropagation();
+            var menu = document.getElementById('display-menu');
+            if (!menu) return;
+            buildDisplayMenu();
+            menu.classList.toggle('hidden');
+        }
+
+        function closeDisplayMenu() {
+            var menu = document.getElementById('display-menu');
+            if (menu) menu.classList.add('hidden');
+        }
+
+        async function selectPresenterDisplay(id) {
+            currentSettings.presenterDisplayId = id;
+            fetchApi('/api/settings' + pinQuery(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ presenterDisplayId: id })
+            });
+            closeDisplayMenu();
+            buildDisplayMenu();
+            if (window.electronAPI) {
+                var open = await window.electronAPI.getPresenterStatus();
+                if (open) {
+                    await window.electronAPI.togglePresenter();
+                    setTimeout(function() { window.electronAPI.togglePresenter(); }, 700);
+                }
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            var dd = document.querySelector('.header-dropdown');
+            if (dd && !dd.contains(e.target)) closeDisplayMenu();
+        });
 
         // --- AUDIO ---
         function toggleAudio() {
@@ -1367,6 +1468,10 @@
                 language: document.getElementById('set-language').value,
                 colorTheme: document.getElementById('set-color-theme').value,
                 autoOpenPresenter: document.getElementById('set-auto-presenter').checked,
+                presenterDisplayId: (function() {
+                    var sel = document.getElementById('set-presenter-display');
+                    return sel && sel.value ? Number(sel.value) : null;
+                })(),
                 captionFont: (function() {
                     var v = document.getElementById('set-caption-font').value;
                     if (v === 'same') return getSelectedFont();
@@ -1953,6 +2058,7 @@
             updateIndicatorButtons(s.statusIndicator);
             updateClockButton(s.showClock);
             populatePrestartCard();
+            populateDisplaySelects();
             renderAgenda(s.agenda, s.agendaAutoNext);
             populateHotkeyFields(s.hotkeys);
             applyLanguage();

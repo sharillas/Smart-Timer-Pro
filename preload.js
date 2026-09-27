@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     togglePresenter: () => ipcRenderer.invoke('toggle-presenter'),
     getPresenterStatus: () => ipcRenderer.invoke('get-presenter-status'),
+    getDisplays: () => ipcRenderer.invoke('get-displays'),
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
     getAppInfo: () => ipcRenderer.invoke('get-app-info'),
     onUpdateStatus: (callback) => {

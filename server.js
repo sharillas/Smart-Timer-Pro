@@ -62,6 +62,7 @@ let settings = {
     showClock: false,
     colorTheme: 'default',
     autoOpenPresenter: false,
+    presenterDisplayId: null,
     apiPin: '',
     language: 'en',
     prestartLabel: 'STARTS IN',
