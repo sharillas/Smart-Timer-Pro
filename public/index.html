@@ -673,6 +673,7 @@
                     <span class="setting-label" data-i18n="presenter_display_label">External display</span>
                     <select id="set-presenter-display" class="setting-input" style="width:240px" onchange="autoSaveSettings()"></select>
                 </div>
+                <p class="setting-hint" id="display-hint" style="display:none" data-i18n="display_hint">No external display detected — the timer opens in a small window.</p>
                 <div class="setting-row">
                     <span class="setting-label" data-i18n="auto_presenter_label">Open external display on app start</span>
                     <label class="toggle-switch">
@@ -929,7 +930,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.8.2 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.8.3 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1041,6 +1042,7 @@
                 prestart_go: 'START PRESTART MODE',
                 auto_presenter_label: 'Open external display on app start',
                 presenter_display_label: 'External display',
+                display_hint: 'No external display detected — the timer opens in a small window.',
                 color_theme_label: 'Color theme',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
@@ -1127,6 +1129,7 @@
                 prestart_go: 'INICIAR MODO PRESTART',
                 auto_presenter_label: 'Abrir ecrã externo ao iniciar a app',
                 presenter_display_label: 'Ecrã externo',
+                display_hint: 'Nenhum ecrã externo detetado — o temporizador abre numa janela pequena.',
                 color_theme_label: 'Tema de cor',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
@@ -1181,7 +1184,12 @@
         function populateDisplaySelects() {
             if (!window.electronAPI) return;
             window.electronAPI.getDisplays().then(function(displays) {
-                displayList = displays || [];
+                var all = displays || [];
+                // Never offer the primary monitor when external displays exist
+                if (all.length > 1) {
+                    all = all.filter(function(d) { return !d.primary; });
+                }
+                displayList = all;
                 var lang = (currentSettings && currentSettings.language) || 'en';
                 var currentId = currentSettings ? currentSettings.presenterDisplayId : null;
                 var options = displayList.map(function(d) {
@@ -1190,6 +1198,10 @@
                 }).join('');
                 var sel = document.getElementById('set-presenter-display');
                 if (sel) sel.innerHTML = options;
+                if (displayList.length === 0) {
+                    var hint = document.getElementById('display-hint');
+                    if (hint) hint.style.display = '';
+                }
                 buildDisplayMenu();
             });
         }

@@ -139,21 +139,36 @@ function createPresenterWindow() {
 
     const hasExternalMonitor = displays.length > 1;
 
-    // Choose the display: saved choice first, then the second display, then primary
-    let targetDisplay = displays[1] || displays[0];
-    try {
-        if (serverInstance && serverInstance.getSettings) {
-            const savedId = serverInstance.getSettings().presenterDisplayId;
-            if (savedId !== undefined && savedId !== null && savedId !== '') {
-                const found = displays.find((d) => d.id === Number(savedId));
-                if (found) targetDisplay = found;
+    // Choose the display: never the primary when external displays exist.
+    // Saved choice first (only if it is not the primary), then the first
+    // non-primary display, then the fallback window mode on the primary.
+    let targetDisplay = null;
+    if (hasExternalMonitor) {
+        try {
+            if (serverInstance && serverInstance.getSettings) {
+                const savedId = serverInstance.getSettings().presenterDisplayId;
+                if (savedId !== undefined && savedId !== null && savedId !== '') {
+                    const found = displays.find((d) => d.id === Number(savedId) && displays.indexOf(d) !== 0);
+                    if (found) targetDisplay = found;
+                }
             }
+        } catch (e) {
+            // ignore, use default
         }
-    } catch (e) {
-        // ignore, use default
+        if (!targetDisplay) {
+            targetDisplay = displays.slice(1).find(() => true) || null;
+        }
     }
 
-    const { x, y, width, height } = targetDisplay.bounds;
+    let bounds = null;
+    if (targetDisplay) {
+        bounds = targetDisplay.bounds;
+    } else {
+        // no external display: fallback window on the primary (not fullscreen)
+        bounds = displays[0].bounds;
+    }
+
+    const { x, y, width, height } = bounds;
 
     let bgMode = 'color';
     if (serverInstance && serverInstance.getSettings) {
@@ -246,6 +261,15 @@ function togglePresenterWindow() {
 ipcMain.handle('toggle-presenter', () => {
     togglePresenterWindow();
     return presenterWindow !== null;
+});
+
+ipcMain.handle('close-presenter', () => {
+    if (presenterWindow) {
+        presenterEnabled = false;
+        presenterWindow.close();
+        presenterWindow = null;
+    }
+    return true;
 });
 
 ipcMain.handle('get-presenter-status', () => {

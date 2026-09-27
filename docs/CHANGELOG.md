@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.3] - 2026-09-15
+
+### Bug Fixes
+- **Primary display is never used for the timer output** when external displays exist: the primary is excluded from the display pickers and from the fallback logic (selecting the primary left the operator stuck behind the fullscreen presenter)
+- **Escape closes the presenter window**: safety net so the external display can always be dismissed from the keyboard
+
 ## [1.8.2] - 2026-09-15
 
 ### New Features
