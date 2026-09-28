@@ -577,6 +577,9 @@
                 var stack = document.createElement('div');
                 stack.className = 'stack';
                 stack.id = 'stack';
+                stack.style.left = '50%';
+                stack.style.top = '50%';
+                stack.style.gap = 'min(1.5vw, 3vh)';
                 stage.appendChild(stack);
 
                 var cap = document.createElement('div');
@@ -632,7 +635,11 @@
             currentSettings = s;
             if (currentState) {
                 currentState.settings = s;
-                buildStage(currentState);
+                if (syncView) {
+                    buildSyncStage(currentState);
+                } else {
+                    buildStage(currentState);
+                }
             }
         });
 

@@ -118,6 +118,28 @@ app.whenReady().then(async () => {
     await api('/api/mode?set=countdown');
     await capture(BASE + '/presenter.html', 'screenshot_presenter.png', 1280, 720);
 
+    // --- 4b. External sync presenter (view=sync, OSC remaining 600s) ---
+    console.log('step 4b');
+    await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'osc', syncOscPort: 9321, syncOscAddress: '/sync/position', syncOscMode: 'seconds', syncDuration: 600 }),
+    });
+    await wait(1000);
+    const dgram = require('dgram');
+    const buf = Buffer.alloc(1024);
+    const addr = Buffer.from('/sync/position', 'utf8');
+    addr.copy(buf, 0);
+    buf.writeInt32BE(0, addr.length);
+    const typeIdx = Math.ceil((addr.length + 1) / 4) * 4;
+    buf.write(',f', typeIdx, 'utf8');
+    const valIdx = Math.ceil((typeIdx + 3) / 4) * 4;
+    buf.writeFloatBE(600, valIdx);
+    const sock = dgram.createSocket('udp4');
+    sock.send(buf.subarray(0, valIdx + 4), 9321, '127.0.0.1', () => sock.close());
+    await wait(1000);
+    await capture(BASE + '/presenter.html?view=sync', 'screenshot_sync_presenter.png', 1280, 720);
+
     // --- 5. Presenter warning + semaforo + message ---
     console.log('step 5');
     await api('/api/reset?sec=90');
