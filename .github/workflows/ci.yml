@@ -32,7 +32,7 @@ jobs:
       - run: npm ci
 
       - name: Build installer
-        run: npx electron-builder --publish never
+        run: node scripts/build-installer.js
 
       - name: Build Companion module
         working-directory: companion/smart-timer-pro

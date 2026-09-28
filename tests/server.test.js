@@ -170,12 +170,11 @@ test('session log records events and exports CSV', async () => {
     assert.ok(text.startsWith('time,type,label'));
 });
 
-test('prestart mode and undo on mode change', async () => {
-    await api('/api/mode?set=prestart');
-    let r = await json('/api/state');
-    assert.strictEqual(r.body.mode, 'prestart');
-    r = await api('/api/undo');
-    assert.strictEqual(r.status, 200);
+test('prestart mode is removed', async () => {
+    let r = await api('/api/mode?set=prestart');
+    assert.strictEqual(r.status, 400);
+    r = await json('/api/state');
+    assert.notStrictEqual(r.body.mode, 'prestart');
 });
 
 test('agenda stop returns to countdown and timer works again', async () => {
@@ -199,19 +198,6 @@ test('agenda stop returns to countdown and timer works again', async () => {
     r = await json('/api/state');
     assert.strictEqual(r.body.timeLeft, 0);
     assert.strictEqual(r.body.isRunning, false);
-});
-
-test('prestart mode keeps the countdown ticking', async () => {
-    await api('/api/reset?sec=3');
-    await api('/api/start');
-    await new Promise((r) => setTimeout(r, 500));
-    await api('/api/mode?set=prestart');
-    await new Promise((r) => setTimeout(r, 1200));
-    const r = await json('/api/state');
-    assert.strictEqual(r.body.mode, 'prestart');
-    assert.ok(r.body.timeLeft < 3, 'prestart should keep counting down');
-    await api('/api/mode?set=countdown');
-    await api('/api/pause');
 });
 
 test('PIN protection', async () => {

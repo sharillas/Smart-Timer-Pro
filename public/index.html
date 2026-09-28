@@ -205,7 +205,7 @@
         .logo-empty { color: var(--text-dim); font-size: 11px; letter-spacing: 1px; }
         .hidden { display: none !important; }
 
-        /* MODAL */
+        /* MODAL (legacy) + DRAWER */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
@@ -219,6 +219,23 @@
             overflow-y: auto; transform: translateY(20px); transition: transform 0.2s;
         }
         .modal-overlay.active .modal-content { transform: translateY(0); }
+        .drawer-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 900; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        }
+        .drawer-backdrop.active { opacity: 1; pointer-events: auto; }
+        .settings-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 540px; max-width: 92vw;
+            background: var(--card); border-left: 1px solid var(--border);
+            z-index: 1000; transform: translateX(105%); transition: transform 0.25s ease;
+            box-shadow: -12px 0 40px rgba(0,0,0,0.5);
+        }
+        .settings-drawer.active { transform: none; }
+        .settings-drawer .modal-content {
+            width: 100%; height: 100%; max-height: none; border: none; border-radius: 0;
+            padding: 24px; transform: none; overflow-y: auto;
+        }
         .modal-title {
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
             margin: 0 0 20px 0; display: flex; justify-content: space-between;
@@ -329,19 +346,6 @@
         .conn-banner.visible { display: block; }
         .hotkey-input { cursor: pointer; }
         .setting-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; line-height: 1.4; }
-        .prestart-preview {
-            height: 110px; background: #000; border-radius: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-            border: 1px solid #1a1a2e;
-        }
-        .prestart-preview #prestart-preview-cap {
-            color: #fff; font-family: 'Anton', sans-serif; font-size: 20px;
-            letter-spacing: 0.04em; text-transform: uppercase; max-width: 95%;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .prestart-preview #prestart-preview-time {
-            font-family: 'Courier New', monospace; font-size: 30px; font-weight: 900; color: #10b981;
-        }
         .header-dropdown { position: relative; display: flex; }
         .header-caret { padding: 8px 10px; }
         .header-menu {
@@ -370,6 +374,12 @@
             .app-footer { justify-content: center; }
             button, input, select, textarea { font-size: 16px; }
         }
+
+        /* --- ULTRA-WIDE (maximized) --- */
+        @media (min-width: 1800px) {
+            .container { max-width: none; }
+            .grid { grid-template-columns: 1.6fr 1fr; gap: 28px; }
+        }
     </style>
 </head>
 <body>
@@ -377,7 +387,8 @@
     <div class="conn-banner" id="conn-banner">CONNECTION LOST — RECONNECTING...</div>
 
     <!-- SETTINGS MODAL -->
-    <div class="modal-overlay" id="settings-modal">
+    <div class="drawer-backdrop" id="settings-backdrop" onclick="closeSettings()"></div>
+    <div class="settings-drawer" id="settings-modal">
         <div class="modal-content">
             <div class="modal-title">
                 SETTINGS
@@ -553,6 +564,15 @@
                         <input type="checkbox" id="set-start-zero" onchange="autoSaveSettings()">
                         <span class="toggle-slider"></span>
                     </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label" data-i18n="flash_times_label">Flash when expired</span>
+                    <select id="set-flash-times" class="setting-input" style="width:200px" onchange="autoSaveSettings()">
+                        <option value="3">3x then solid red</option>
+                        <option value="6">6x then solid red</option>
+                        <option value="8">8x then solid red</option>
+                        <option value="infinite">Infinite</option>
+                    </select>
                 </div>
             </div>
 
@@ -754,8 +774,7 @@
         </div>
     </div>
 
-    <!-- TUTORIAL MODAL -->
-    <div class="modal-overlay" id="tutorial-modal">
+    <!-- TUTORIAL MODAL -->    <div class="modal-overlay" id="tutorial-modal">
         <div class="modal-content">
             <div class="modal-title">
                 <span id="tutorial-title">TUTORIAL</span>
@@ -799,6 +818,12 @@
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
+                    <div class="card-header" data-i18n="visual_presets">Visual Presets</div>
+                    <div id="visual-presets-grid" style="display:flex;flex-direction:column;gap:8px"></div>
+                    <p class="setting-hint" data-i18n="visual_presets_hint">Save the current look (background, fonts, colors) to a slot and apply it anytime.</p>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
                     <div class="card-header" data-i18n="display_mode">Display Mode</div>
                     <div class="preset-grid cols4" style="margin-bottom:0">
                         <button onclick="setMode('countdown')" class="btn-preset active" id="mode-countdown">Countdown</button>
@@ -806,7 +831,6 @@
                         <button onclick="setMode('timeofday')" class="btn-preset" id="mode-timeofday">Time of Day</button>
                         <button onclick="setMode('logo')" class="btn-preset" id="mode-logo">Show Logo/Grid</button>
                         <button onclick="setMode('agenda')" class="btn-preset" id="mode-agenda">Agenda</button>
-                        <button onclick="setMode('prestart')" class="btn-preset" id="mode-prestart">Prestart</button>
                     </div>
                 </div>
 
@@ -857,26 +881,8 @@
                         <button id="btn-bar" onclick="toggleIndicator('bar')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">LOADING BAR: OFF</button>
                         <button id="btn-semaforo" onclick="toggleIndicator('semaforo')" class="btn btn-sm" style="background:#334155;color:#cbd5e1">SEMÁFORO: OFF</button>
                         <button id="btn-clock" onclick="toggleClock()" class="btn btn-sm" style="background:#334155;color:#cbd5e1">SHOW CLOCK: OFF</button>
+                        <button id="btn-flash" onclick="toggleFlash()" class="btn btn-sm" style="background:#334155;color:#cbd5e1">FLASH: OFF</button>
                     </div>
-                </div>
-
-                <div class="card" style="margin-bottom:24px">
-                    <div class="card-header"><span data-i18n="prestart_card">Prestart / Pré-evento</span></div>
-                    <div class="custom-row" style="margin-bottom:10px">
-                        <select id="prestart-select" class="custom-input" style="flex:1" onchange="onPrestartSelect()">
-                            <option value="">STARTS IN</option>
-                            <option value="COMEÇA EM">COMEÇA EM</option>
-                            <option value="OPENING SOON">OPENING SOON</option>
-                            <option value="WE START IN">WE START IN</option>
-                            <option value="custom" data-i18n="custom_opt">Custom...</option>
-                        </select>
-                    </div>
-                    <input type="text" id="prestart-input" class="custom-input" style="margin-bottom:10px" data-i18n-ph="prestart_ph" placeholder="Custom caption..." onchange="onPrestartInput()">
-                    <div class="prestart-preview" id="prestart-preview">
-                        <div id="prestart-preview-cap">STARTS IN</div>
-                        <div id="prestart-preview-time">10:00</div>
-                    </div>
-                    <button class="btn-set" style="width:100%;padding:12px;margin-top:10px" onclick="setMode('prestart')" data-i18n="prestart_go">INICIAR MODO PRESTART</button>
                 </div>
 
                 <div class="card" style="margin-bottom:24px">
@@ -930,7 +936,7 @@
     </div>
 
     <footer class="app-footer">
-        <span id="footer-text">Copyright © Smart Timer Pro v1.8.3 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
+        <span id="footer-text">Copyright © Smart Timer Pro v1.9.0 - All Rights Reserved - Nelson Teixeira @ Smartchoice 2026</span>
         <span id="shortcuts-hint" data-i18n="shortcuts_hint">Shortcuts: Space = GO/PAUSE · R = RESET · M = Message · Ctrl+Z = Undo</span>
     </footer>
 
@@ -1021,7 +1027,6 @@
                 export_profile: 'EXPORT PROFILE',
                 import_profile: 'IMPORT PROFILE',
                 language_label: 'Language',
-                prestart_label: 'Prestart caption',
                 webhook_label: 'Webhook URL (POST on events)',
                 osc_label: 'OSC output',
                 osc_host: 'OSC host',
@@ -1036,14 +1041,14 @@
                 session_name_ph: 'Session name...',
                 pin_ph: 'No PIN set',
                 pin_set_ph: 'PIN is set (type new to change, leave empty to keep)',
-                prestart_card: 'Prestart / Pre-event',
                 custom_opt: 'Custom...',
-                prestart_ph: 'Custom caption...',
-                prestart_go: 'START PRESTART MODE',
                 auto_presenter_label: 'Open external display on app start',
                 presenter_display_label: 'External display',
                 display_hint: 'No external display detected — the timer opens in a small window.',
+                flash_times_label: 'Flash when expired',
                 color_theme_label: 'Color theme',
+                visual_presets: 'Visual Presets',
+                visual_presets_hint: 'Save the current look (background, fonts, colors) to a slot and apply it anytime.',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
             },
@@ -1108,7 +1113,6 @@
                 export_profile: 'EXPORTAR PERFIL',
                 import_profile: 'IMPORTAR PERFIL',
                 language_label: 'Idioma',
-                prestart_label: 'Legenda de pré-evento',
                 webhook_label: 'URL Webhook (POST nos eventos)',
                 osc_label: 'Saída OSC',
                 osc_host: 'Host OSC',
@@ -1123,14 +1127,14 @@
                 session_name_ph: 'Nome da sessão...',
                 pin_ph: 'Sem PIN definido',
                 pin_set_ph: 'PIN definido (escreve novo para alterar, vazio mantém)',
-                prestart_card: 'Prestart / Pré-evento',
                 custom_opt: 'Personalizado...',
-                prestart_ph: 'Legenda personalizada...',
-                prestart_go: 'INICIAR MODO PRESTART',
                 auto_presenter_label: 'Abrir ecrã externo ao iniciar a app',
                 presenter_display_label: 'Ecrã externo',
                 display_hint: 'Nenhum ecrã externo detetado — o temporizador abre numa janela pequena.',
+                flash_times_label: 'Flash ao expirar',
                 color_theme_label: 'Tema de cor',
+                visual_presets: 'Presets Visuais',
+                visual_presets_hint: 'Grava o aspeto atual (fundo, fontes, cores) num slot e aplica quando quiseres.',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
             }
@@ -1400,6 +1404,8 @@
             document.getElementById('set-warning-thr').value = s.warningThreshold || 120;
             document.getElementById('set-danger-thr').value = s.dangerThreshold || 30;
             document.getElementById('set-start-zero').checked = s.stopAtZero !== false;
+            var ftEl = document.getElementById('set-flash-times');
+            if (ftEl) ftEl.value = s.flashTimes !== undefined ? String(s.flashTimes) : '3';
             document.getElementById('set-audio-end').checked = s.audioEndEnabled !== false;
             document.getElementById('set-audio-warning').checked = s.audioWarningEnabled !== false;
             document.getElementById('set-audio-danger').checked = s.audioDangerEnabled !== false;
@@ -1442,11 +1448,15 @@
         function openSettings() {
             populateSettingsForm(currentSettings);
             document.getElementById('settings-modal').classList.add('active');
+            var bd = document.getElementById('settings-backdrop');
+            if (bd) bd.classList.add('active');
         }
 
         function closeSettings() {
             autoSaveSettings();
             document.getElementById('settings-modal').classList.remove('active');
+            var bd = document.getElementById('settings-backdrop');
+            if (bd) bd.classList.remove('active');
         }
 
         function autoSaveSettings() {
@@ -1463,6 +1473,7 @@
                 warningThreshold: parseInt(document.getElementById('set-warning-thr').value) || 120,
                 dangerThreshold: parseInt(document.getElementById('set-danger-thr').value) || 30,
                 stopAtZero: document.getElementById('set-start-zero').checked,
+                flashTimes: document.getElementById('set-flash-times').value,
                 audioEndEnabled: document.getElementById('set-audio-end').checked,
                 audioWarningEnabled: document.getElementById('set-audio-warning').checked,
                 audioDangerEnabled: document.getElementById('set-audio-danger').checked,
@@ -1595,6 +1606,102 @@
             });
         }
 
+        function toggleFlash() {
+            var cur = !!(lastState && lastState.flashOn);
+            api('flash', '?state=' + (cur ? 'off' : 'on'));
+        }
+
+        function updateFlashButton(val) {
+            var btn = document.getElementById('btn-flash');
+            if (!btn) return;
+            if (val) {
+                btn.textContent = 'FLASH: ON';
+                btn.style.background = 'var(--red)';
+                btn.style.color = '#fff';
+            } else {
+                btn.textContent = 'FLASH: OFF';
+                btn.style.background = '#334155';
+                btn.style.color = '#cbd5e1';
+            }
+        }
+
+        // --- VISUAL PRESETS ---
+        var VISUAL_KEYS = ['bgMode', 'bgColor', 'fontFamily', 'captionFont', 'colorNormal', 'colorWarning', 'colorDanger', 'colorExpired', 'timerSize'];
+
+        function renderVisualPresets() {
+            var grid = document.getElementById('visual-presets-grid');
+            if (!grid) return;
+            var slots = (currentSettings && currentSettings.visualPresets) || [null, null, null, null];
+            grid.innerHTML = '';
+            for (var i = 0; i < 4; i++) {
+                (function(index) {
+                    var preset = slots[index];
+                    var row = document.createElement('div');
+                    row.style.cssText = 'display:flex;align-items:center;gap:8px';
+
+                    var nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.className = 'custom-input';
+                    nameInput.style.cssText = 'flex:1;padding:8px 10px;font-size:12px';
+                    nameInput.placeholder = 'Slot ' + (index + 1);
+                    nameInput.value = preset ? preset.name : '';
+                    nameInput.onchange = function() {
+                        if (preset) {
+                            preset.name = nameInput.value.trim();
+                            var all = (currentSettings.visualPresets || [null, null, null, null]).slice();
+                            all[index] = preset;
+                            fetchApi('/api/settings' + pinQuery(), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ visualPresets: all })
+                            });
+                        }
+                    };
+
+                    var saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn-set';
+                    saveBtn.style.cssText = 'padding:8px 12px;font-size:11px;flex:none';
+                    saveBtn.textContent = 'SAVE';
+                    saveBtn.title = 'Save current look to this slot';
+                    saveBtn.onclick = function() {
+                        var snap = { name: nameInput.value.trim() || ('Slot ' + (index + 1)) };
+                        VISUAL_KEYS.forEach(function(k) {
+                            if (currentSettings[k] !== undefined) snap[k] = currentSettings[k];
+                        });
+                        var all = (currentSettings.visualPresets || [null, null, null, null]).slice();
+                        all[index] = snap;
+                        fetchApi('/api/settings' + pinQuery(), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ visualPresets: all })
+                        });
+                    };
+
+                    var applyBtn = document.createElement('button');
+                    applyBtn.className = 'btn-set';
+                    applyBtn.style.cssText = 'padding:8px 12px;font-size:11px;flex:none;background:var(--accent)';
+                    applyBtn.textContent = 'APPLY';
+                    applyBtn.onclick = function() {
+                        if (!preset) return;
+                        var patch = {};
+                        VISUAL_KEYS.forEach(function(k) {
+                            if (preset[k] !== undefined) patch[k] = preset[k];
+                        });
+                        fetchApi('/api/settings' + pinQuery(), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(patch)
+                        });
+                    };
+
+                    row.appendChild(nameInput);
+                    row.appendChild(saveBtn);
+                    row.appendChild(applyBtn);
+                    grid.appendChild(row);
+                })(i);
+            }
+        }
+
         function updateClockButton(val) {
             var btn = document.getElementById('btn-clock');
             if (!btn) return;
@@ -1609,47 +1716,6 @@
             }
         }
 
-        function updatePrestartPreview() {
-            var cap = document.getElementById('prestart-preview-cap');
-            var tm = document.getElementById('prestart-preview-time');
-            if (cap) cap.textContent = (currentSettings && currentSettings.prestartLabel) || 'STARTS IN';
-            if (tm && lastState) {
-                tm.textContent = formatTimeDisplay(currentSettings || {}, lastState.timeLeft !== undefined ? lastState.timeLeft : 600);
-            }
-        }
-
-        function onPrestartSelect() {
-            var sel = document.getElementById('prestart-select');
-            var input = document.getElementById('prestart-input');
-            if (sel.value === 'custom') {
-                input.focus();
-                return;
-            }
-            input.value = sel.value;
-            onPrestartInput();
-        }
-
-        function onPrestartInput() {
-            var val = document.getElementById('prestart-input').value.trim();
-            fetchApi('/api/settings' + pinQuery(), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prestartLabel: val })
-            });
-            updatePrestartPreview();
-        }
-
-        function populatePrestartCard() {
-            var input = document.getElementById('prestart-input');
-            var sel = document.getElementById('prestart-select');
-            var label = (currentSettings && currentSettings.prestartLabel) || 'STARTS IN';
-            if (input) input.value = label;
-            if (sel) {
-                var preset = Array.prototype.slice.call(sel.options).some(function(o) { return o.value === label; });
-                sel.value = preset ? label : 'custom';
-            }
-            updatePrestartPreview();
-        }
         function addCustomPreset() {
             var raw = document.getElementById('custom-preset-time').value.trim();
             if (!raw) return;
@@ -1886,15 +1952,16 @@
             }
 
             // Mode buttons
-            ['countdown','countup','timeofday','logo','agenda','prestart'].forEach(function(m) {
+            ['countdown','countup','timeofday','logo','agenda'].forEach(function(m) {
                 var btn = document.getElementById('mode-' + m);
                 if (btn) btn.classList.toggle('active', s.mode === m);
             });
-            updatePresetActive(s.mode === 'countdown' || s.mode === 'prestart' ? s.initialTime : -1);
+            updatePresetActive(s.mode === 'countdown' ? s.initialTime : -1);
+            updateFlashButton(s.flashOn);
 
             // Clock overlay in monitor preview
             var mClock = document.getElementById('monitor-clock');
-            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup' || s.mode === 'prestart')) {
+            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup')) {
                 if (!mClock) {
                     mClock = document.createElement('div');
                     mClock.id = 'monitor-clock';
@@ -1923,7 +1990,6 @@
             }
             agendaState = { agendaActive: !!s.agendaActive, agendaIndex: s.agendaIndex };
             renderAgendaTimeline();
-            updatePrestartPreview();
 
             // Monitor time
             var mt = document.getElementById('monitor-time');
@@ -2069,8 +2135,8 @@
             renderDefaultPresets(s.defaultPresets);
             updateIndicatorButtons(s.statusIndicator);
             updateClockButton(s.showClock);
-            populatePrestartCard();
             populateDisplaySelects();
+            renderVisualPresets();
             renderAgenda(s.agenda, s.agendaAutoNext);
             populateHotkeyFields(s.hotkeys);
             applyLanguage();
@@ -2365,8 +2431,6 @@
                 'Click a preset badge (10 MIN, 5 MIN...) or add your own with HH:MM:SS. Fine-tune with <b>+1 MIN / -1 MIN</b>.',
                 '<h4>3. Agenda (optional)</h4>',
                 'Add sessions in <b>AGENDA / RUNDOWN</b> and press <b>START</b> — the display shows the session name and time. <b>NEXT</b> skips, <b>STOP</b> ends.',
-                '<h4>4. Prestart (optional)</h4>',
-                'The <b>PRESTART</b> card shows a "STARTS IN" caption before the event begins.',
                 '<h4>5. During the event</h4>',
                 '<b>Space</b> = GO/PAUSE · <b>R</b> = RESET · <b>M</b> = message · <b>Ctrl+Z</b> = undo. The <b>REMOTE</b> button opens the mobile control page.',
                 '<h4>6. Close</h4>',
@@ -2381,9 +2445,7 @@
                 'Clica num preset (10 MIN, 5 MIN...) ou adiciona os teus em HH:MM:SS. Ajusta com <b>+1 MIN / -1 MIN</b>.',
                 '<h4>3. Agenda (opcional)</h4>',
                 'Adiciona sessões em <b>AGENDA / ALINHAMENTO</b> e prime <b>INICIAR</b> — o ecrã mostra o nome da sessão e o tempo. <b>SEGUINTE</b> salta, <b>PARAR</b> termina.',
-                '<h4>4. Pré-evento (opcional)</h4>',
-                'O cartão <b>PRESTART / PRÉ-EVENTO</b> mostra uma legenda "COMEÇA EM" antes do evento.',
-                '<h4>5. Durante o evento</h4>',
+                '<h4>4. Durante o evento</h4>',
                 '<b>Espaço</b> = GO/PAUSA · <b>R</b> = RESET · <b>M</b> = mensagem · <b>Ctrl+Z</b> = anular. O botão <b>REMOTO</b> abre a página de controlo mobile.',
                 '<h4>6. Fechar</h4>',
                 'Fechar a janela (X) fecha também o ecrã externo — a app fica no system tray.',

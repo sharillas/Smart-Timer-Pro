@@ -45,7 +45,6 @@ e a **piscar** quando expira.
 ## 5. Opcionais
 
 - **Logótipo do evento**: UPLOAD LOGO (modo "Show Logo/Grid" mostra-o)
-- **Pré-evento**: cartão **Prestart / Pré-evento** mostra "STARTS IN 05:00"
 - **Stream Deck**: instalar o módulo Companion (ver `docs/COMPANION.md`)
 - **Controlo remoto**: abrir `http://<ip-do-pc>:3000/remote.html` no telemóvel
   (ou carregar no botão **REMOTE** na app e copiar o endereço)

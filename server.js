@@ -63,9 +63,10 @@ let settings = {
     colorTheme: 'default',
     autoOpenPresenter: false,
     presenterDisplayId: null,
+    flashTimes: 3,
+    visualPresets: [null, null, null, null],
     apiPin: '',
     language: 'en',
-    prestartLabel: 'STARTS IN',
     webhookUrl: '',
     oscEnabled: false,
     oscHost: '',
@@ -213,7 +214,8 @@ let state = {
     agendaTimeLeft: 0,
     agendaTotal: 0,
     agendaEndTime: null,
-    agendaAutoNext: true
+    agendaAutoNext: true,
+    flashOn: false
 };
 
 let lastAlertLevel = 'normal';
@@ -360,7 +362,8 @@ const PIN_PROTECTED = [
     '/agenda/setAutoNext',
     '/profile/import',
     '/undo',
-    '/log/clear'
+    '/log/clear',
+    '/flash'
 ];
 
 app.use('/api', (req, res, next) => {
@@ -391,7 +394,7 @@ setInterval(() => {
     if (!state.isRunning) return;
     const now = Date.now();
 
-    if (state.mode === 'countdown' || state.mode === 'prestart') {
+    if (state.mode === 'countdown' ) {
         if (countdownEndTime === null) {
             countdownEndTime = now + state.timeLeft * 1000;
         }
@@ -435,12 +438,12 @@ setInterval(() => {
 }, 200);
 
 function computeAlertLevel() {
-    if ((state.mode === 'countdown' || state.mode === 'prestart') && state.isRunning) {
+    if ((state.mode === 'countdown' ) && state.isRunning) {
         if (state.timeLeft <= 0) return 'expired';
         if (state.timeLeft <= settings.dangerThreshold) return 'danger';
         if (state.timeLeft <= settings.warningThreshold) return 'warning';
     }
-    if ((state.mode === 'countdown' || state.mode === 'prestart') && !state.isRunning && state.timeLeft <= 0) return 'expired';
+    if ((state.mode === 'countdown' ) && !state.isRunning && state.timeLeft <= 0) return 'expired';
     return 'normal';
 }
 
@@ -451,7 +454,7 @@ function broadcast() {
     state.activeTime = state.mode === 'countup' ? state.countupTime : state.timeLeft;
 
     // Audio triggers + OSC
-    if (state.isRunning && (state.mode === 'countdown' || state.mode === 'prestart')) {
+    if (state.isRunning && (state.mode === 'countdown' )) {
         if (state.alertLevel === 'expired' && prevAlert !== 'expired') {
             io.emit('audioTrigger', { type: 'end' });
             sendOSC('end', 0);
@@ -472,7 +475,7 @@ app.get('/api/state', (req, res) => res.json(state));
 
 app.get('/api/start', (req, res) => {
     const now = Date.now();
-    if (state.mode === 'countdown' || state.mode === 'prestart') {
+    if (state.mode === 'countdown' ) {
         countdownEndTime = now + state.timeLeft * 1000;
     } else if (state.mode === 'countup') {
         countupStartTime = now - state.countupTime * 1000;
@@ -501,7 +504,7 @@ app.get('/api/toggle_playback', (req, res) => {
         sendOSC('pause', 0);
     } else {
         const now = Date.now();
-        if (state.mode === 'countdown' || state.mode === 'prestart') {
+        if (state.mode === 'countdown' ) {
             countdownEndTime = now + state.timeLeft * 1000;
         } else if (state.mode === 'countup') {
             countupStartTime = now - state.countupTime * 1000;
@@ -541,13 +544,19 @@ app.get('/api/reset', (req, res) => {
     res.send('Reset');
 });
 
-app.get('/api/add', (req, res) => {
-    captureUndo();
+app.get('/api/flash', (req, res) => {
+    const on = req.query.state === 'on' || req.query.on === '1' || req.query.on === 'true';
+    state.flashOn = on;
+    broadcast();
+    res.send(on ? 'Flash on' : 'Flash off');
+});
+
+app.get('/api/add', (req, res) => {    captureUndo();
     const sec = parseInt(req.query.sec) || 0;
     if (state.mode === 'countup') {
         state.countupTime += sec;
         if (state.isRunning) countupStartTime -= sec * 1000;
-    } else if (state.mode === 'countdown' || state.mode === 'prestart') {
+    } else if (state.mode === 'countdown' ) {
         state.timeLeft += sec;
         if (state.isRunning) countdownEndTime += sec * 1000;
     } else if (state.mode === 'agenda' && state.agendaActive) {
@@ -569,12 +578,12 @@ app.get('/api/undo', (req, res) => {
 });
 
 app.get('/api/mode', (req, res) => {
-    const validModes = ['countdown', 'countup', 'timeofday', 'logo', 'agenda', 'prestart'];
+    const validModes = ['countdown', 'countup', 'timeofday', 'logo', 'agenda'];
     if (validModes.includes(req.query.set)) {
         captureUndo();
         if (state.isRunning) {
             const now = Date.now();
-            if (req.query.set === 'countdown' || req.query.set === 'prestart') {
+            if (req.query.set === 'countdown') {
                 countdownEndTime = now + state.timeLeft * 1000;
             } else if (req.query.set === 'countup') {
                 countupStartTime = now - state.countupTime * 1000;

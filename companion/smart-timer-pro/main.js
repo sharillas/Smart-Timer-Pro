@@ -477,7 +477,6 @@ class SmartTimerProInstance extends InstanceBase {
 			{ id: 'timeofday', label: 'Clock', icon: 'schedule' },
 			{ id: 'logo', label: 'Logo', icon: 'image' },
 			{ id: 'agenda', label: 'Agenda', icon: 'event_note' },
-			{ id: 'prestart', label: 'Prestart', icon: 'movie' },
 		];
 		modes.forEach((mode) => {
 			presets[`mode_${mode.id}`] = {

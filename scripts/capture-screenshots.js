@@ -125,13 +125,12 @@ app.whenReady().then(async () => {
     await api('/api/message/trigger?index=2');
     await capture(BASE + '/presenter.html', 'screenshot_External_Monitor_Smaforo.png', 1280, 720);
 
-    // --- 6. Presenter prestart ---
+    // --- 6. Presenter countdown paused (clean) ---
     console.log('step 6');
     await api('/api/message/hide');
     await api('/api/indicator?type=semaforo&action=off');
     await api('/api/reset?sec=120');
-    await api('/api/mode?set=prestart');
-    await capture(BASE + '/presenter.html', 'screenshot_prestart.png', 1280, 720);
+    await capture(BASE + '/presenter.html', 'screenshot_presenter_clean.png', 1280, 720);
 
     // --- 7. Remote page (mobile size) ---
     console.log('step 7');

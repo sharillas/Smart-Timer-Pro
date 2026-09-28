@@ -39,11 +39,6 @@ Warning color, live message and the Semáforo indicator on the external display.
 
 ![Presenter Semáforo](assets/screenshot_External_Monitor_Smaforo.png)
 
-### Presenter - Prestart
-Pre-event screen with the "STARTS IN" caption.
-
-![Presenter Prestart](assets/screenshot_prestart.png)
-
 ### Remote Control (phone/tablet)
 Lightweight remote page at `/remote.html` with GO/PAUSE, RESET, +1m/-1m and message toggle.
 

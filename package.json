@@ -1,6 +1,6 @@
 {
   "name": "smart-timer-pro",
-  "version": "1.8.3",
+  "version": "1.9.0",
   "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
   "main": "main.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "bump:patch": "node scripts/bump-version.js patch",
     "bump:minor": "node scripts/bump-version.js minor",
     "bump:major": "node scripts/bump-version.js major",
-    "build": "node scripts/bump-version.js && electron-builder"
+    "build": "node scripts/bump-version.js && node scripts/build-installer.js"
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
@@ -27,6 +27,7 @@
   "build": {
     "appId": "com.smartchoice.smarttimerpro",
     "productName": "Smart Timer Pro",
+    "afterPack": "scripts/after-pack.js",
     "publish": [
       {
         "provider": "github",
@@ -59,8 +60,7 @@
             "x64"
           ]
         }
-      ],
-      "signAndEditExecutable": false
+      ]
     },
     "nsis": {
       "oneClick": false,

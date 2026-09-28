@@ -132,7 +132,7 @@
                 el.textContent = formatTime(s.activeTime, cfg);
                 document.getElementById('session').textContent = '';
             }
-            if (s.mode === 'countdown' || s.mode === 'prestart') {
+            if (s.mode === 'countdown') {
                 if (s.alertLevel === 'expired') el.style.color = cfg.colorExpired || '#ef4444';
                 else if (s.alertLevel === 'danger') el.style.color = cfg.colorDanger || '#f97316';
                 else if (s.alertLevel === 'warning') el.style.color = cfg.colorWarning || '#f59e0b';
@@ -144,7 +144,7 @@
             document.getElementById('btn-pause').classList.toggle('hidden', !s.isRunning);
 
             var clock = document.getElementById('clock-top');
-            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup' || s.mode === 'prestart')) {
+            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup')) {
                 clock.classList.add('visible');
                 var d = new Date();
                 clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());

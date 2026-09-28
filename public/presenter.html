@@ -220,9 +220,11 @@
             var color = cfg.colorNormal || '#10b981';
             if (s.alertLevel === 'expired') {
                 color = cfg.colorExpired || '#ef4444';
-                if (s.isRunning) {
-                    var flash = Math.floor(Date.now() / 500) % 2 === 0;
-                    color = flash ? (cfg.colorExpired || '#ef4444') : '#000';
+                var ft = cfg.flashTimes !== undefined ? cfg.flashTimes : 3;
+                var blink = s.flashOn
+                    || (s.isRunning && (ft === 'infinite' || expiredPulses < ft * 2));
+                if (blink) {
+                    color = flashToggle ? color : '#000';
                 }
             } else if (s.alertLevel === 'danger') {
                 color = cfg.colorDanger || '#f97316';
@@ -457,22 +459,19 @@
                     el.textContent = formatTimeOfDay();
                     el.style.color = cfg.colorNormal || '#10b981';
                     el.style.fontSize = timerFontSize(cfg);
-                } else if (s.mode === 'countdown' || s.mode === 'prestart') {
+                } else if (s.mode === 'countdown') {
                     renderCountdown(s);
                 } else {
                     renderCountUp(s);
                 }
             }
 
-            // Caption (session name in agenda, label in prestart, hidden otherwise)
+            // Caption (session name in agenda, hidden otherwise)
             var cap = document.getElementById('caption');
             if (cap) {
                 cap.style.fontFamily = captionFont(cfg);
                 cap.style.fontSize = captionFontSize(cfg);
-                if (s.mode === 'prestart') {
-                    cap.textContent = (cfg.prestartLabel) || 'STARTS IN';
-                    cap.style.display = '';
-                } else if (s.mode === 'agenda') {
+                if (s.mode === 'agenda') {
                     cap.textContent = s.agendaName || '';
                     cap.style.display = '';
                 } else {
@@ -495,7 +494,7 @@
 
             // Clock overlay (top-right) in countdown/count-up when enabled
             var clockEl = document.getElementById('clock');
-            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup' || s.mode === 'prestart')) {
+            if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup')) {
                 if (!clockEl) {
                     clockEl = document.createElement('div');
                     clockEl.className = 'clock';
@@ -602,11 +601,25 @@
             }
         }, 1000);
 
-        // Expired flash tick (in-place, only touches the timer color)
+        // Expired / manual flash tick (in-place, only touches the timer color)
+        var flashToggle = false;
+        var expiredPulses = 0;
         setInterval(function() {
-            if (currentState && currentState.mode === 'countdown' &&
-                currentState.alertLevel === 'expired' && currentState.isRunning) {
+            if (!currentState) return;
+            var cfg = currentState.settings || {};
+            var ft = cfg.flashTimes !== undefined ? cfg.flashTimes : 3;
+            var manual = !!currentState.flashOn;
+            var autoExpired = currentState.mode === 'countdown' &&
+                currentState.alertLevel === 'expired' && currentState.isRunning;
+            var blinking = manual || (autoExpired && (ft === 'infinite' || expiredPulses < ft * 2));
+            if (blinking) {
+                flashToggle = !flashToggle;
+                if (!manual) expiredPulses++;
                 updateStage(currentState);
+            }
+            if (!manual && !autoExpired) {
+                expiredPulses = 0;
+                flashToggle = false;
             }
         }, 500);
     </script>

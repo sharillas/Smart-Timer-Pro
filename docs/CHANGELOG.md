@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0] - 2026-09-15
+
+### New Features
+- **Visual presets**: 4 slots to save and apply the current look (background, fonts, colors, timer size)
+- **Configurable flash**: when the countdown keeps running past zero, the display flashes 3x, 6x or 8x (or infinitely) and then stays solid red — configurable in Settings. Added a manual **FLASH ON/OFF** button in Controls for live events (flashes until turned off)
+- **Settings drawer**: settings now slide in from the right as a drawer instead of a centered popup
+- **Ultra-wide layout**: when the window is maximized on wide screens, the interface uses the full width
+
+### Removed
+- **Prestart mode**: removed entirely (mode, card, caption and settings) — superseded by Agenda/Logo
+- Companion module: Prestart preset removed
+
+### Fixes
+- **Installer/shortcut icon**: the packaged exe was never getting the app icon (a build config flag inherited from the base project disabled resource editing, and the rcedit step fails on this machine). A new afterPack hook patches the icon directly — the exe and installer now carry the correct icon
+
 ## [1.8.3] - 2026-09-15
 
 ### Bug Fixes
