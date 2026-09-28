@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0] - 2026-09-29
+
+### New Features
+- **External Sync Timer**: a second timer that follows the remaining time of a cue running in **Resolume Arena 7** (REST), **Pixera R25** or **WATCHOUT 7** (HTTP / OSC), displayed on its own screen in a dedicated black window with timecode font
+- **Sync card**: full control in the main panel — provider picker (none / Resolume / Pixera-Watchout HTTP / OSC), per-provider fields, FOLLOW ON/OFF (continuous) and SYNC NOW (grab once), NO SIGNAL badge on connection loss, display picker with OPEN DISPLAY
+- **Second presenter window**: the sync timer opens on the chosen monitor (never the primary) with fallback window and auto-recovery
+- **Companion module**: External Sync actions (Start, Pause, Reset, Follow On/Off, Sync Now), variables (`sync_time`, `sync_hours`, `sync_minutes`, `sync_seconds`, `sync_ms`, `sync_source`, `sync_connected`) and HH : MM : SS : MS display presets
+- **Setup guide**: per-server tutorial (Resolume / Pixera / WATCHOUT) with Lua script for Pixera — in-app (GUIDE button on the sync card) and in `docs/SYNC_GUIDE.md`
+
+### Changes
+- Main timer clock (SHOW CLOCK) position is now configurable (`clockX` / `clockY` percentages)
+
 ## [1.9.0] - 2026-09-15
 
 ### New Features

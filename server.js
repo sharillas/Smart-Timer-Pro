@@ -65,6 +65,20 @@ let settings = {
     presenterDisplayId: null,
     flashTimes: 3,
     visualPresets: [null, null, null, null],
+    clockX: 96,
+    clockY: 4,
+    syncProvider: 'none',
+    syncHost: '',
+    syncPort: 8080,
+    syncTarget: '1',
+    syncFollow: false,
+    syncHttpUrl: '',
+    syncHttpPath: 'position',
+    syncHttpDuration: 60,
+    syncDuration: 60,
+    syncOscPort: 9001,
+    syncOscAddress: '/sync/position',
+    syncOscMode: 'position',
     apiPin: '',
     language: 'en',
     webhookUrl: '',
@@ -215,7 +229,15 @@ let state = {
     agendaTotal: 0,
     agendaEndTime: null,
     agendaAutoNext: true,
-    flashOn: false
+    flashOn: false,
+    syncTimer: {
+        timeLeft: 0,
+        initialTime: 0,
+        isRunning: false,
+        following: false,
+        connected: false,
+        sourceLabel: 'SYNC'
+    }
 };
 
 let lastAlertLevel = 'normal';
@@ -314,6 +336,174 @@ function restoreUndo() {
     return true;
 }
 
+// --- EXTERNAL SYNC ENGINE ---
+let syncLastGood = 0;
+let syncCountdownEnd = null;
+let syncOscSocket = null;
+
+function setSyncConnected(ok) {
+    if (state.syncTimer.connected === ok) return;
+    state.syncTimer.connected = ok;
+    if (!ok && state.syncTimer.following) {
+        state.syncTimer.isRunning = false;
+    }
+    broadcast();
+}
+
+function applySyncRemaining(seconds, label) {
+    const sec = Math.max(0, seconds);
+    state.syncTimer.timeLeft = sec;
+    if (sec > 0.01 && state.syncTimer.initialTime <= 0) {
+        state.syncTimer.initialTime = sec;
+    }
+    if (state.syncTimer.following) {
+        state.syncTimer.isRunning = sec > 0.01;
+        syncCountdownEnd = null;
+    }
+    if (label) state.syncTimer.sourceLabel = label;
+    syncLastGood = Date.now();
+    if (!state.syncTimer.connected) setSyncConnected(true);
+    else broadcast();
+}
+
+function getDot(obj, path) {
+    return String(path).split('.').reduce((acc, k) => (acc == null ? undefined : acc[k]), obj);
+}
+
+async function pollResolume() {
+    const host = settings.syncHost;
+    if (!host) return;
+    const port = settings.syncPort || 8080;
+    const base = `http://${host}:${port}/api/v1`;
+    const timeout = AbortSignal.timeout(2000);
+    try {
+        let position = null;
+        let duration = null;
+        let label = 'RESOLUME';
+
+        if (settings.syncTarget === 'selected') {
+            const comp = await (await fetch(`${base}/composition`, { signal: timeout })).json();
+            const cols = (comp && comp.columns) || [];
+            const sel = cols.find((c) => c.selected === true) || cols[0];
+            if (sel) {
+                label = 'RESOLUME · ' + ((sel.name && sel.name.value) || 'CLIP');
+                if (sel.transport && sel.transport.position !== undefined) {
+                    position = sel.transport.position;
+                    duration = sel.duration;
+                }
+                if (sel.clips && Array.isArray(sel.clips)) {
+                    const sc = sel.clips.find((c) => c.selected === true) || sel.clips[0];
+                    if (sc) {
+                        label = 'RESOLUME · ' + ((sc.name && sc.name.value) || 'CLIP');
+                        if (sc.transport && sc.transport.position !== undefined) position = sc.transport.position;
+                        if (sc.duration !== undefined) duration = sc.duration;
+                        if (sc.video && sc.video.duration !== undefined) duration = sc.video.duration;
+                    }
+                }
+            }
+        } else {
+            const idx = parseInt(settings.syncTarget) || 1;
+            const t = await (await fetch(`${base}/composition/columns/${idx}/transport`, { signal: timeout })).json();
+            position = t && (t.position !== undefined ? t.position : (Array.isArray(t) && t[0] ? t[0].position : undefined));
+            try {
+                const col = await (await fetch(`${base}/composition/columns/${idx}`, { signal: timeout })).json();
+                if (col && col.duration !== undefined) duration = col.duration;
+                if (col && col.name && col.name.value) label = 'RESOLUME · COL ' + col.name.value;
+            } catch (e) { /* duration optional */ }
+        }
+
+        if (position === null || position === undefined) return;
+        if (typeof position === 'string') position = parseFloat(position);
+        if (isNaN(position)) return;
+        if (!(duration > 0)) duration = settings.syncDuration || 60;
+        applySyncRemaining(duration * (1 - Math.min(1, Math.max(0, position))), label);
+    } catch (e) {
+        // connection failure handled by the timeout logic
+    }
+}
+
+async function pollHttpGeneric() {
+    const url = settings.syncHttpUrl;
+    if (!url) return;
+    try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
+        const data = await res.json();
+        let value = getDot(data, settings.syncHttpPath || 'position');
+        if (value === undefined && Array.isArray(data)) value = data[0];
+        if (value === undefined || value === null) return;
+        value = parseFloat(value);
+        if (isNaN(value)) return;
+        let seconds;
+        if (value >= 0 && value <= 1) {
+            seconds = (1 - value) * (settings.syncHttpDuration || 60);
+        } else {
+            seconds = value;
+        }
+        applySyncRemaining(seconds, (settings.syncProvider || 'http').toUpperCase());
+    } catch (e) { /* handled by timeout */ }
+}
+
+function ensureOscListener() {
+    if (syncOscSocket) return;
+    syncOscSocket = dgram.createSocket('udp4');
+    syncOscSocket.on('message', (msg) => {
+        try {
+            // minimal OSC parser: address string + float arg
+            if (msg.length < 8) return;
+            const addrEnd = msg.indexOf(0);
+            if (addrEnd < 0) return;
+            const address = msg.toString('utf8', 0, addrEnd);
+            const typeTagIdx = addrEnd + 4 - (addrEnd % 4);
+            let off = typeTagIdx;
+            const tags = msg.toString('utf8', typeTagIdx, msg.indexOf(0, typeTagIdx));
+            let value = null;
+            if (tags.indexOf(',f') === 0 || tags.indexOf(',i') === 0) {
+                off = Math.ceil((msg.indexOf(0, typeTagIdx) + 1) / 4) * 4;
+                if (tags.indexOf(',f') === 0) {
+                    value = msg.readFloatBE(off);
+                } else {
+                    value = msg.readInt32BE(off);
+                }
+            }
+            if (value === null) return;
+            const expected = settings.syncOscAddress || '/sync/position';
+            if (address !== expected) return;
+            let seconds;
+            if (settings.syncOscMode === 'seconds') {
+                seconds = value;
+            } else {
+                seconds = (1 - Math.min(1, Math.max(0, value))) * (settings.syncDuration || 60);
+            }
+            applySyncRemaining(seconds, 'OSC');
+        } catch (e) { /* ignore malformed */ }
+    });
+    syncOscSocket.on('error', () => {});
+    syncOscSocket.bind(settings.syncOscPort || 9001);
+}
+
+function stopOscListener() {
+    if (syncOscSocket) {
+        try { syncOscSocket.close(); } catch (e) {}
+        syncOscSocket = null;
+    }
+}
+
+setInterval(async () => {
+    const p = settings.syncProvider;
+    if (p === 'resolume') {
+        await pollResolume();
+    } else if (p === 'http') {
+        await pollHttpGeneric();
+    } else if (p === 'osc') {
+        ensureOscListener();
+    }
+    if (p !== 'osc') stopOscListener();
+
+    if (p !== 'none' && Date.now() - syncLastGood > 4000) {
+        setSyncConnected(false);
+    }
+}, 500);
+
 // --- CROSS-SITE REQUEST PROTECTION ---
 // Blocks browser requests coming from foreign origins (CSRF) while
 // allowing same-origin UI, Companion polling and LAN tools (no Origin header).
@@ -363,7 +553,12 @@ const PIN_PROTECTED = [
     '/profile/import',
     '/undo',
     '/log/clear',
-    '/flash'
+    '/flash',
+    '/sync/start',
+    '/sync/pause',
+    '/sync/reset',
+    '/sync/follow',
+    '/sync/now'
 ];
 
 app.use('/api', (req, res, next) => {
@@ -431,6 +626,22 @@ setInterval(() => {
                     state.agendaTimeLeft = 0;
                     state.isRunning = false;
                 }
+            }
+            broadcast();
+        }
+    }
+
+    // External sync timer: local countdown when not following the source
+    if (state.syncTimer.isRunning && !state.syncTimer.following) {
+        if (syncCountdownEnd === null) {
+            syncCountdownEnd = now + state.syncTimer.timeLeft * 1000;
+        }
+        const nt = Math.round((syncCountdownEnd - now) / 1000);
+        if (nt !== state.syncTimer.timeLeft) {
+            state.syncTimer.timeLeft = Math.max(0, nt);
+            if (state.syncTimer.timeLeft <= 0) {
+                state.syncTimer.isRunning = false;
+                syncCountdownEnd = null;
             }
             broadcast();
         }
@@ -549,6 +760,80 @@ app.get('/api/flash', (req, res) => {
     state.flashOn = on;
     broadcast();
     res.send(on ? 'Flash on' : 'Flash off');
+});
+
+// --- EXTERNAL SYNC TIMER API ---
+app.get('/api/sync/state', (req, res) => {
+    res.json({
+        syncTimer: state.syncTimer,
+        provider: settings.syncProvider,
+        host: settings.syncHost,
+        port: settings.syncPort,
+        target: settings.syncTarget,
+        follow: settings.syncFollow,
+        httpUrl: settings.syncHttpUrl,
+        httpPath: settings.syncHttpPath,
+        oscPort: settings.syncOscPort,
+        oscAddress: settings.syncOscAddress,
+        oscMode: settings.syncOscMode,
+        duration: settings.syncDuration
+    });
+});
+
+app.get('/api/sync/start', (req, res) => {
+    state.syncTimer.following = false;
+    state.syncTimer.isRunning = true;
+    syncCountdownEnd = Date.now() + state.syncTimer.timeLeft * 1000;
+    broadcast();
+    res.send('Sync timer started');
+});
+
+app.get('/api/sync/pause', (req, res) => {
+    state.syncTimer.isRunning = false;
+    syncCountdownEnd = null;
+    broadcast();
+    res.send('Sync timer paused');
+});
+
+app.get('/api/sync/reset', (req, res) => {
+    state.syncTimer.isRunning = false;
+    state.syncTimer.following = false;
+    syncCountdownEnd = null;
+    state.syncTimer.timeLeft = state.syncTimer.initialTime || 0;
+    broadcast();
+    res.send('Sync timer reset');
+});
+
+app.get('/api/sync/follow', (req, res) => {
+    const m = String(req.query.mode || '').toLowerCase();
+    let val;
+    if (m === 'on') val = true;
+    else if (m === 'off') val = false;
+    else if (m === 'toggle') val = !state.syncTimer.following;
+    else val = req.query.value === '1' || req.query.value === 'true';
+    settings.syncFollow = val;
+    state.syncTimer.following = val;
+    if (val) {
+        syncCountdownEnd = null;
+        state.syncTimer.isRunning = state.syncTimer.timeLeft > 0.01;
+    }
+    saveSettings();
+    state.settings = publicSettings();
+    broadcast();
+    io.emit('settingsUpdate', publicSettings());
+    res.send('Follow ' + (val ? 'on' : 'off'));
+});
+
+app.get('/api/sync/now', (req, res) => {
+    // capture the current remaining time once and run locally
+    state.syncTimer.following = false;
+    if (state.syncTimer.timeLeft > 0.01) {
+        state.syncTimer.initialTime = state.syncTimer.timeLeft;
+        state.syncTimer.isRunning = true;
+        syncCountdownEnd = Date.now() + state.syncTimer.timeLeft * 1000;
+    }
+    broadcast();
+    res.send('Synced now');
 });
 
 app.get('/api/add', (req, res) => {    captureUndo();
@@ -1041,7 +1326,13 @@ app.get('/api/companion', (req, res) => {
         agendaActive: state.agendaActive,
         agendaName: state.agendaName,
         agendaTimeLeft: state.agendaTimeLeft,
-        agendaTotal: state.agendaTotal
+        agendaTotal: state.agendaTotal,
+        syncTime: Math.round(state.syncTimer.timeLeft),
+        syncTimeMs: Math.round(state.syncTimer.timeLeft * 1000),
+        syncConnected: state.syncTimer.connected,
+        syncRunning: state.syncTimer.isRunning,
+        syncFollowing: state.syncTimer.following,
+        syncSource: state.syncTimer.sourceLabel
     });
 });
 

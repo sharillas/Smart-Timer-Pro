@@ -87,8 +87,6 @@
         .message.hidden { opacity: 0; visibility: hidden; }
         .clock {
             position: fixed;
-            top: 3vh;
-            right: 4vw;
             color: #fff;
             font-family: 'Orbitron', 'Courier New', monospace;
             font-size: min(3vw, 5vh);
@@ -97,6 +95,21 @@
             opacity: 0.95;
             z-index: 5;
         }
+        .sync-badge {
+            position: fixed;
+            top: 3vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', 'Courier New', monospace;
+            font-size: min(1.6vw, 2.8vh);
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            z-index: 6;
+            padding: 4px 14px;
+            border-radius: 6px;
+        }
+        .sync-badge.ok { color: #6ee7b7; }
+        .sync-badge.lost { color: #fff; background: rgba(239, 68, 68, 0.85); }
         .conn-banner {
             position: fixed;
             top: 12px; right: 12px;
@@ -170,6 +183,7 @@
         var currentState = null;
         var audioElements = {};
         var builtMode = null;
+        var syncView = window.location.search.indexOf('view=sync') >= 0;
 
         function getTimerEl() { return document.getElementById('timer'); }
         function getMsgEl() { return document.getElementById('msg'); }
@@ -492,7 +506,7 @@
                 }
             }
 
-            // Clock overlay (top-right) in countdown/count-up when enabled
+            // Clock overlay in countdown/count-up when enabled
             var clockEl = document.getElementById('clock');
             if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup')) {
                 if (!clockEl) {
@@ -501,6 +515,9 @@
                     clockEl.id = 'clock';
                     stage.appendChild(clockEl);
                 }
+                clockEl.style.left = (cfg.clockX !== undefined ? cfg.clockX : 96) + '%';
+                clockEl.style.top = (cfg.clockY !== undefined ? cfg.clockY : 4) + '%';
+                clockEl.style.transform = 'translate(-50%, -50%)';
                 var now = new Date();
                 clockEl.textContent =
                     String(now.getHours()).padStart(2, '0') + ':' +
@@ -542,8 +559,74 @@
         }
 
         socket.on('stateUpdate', function(s) {
-            buildStage(s);
+            if (syncView) {
+                buildSyncStage(s);
+            } else {
+                buildStage(s);
+            }
         });
+
+        // --- SYNC VIEW (external device timer) ---
+        function buildSyncStage(s) {
+            currentState = s;
+            currentSettings = s.settings || {};
+            applyTransparency({ bgMode: 'color', bgColor: '#000000' });
+
+            if (builtMode !== 'sync') {
+                stage.innerHTML = '';
+                var stack = document.createElement('div');
+                stack.className = 'stack';
+                stack.id = 'stack';
+                stage.appendChild(stack);
+
+                var cap = document.createElement('div');
+                cap.className = 'caption';
+                cap.id = 'caption';
+                stack.appendChild(cap);
+
+                var timerDiv = document.createElement('div');
+                timerDiv.className = 'timer';
+                timerDiv.id = 'timer';
+                timerDiv.style.fontFamily = "'Orbitron', 'Courier New', monospace";
+                timerDiv.style.fontWeight = '700';
+                timerDiv.style.letterSpacing = '0.05em';
+                timerDiv.style.color = '#ffffff';
+                stack.appendChild(timerDiv);
+
+                builtMode = 'sync';
+            }
+
+            var el = getTimerEl();
+            if (el) {
+                var t = (s.syncTimer && s.syncTimer.timeLeft) || 0;
+                el.textContent = formatTime(t, { showHours: true, showSeconds: true });
+                el.style.fontSize = 'min(11vw, 20vh)';
+            }
+
+            var cap = document.getElementById('caption');
+            if (cap) {
+                cap.style.fontFamily = "'Orbitron', 'Courier New', monospace";
+                cap.style.fontSize = 'min(2.4vw, 4.5vh)';
+                cap.style.color = '#9ca3af';
+                cap.textContent = (s.syncTimer && s.syncTimer.sourceLabel) || 'EXTERNAL TIMER';
+            }
+
+            // SYNC / NO SIGNAL badge
+            var badge = document.getElementById('sync-badge');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = 'sync-badge';
+                badge.id = 'sync-badge';
+                stage.appendChild(badge);
+            }
+            if (s.syncTimer && s.syncTimer.connected) {
+                badge.textContent = 'SYNC';
+                badge.className = 'sync-badge ok';
+            } else {
+                badge.textContent = 'NO SIGNAL';
+                badge.className = 'sync-badge lost';
+            }
+        }
 
         socket.on('settingsUpdate', function(s) {
             currentSettings = s;
@@ -581,7 +664,11 @@
         // Escape closes the presenter window (safety net)
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && window.electronAPI) {
-                window.electronAPI.closePresenter();
+                if (syncView) {
+                    window.electronAPI.closeSyncPresenter();
+                } else {
+                    window.electronAPI.closePresenter();
+                }
             }
         });
 

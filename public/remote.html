@@ -41,7 +41,8 @@
         .msg:active { background: #0284c7; }
         .hidden { display: none; }
         .clock-top {
-            position: fixed; top: 12px; right: 16px; color: #fff;
+            position: fixed; top: 4%; right: auto; left: 96%; transform: translate(-50%, -50%);
+            color: #fff;
             font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
             opacity: 0.9; display: none;
         }
@@ -146,6 +147,8 @@
             var clock = document.getElementById('clock-top');
             if (cfg.showClock && (s.mode === 'countdown' || s.mode === 'countup')) {
                 clock.classList.add('visible');
+                clock.style.left = (cfg.clockX !== undefined ? cfg.clockX : 96) + '%';
+                clock.style.top = (cfg.clockY !== undefined ? cfg.clockY : 4) + '%';
                 var d = new Date();
                 clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
             } else {

@@ -8,6 +8,8 @@ let serverInstance = null;
 let tray = null;
 let isQuitting = false;
 let presenterEnabled = false;
+let syncPresenterWindow = null;
+let syncPresenterEnabled = false;
 let httpsEnabled = false;
 
 const pageProtocol = () => (httpsEnabled ? 'https' : 'http');
@@ -257,6 +259,86 @@ function togglePresenterWindow() {
     }
 }
 
+// --- SECOND PRESENTER (external sync timer) ---
+function createSyncPresenterWindow() {
+    const displays = screen.getAllDisplays();
+    syncPresenterEnabled = true;
+
+    let targetDisplay = null;
+    if (displays.length > 1) {
+        try {
+            if (serverInstance && serverInstance.getSettings) {
+                const savedId = serverInstance.getSettings().presenterSyncDisplayId;
+                if (savedId !== undefined && savedId !== null && savedId !== '') {
+                    const found = displays.find((d) => d.id === Number(savedId) && displays.indexOf(d) !== 0);
+                    if (found) targetDisplay = found;
+                }
+            }
+        } catch (e) { /* default */ }
+        if (!targetDisplay) targetDisplay = displays.slice(1).find(() => true) || null;
+    }
+
+    let windowOpts = {
+        title: 'Smart Timer Pro - External Sync',
+        icon: path.join(__dirname, 'assets', 'icon.png'),
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
+        },
+        backgroundColor: '#000000',
+        show: false,
+        autoHideMenuBar: true
+    };
+
+    if (targetDisplay) {
+        const { x, y, width, height } = targetDisplay.bounds;
+        windowOpts.x = x;
+        windowOpts.y = y;
+        windowOpts.width = width;
+        windowOpts.height = height;
+        windowOpts.fullscreen = true;
+        windowOpts.frame = false;
+        windowOpts.resizable = false;
+        windowOpts.thickFrame = false;
+    } else {
+        windowOpts.width = 640;
+        windowOpts.height = 220;
+        windowOpts.frame = false;
+        windowOpts.thickFrame = false;
+        windowOpts.resizable = true;
+        windowOpts.alwaysOnTop = true;
+    }
+
+    syncPresenterWindow = new BrowserWindow(windowOpts);
+    syncPresenterWindow.loadURL(pageProtocol() + '://127.0.0.1:3000/presenter.html?view=sync');
+
+    syncPresenterWindow.once('ready-to-show', () => {
+        syncPresenterWindow.show();
+    });
+
+    syncPresenterWindow.on('closed', () => {
+        syncPresenterWindow = null;
+        if (syncPresenterEnabled && !isQuitting && mainWindow) {
+            setTimeout(() => {
+                if (syncPresenterEnabled && !isQuitting && !syncPresenterWindow && mainWindow) {
+                    createSyncPresenterWindow();
+                }
+            }, 2000);
+        }
+    });
+}
+
+function toggleSyncPresenterWindow() {
+    if (syncPresenterWindow) {
+        syncPresenterEnabled = false;
+        syncPresenterWindow.close();
+        syncPresenterWindow = null;
+    } else {
+        createSyncPresenterWindow();
+    }
+}
+
 // --- IPC HANDLERS ---
 ipcMain.handle('toggle-presenter', () => {
     togglePresenterWindow();
@@ -268,6 +350,24 @@ ipcMain.handle('close-presenter', () => {
         presenterEnabled = false;
         presenterWindow.close();
         presenterWindow = null;
+    }
+    return true;
+});
+
+ipcMain.handle('toggle-sync-presenter', () => {
+    toggleSyncPresenterWindow();
+    return syncPresenterWindow !== null;
+});
+
+ipcMain.handle('get-sync-presenter-status', () => {
+    return syncPresenterWindow !== null;
+});
+
+ipcMain.handle('close-sync-presenter', () => {
+    if (syncPresenterWindow) {
+        syncPresenterEnabled = false;
+        syncPresenterWindow.close();
+        syncPresenterWindow = null;
     }
     return true;
 });
@@ -385,7 +485,11 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
     isQuitting = true;
     presenterEnabled = false;
+    syncPresenterEnabled = false;
     if (presenterWindow) {
         presenterWindow.close();
+    }
+    if (syncPresenterWindow) {
+        syncPresenterWindow.close();
     }
 });

@@ -87,30 +87,44 @@ class SmartTimerProInstance extends InstanceBase {
 					const data = await response.json();
 					this.state = data;
 
-					const raw = data.raw_seconds || 0;
-					const abs = Math.abs(raw);
-					const agLeft = data.agendaTimeLeft || 0;
-					const agAbs = Math.abs(agLeft);
+				const raw = data.raw_seconds || 0;
+				const abs = Math.abs(raw);
+				const agLeft = data.agendaTimeLeft || 0;
+				const agAbs = Math.abs(agLeft);
+				const syncMs = Math.max(0, data.syncTimeMs || 0);
+				const syncTotalSec = Math.floor(syncMs / 1000);
 
-					const updates = {
-						time: data.time,
-						raw_seconds: raw,
-						over_time: data.over_time,
-						mode: data.mode,
-						sign: raw < 0 ? '-' : '',
-						hours: Math.floor(abs / 3600).toString().padStart(2, '0'),
-						minutes: Math.floor((abs % 3600) / 60).toString().padStart(2, '0'),
-						seconds: (abs % 60).toString().padStart(2, '0'),
-						agenda_name: data.agendaActive ? data.agendaName || '' : '',
-						agenda_time:
-							Math.floor(agAbs / 60).toString().padStart(2, '0') +
-							':' +
-							(agAbs % 60).toString().padStart(2, '0'),
-						agenda_total:
-							Math.floor((data.agendaTotal || 0) / 60).toString().padStart(2, '0') +
-							':' +
-							((data.agendaTotal || 0) % 60).toString().padStart(2, '0'),
-					};
+				const updates = {
+					time: data.time,
+					raw_seconds: raw,
+					over_time: data.over_time,
+					mode: data.mode,
+					sign: raw < 0 ? '-' : '',
+					hours: Math.floor(abs / 3600).toString().padStart(2, '0'),
+					minutes: Math.floor((abs % 3600) / 60).toString().padStart(2, '0'),
+					seconds: (abs % 60).toString().padStart(2, '0'),
+					agenda_name: data.agendaActive ? data.agendaName || '' : '',
+					agenda_time:
+						Math.floor(agAbs / 60).toString().padStart(2, '0') +
+						':' +
+						(agAbs % 60).toString().padStart(2, '0'),
+					agenda_total:
+						Math.floor((data.agendaTotal || 0) / 60).toString().padStart(2, '0') +
+						':' +
+						((data.agendaTotal || 0) % 60).toString().padStart(2, '0'),
+					sync_time:
+						Math.floor(syncTotalSec / 3600).toString().padStart(2, '0') +
+						':' +
+						Math.floor((syncTotalSec % 3600) / 60).toString().padStart(2, '0') +
+						':' +
+						(syncTotalSec % 60).toString().padStart(2, '0'),
+					sync_hours: Math.floor(syncTotalSec / 3600).toString().padStart(2, '0'),
+					sync_minutes: Math.floor((syncTotalSec % 3600) / 60).toString().padStart(2, '0'),
+					sync_seconds: (syncTotalSec % 60).toString().padStart(2, '0'),
+					sync_ms: (syncMs % 1000).toString().padStart(3, '0'),
+					sync_source: data.syncSource || '',
+					sync_connected: data.syncConnected ? 'true' : 'false',
+				};
 
 					for (let i = 0; i < 10; i++) {
 						updates[`msg_${i + 1}`] =
@@ -119,8 +133,8 @@ class SmartTimerProInstance extends InstanceBase {
 								: '(Empty Slot)';
 					}
 
-					this.setVariableValues(updates);
-					this.checkFeedbacks('timer_state', 'msg_state');
+				this.setVariableValues(updates);
+				this.checkFeedbacks('timer_state', 'msg_state', 'sync_follow_state', 'sync_connected_state');
 				}
 			} catch (e) {
 				this.updateStatus(
@@ -144,6 +158,13 @@ class SmartTimerProInstance extends InstanceBase {
 			{ name: 'Agenda Session Name', variableId: 'agenda_name' },
 			{ name: 'Agenda Time Left (MM:SS)', variableId: 'agenda_time' },
 			{ name: 'Agenda Session Total (MM:SS)', variableId: 'agenda_total' },
+			{ name: 'External Sync - Time (HH:MM:SS)', variableId: 'sync_time' },
+			{ name: 'External Sync - Hours (HH)', variableId: 'sync_hours' },
+			{ name: 'External Sync - Minutes (MM)', variableId: 'sync_minutes' },
+			{ name: 'External Sync - Seconds (SS)', variableId: 'sync_seconds' },
+			{ name: 'External Sync - Milliseconds (000)', variableId: 'sync_ms' },
+			{ name: 'External Sync - Source Label', variableId: 'sync_source' },
+			{ name: 'External Sync - Connected (true/false)', variableId: 'sync_connected' },
 		];
 
 		for (let i = 1; i <= 10; i++) {
@@ -185,20 +206,46 @@ class SmartTimerProInstance extends InstanceBase {
 					};
 				},
 			},
-			msg_state: {
-				name: 'Message Active Background',
-				type: 'boolean',
-				label: 'Message is active on screen',
-				defaultStyle: {
-					bgcolor: combineRgb(0, 163, 224),
-					color: WHITE,
-				},
-				options: [],
-				callback: () => {
-					return this.state.msg_active;
-				},
+		msg_state: {
+			name: 'Message Active Background',
+			type: 'boolean',
+			label: 'Message is active on screen',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 163, 224),
+				color: WHITE,
 			},
-		});
+			options: [],
+			callback: () => {
+				return this.state.msg_active;
+			},
+		},
+		sync_follow_state: {
+			name: 'External Sync - Follow ON Background',
+			type: 'boolean',
+			label: 'External sync follow mode is active',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 163, 224),
+				color: WHITE,
+			},
+			options: [],
+			callback: () => {
+				return !!this.state.syncFollowing;
+			},
+		},
+		sync_connected_state: {
+			name: 'External Sync - Signal Lost Background',
+			type: 'boolean',
+			label: 'External sync connection lost (red = NO SIGNAL)',
+			defaultStyle: {
+				bgcolor: combineRgb(239, 68, 68),
+				color: WHITE,
+			},
+			options: [],
+			callback: () => {
+				return !this.state.syncConnected;
+			},
+		},
+	});
 	}
 
 	initActions() {
@@ -376,14 +423,62 @@ class SmartTimerProInstance extends InstanceBase {
 					await sendCmd('agenda/next');
 				},
 			},
-			agenda_stop: {
-				name: 'Agenda - Stop Rundown',
-				options: [],
-				callback: async () => {
-					await sendCmd('agenda/stop');
-				},
+		agenda_stop: {
+			name: 'Agenda - Stop Rundown',
+			options: [],
+			callback: async () => {
+				await sendCmd('agenda/stop');
 			},
-		});
+		},
+		sync_start: {
+			name: 'External Sync - Start',
+			options: [],
+			callback: async () => {
+				await sendCmd('sync/start');
+			},
+		},
+		sync_pause: {
+			name: 'External Sync - Pause',
+			options: [],
+			callback: async () => {
+				await sendCmd('sync/pause');
+			},
+		},
+		sync_reset: {
+			name: 'External Sync - Reset',
+			options: [],
+			callback: async () => {
+				await sendCmd('sync/reset');
+			},
+		},
+		sync_follow: {
+			name: 'External Sync - Follow On/Off',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Mode',
+					id: 'mode',
+					default: 'toggle',
+					choices: [
+						{ id: 'toggle', label: 'Toggle' },
+						{ id: 'on', label: 'Follow ON' },
+						{ id: 'off', label: 'Follow OFF' },
+					],
+				},
+			],
+			callback: async (action) => {
+				const m = action.options.mode;
+				await sendCmd(`sync/follow?mode=${m}`);
+			},
+		},
+		sync_now: {
+			name: 'External Sync - Sync Now (grab cue time)',
+			options: [],
+			callback: async () => {
+				await sendCmd('sync/now');
+			},
+		},
+	});
 	}
 
 	initPresets() {
@@ -412,6 +507,18 @@ class SmartTimerProInstance extends InstanceBase {
 		presets['display_hours'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Hours (HH)', style: textStyle('$(smart-timer-pro:sign)$(smart-timer-pro:hours)', '40'), steps: [], feedbacks: [] };
 		presets['display_minutes'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Minutes (MM)', style: textStyle('$(smart-timer-pro:minutes)', '40'), steps: [], feedbacks: [] };
 		presets['display_seconds'] = { type: 'button', category: 'Timer Display', name: 'Timer Display - Seconds (SS)', style: textStyle('$(smart-timer-pro:seconds)', '40'), steps: [], feedbacks: [] };
+
+		// External Sync Display (HH : MM : SS : MS read-only)
+		presets['sync_display_hours'] = { type: 'button', category: 'External Sync', name: 'External Sync - Hours (HH)', style: textStyle('$(smart-timer-pro:sync_hours)', '40'), steps: [], feedbacks: [] };
+		presets['sync_display_minutes'] = { type: 'button', category: 'External Sync', name: 'External Sync - Minutes (MM)', style: textStyle('$(smart-timer-pro:sync_minutes)', '40'), steps: [], feedbacks: [] };
+		presets['sync_display_seconds'] = { type: 'button', category: 'External Sync', name: 'External Sync - Seconds (SS)', style: textStyle('$(smart-timer-pro:sync_seconds)', '40'), steps: [], feedbacks: [] };
+		presets['sync_display_ms'] = { type: 'button', category: 'External Sync', name: 'External Sync - Milliseconds (000)', style: textStyle('$(smart-timer-pro:sync_ms)', '40'), steps: [], feedbacks: [] };
+
+		presets['sync_now'] = { type: 'button', category: 'External Sync', name: 'External Sync - Sync Now', style: iconStyle('refresh', 'SYNC NOW', '12'), steps: [{ down: [{ actionId: 'sync_now', options: {} }], up: [] }], feedbacks: [] };
+		presets['sync_follow'] = { type: 'button', category: 'External Sync', name: 'External Sync - Follow Toggle', style: iconStyle('trending_up', 'FOLLOW', '12'), steps: [{ down: [{ actionId: 'sync_follow', options: { mode: 'toggle' } }], up: [] }], feedbacks: [{ feedbackId: 'sync_follow_state', options: {} }] };
+		presets['sync_start'] = { type: 'button', category: 'External Sync', name: 'External Sync - Start', style: iconStyle('play_circle_filled', 'START', '12'), steps: [{ down: [{ actionId: 'sync_start', options: {} }], up: [] }], feedbacks: [] };
+		presets['sync_pause'] = { type: 'button', category: 'External Sync', name: 'External Sync - Pause', style: iconStyle('stop', 'PAUSE', '12'), steps: [{ down: [{ actionId: 'sync_pause', options: {} }], up: [] }], feedbacks: [] };
+		presets['sync_reset'] = { type: 'button', category: 'External Sync', name: 'External Sync - Reset', style: iconStyle('av_timer', 'RESET', '12'), steps: [{ down: [{ actionId: 'sync_reset', options: {} }], up: [] }], feedbacks: [] };
 
 		presets['smart_timer'] = {
 			type: 'button',

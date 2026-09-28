@@ -493,6 +493,18 @@
             </div>
 
             <div class="setting-group">
+                <h3>Show Clock Position</h3>
+                <div class="setting-row">
+                    <span class="setting-label">X (%)</span>
+                    <input type="number" id="set-clock-x" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Y (%)</span>
+                    <input type="number" id="set-clock-y" class="setting-input num" min="0" max="100" onchange="autoSaveSettings()">
+                </div>
+            </div>
+
+            <div class="setting-group">
                 <h3>Loading Bar</h3>
                 <div class="setting-row">
                     <span class="setting-label">X (%)</span>
@@ -773,14 +785,25 @@
             <button class="btn-set" style="width:100%;padding:14px;margin-top:8px" onclick="closeSettings()" data-i18n="done">DONE</button>
         </div>
     </div>
-
-    <!-- TUTORIAL MODAL -->    <div class="modal-overlay" id="tutorial-modal">
+    <!-- TUTORIAL MODAL -->
+    <div class="modal-overlay" id="tutorial-modal">
         <div class="modal-content">
             <div class="modal-title">
                 <span id="tutorial-title">TUTORIAL</span>
                 <button class="modal-close" onclick="closeTutorial()">&times;</button>
             </div>
             <div id="tutorial-body" style="max-height:70vh;overflow-y:auto;font-size:13px;line-height:1.8;color:var(--text)"></div>
+        </div>
+    </div>
+
+    <!-- SYNC GUIDE MODAL -->
+    <div class="modal-overlay" id="sync-guide-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <span id="sync-guide-title">EXTERNAL SYNC — GUIDE</span>
+                <button class="modal-close" onclick="closeSyncGuide()">&times;</button>
+            </div>
+            <div id="sync-guide-body" style="max-height:70vh;overflow-y:auto;font-size:13px;line-height:1.8;color:var(--text)"></div>
         </div>
     </div>
 
@@ -895,6 +918,66 @@
                         <input type="file" id="logo-input" accept="image/*" class="hidden" onchange="uploadLogo(this)">
                         <button onclick="document.getElementById('logo-input').click()" class="btn-set" style="flex:1;padding:12px" data-i18n="upload_logo">UPLOAD LOGO</button>
                         <button onclick="clearLogo()" class="btn-set" style="background:var(--red);flex:none;padding:0 20px">✕</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header"><span data-i18n="sync_card">External Sync Timer</span> <button class="header-btn" style="padding:2px 10px;font-size:11px;margin-left:8px" onclick="openSyncGuide()" data-i18n="sync_guide_btn">GUIDE</button></div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <select id="sync-provider" class="custom-input" style="flex:1" onchange="onSyncProviderChange()">
+                            <option value="none" data-i18n="sync_none">None</option>
+                            <option value="resolume">Resolume</option>
+                            <option value="http">Pixera / Watchout (HTTP)</option>
+                            <option value="osc">OSC</option>
+                        </select>
+                    </div>
+                    <div id="sync-resolume-fields" class="hidden">
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="text" id="sync-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="autoSaveSettings()">
+                            <input type="number" id="sync-port" class="custom-input" placeholder="8080" style="max-width:90px" onchange="autoSaveSettings()">
+                        </div>
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <select id="sync-target" class="custom-input" style="flex:1" onchange="autoSaveSettings()"></select>
+                        </div>
+                    </div>
+                    <div id="sync-http-fields" class="hidden">
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="text" id="sync-http-url" class="custom-input" data-i18n-ph="sync_url_ph" placeholder="http://ip/api/..." onchange="autoSaveSettings()">
+                        </div>
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="text" id="sync-http-path" class="custom-input" placeholder="field.path (position 0-1)" style="flex:1" onchange="autoSaveSettings()">
+                            <input type="number" id="sync-http-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="autoSaveSettings()">
+                        </div>
+                    </div>
+                    <div id="sync-osc-fields" class="hidden">
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="number" id="sync-osc-port" class="custom-input" placeholder="9001" style="max-width:90px" onchange="autoSaveSettings()">
+                            <input type="text" id="sync-osc-address" class="custom-input" placeholder="/sync/position" style="flex:1" onchange="autoSaveSettings()">
+                        </div>
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <select id="sync-osc-mode" class="custom-input" style="flex:1" onchange="autoSaveSettings()">
+                                <option value="position" data-i18n="sync_mode_position">Position (0-1) + duration</option>
+                                <option value="seconds" data-i18n="sync_mode_seconds">Remaining seconds</option>
+                            </select>
+                            <input type="number" id="sync-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="autoSaveSettings()">
+                        </div>
+                    </div>
+                    <div class="btn-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
+                        <button id="btn-sync-follow" onclick="toggleSyncFollow()" class="btn btn-sm" style="height:40px;background:#334155;color:#cbd5e1">FOLLOW: OFF</button>
+                        <button onclick="syncCmd('now')" class="btn btn-add btn-sm" style="height:40px" data-i18n="sync_now">SYNC NOW</button>
+                    </div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <span id="sync-status" class="msg-badge badge-off" style="flex:none">NO SIGNAL</span>
+                        <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:18px;font-weight:700;color:#fff;text-align:center">00:00:00</span>
+                    </div>
+                    <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
+                        <button onclick="syncCmd('start')" class="btn btn-start btn-sm" style="height:40px">▶ START</button>
+                        <button onclick="syncCmd('pause')" class="btn btn-reset btn-sm" style="height:40px">⏸ PAUSE</button>
+                        <button onclick="syncCmd('reset')" class="btn btn-reset btn-sm" style="height:40px">⟳ RESET</button>
+                    </div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <select id="sync-display" class="custom-input" style="flex:1"></select>
+                        <button id="btn-sync-presenter" onclick="toggleSyncPresenterWindow()" class="btn-set" style="flex:none;padding:10px 14px" data-i18n="sync_open_display">OPEN DISPLAY</button>
                     </div>
                 </div>
 
@@ -1049,6 +1132,15 @@
                 color_theme_label: 'Color theme',
                 visual_presets: 'Visual Presets',
                 visual_presets_hint: 'Save the current look (background, fonts, colors) to a slot and apply it anytime.',
+                sync_card: 'External Sync Timer',
+                sync_none: 'None',
+                sync_host_ph: 'IP (e.g. 192.168.1.10)',
+                sync_url_ph: 'http://ip/api/...',
+                sync_now: 'SYNC NOW',
+                sync_open_display: 'OPEN DISPLAY',
+                sync_selected: 'Selected clip (active column)',
+                sync_mode_position: 'Position (0-1) + duration',
+                sync_mode_seconds: 'Remaining seconds',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
             },
@@ -1135,6 +1227,15 @@
                 color_theme_label: 'Tema de cor',
                 visual_presets: 'Presets Visuais',
                 visual_presets_hint: 'Grava o aspeto atual (fundo, fontes, cores) num slot e aplica quando quiseres.',
+                sync_card: 'Timer Sincronizado Externo',
+                sync_none: 'Nenhum',
+                sync_host_ph: 'IP (ex: 192.168.1.10)',
+                sync_url_ph: 'http://ip/api/...',
+                sync_now: 'SYNC NOW',
+                sync_open_display: 'ABRIR ECRÃ',
+                sync_selected: 'Clip selecionado (coluna ativa)',
+                sync_mode_position: 'Posição (0-1) + duração',
+                sync_mode_seconds: 'Segundos restantes',
                 tutorial: 'Tutorial',
                 tutorial_btn: 'TUTORIAL'
             }
@@ -1436,6 +1537,8 @@
             document.getElementById('set-timer-x').value = s.timerX !== undefined ? s.timerX : 50;
             document.getElementById('set-timer-y').value = s.timerY !== undefined ? s.timerY : 46;
             document.getElementById('set-timer-size').value = s.timerSize !== undefined ? s.timerSize : 22;
+            document.getElementById('set-clock-x').value = s.clockX !== undefined ? s.clockX : 96;
+            document.getElementById('set-clock-y').value = s.clockY !== undefined ? s.clockY : 4;
             document.getElementById('set-bar-x').value = s.barX !== undefined ? s.barX : 10;
             document.getElementById('set-bar-y').value = s.barY !== undefined ? s.barY : 88;
             document.getElementById('set-bar-width').value = s.barWidth !== undefined ? s.barWidth : 80;
@@ -1481,6 +1584,8 @@
                 timerX: parseInt(document.getElementById('set-timer-x').value) || 50,
                 timerY: parseInt(document.getElementById('set-timer-y').value) || 46,
                 timerSize: parseInt(document.getElementById('set-timer-size').value) || 22,
+                clockX: parseInt(document.getElementById('set-clock-x').value) || 96,
+                clockY: parseInt(document.getElementById('set-clock-y').value) || 4,
                 barX: parseInt(document.getElementById('set-bar-x').value) || 10,
                 barY: parseInt(document.getElementById('set-bar-y').value) || 88,
                 barWidth: parseInt(document.getElementById('set-bar-width').value) || 80,
@@ -1594,6 +1699,153 @@
                 semBtn.textContent = t('semaforo') + ': ' + t('off');
                 semBtn.style.background = '#334155';
                 semBtn.style.color = '#cbd5e1';
+            }
+        }
+
+        // --- EXTERNAL SYNC TIMER ---
+        function saveSyncSettings() {
+            var provider = document.getElementById('sync-provider').value;
+            var patch = { syncProvider: provider };
+            if (provider === 'resolume') {
+                patch.syncHost = document.getElementById('sync-host').value.trim();
+                patch.syncPort = parseInt(document.getElementById('sync-port').value) || 8080;
+                patch.syncTarget = document.getElementById('sync-target').value;
+            } else if (provider === 'http') {
+                patch.syncHttpUrl = document.getElementById('sync-http-url').value.trim();
+                patch.syncHttpPath = document.getElementById('sync-http-path').value.trim() || 'position';
+                patch.syncHttpDuration = parseInt(document.getElementById('sync-http-duration').value) || 60;
+                patch.syncHost = document.getElementById('sync-http-url').value.trim();
+            } else if (provider === 'osc') {
+                patch.syncOscPort = parseInt(document.getElementById('sync-osc-port').value) || 9001;
+                patch.syncOscAddress = document.getElementById('sync-osc-address').value.trim() || '/sync/position';
+                patch.syncOscMode = document.getElementById('sync-osc-mode').value;
+                patch.syncDuration = parseInt(document.getElementById('sync-duration').value) || 60;
+            }
+            fetchApi('/api/settings' + pinQuery(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(patch)
+            });
+        }
+
+        function onSyncProviderChange() {
+            var p = document.getElementById('sync-provider').value;
+            document.getElementById('sync-resolume-fields').classList.toggle('hidden', p !== 'resolume');
+            document.getElementById('sync-http-fields').classList.toggle('hidden', p !== 'http');
+            document.getElementById('sync-osc-fields').classList.toggle('hidden', p !== 'osc');
+            saveSyncSettings();
+        }
+
+        function populateSyncTargets() {
+            var sel = document.getElementById('sync-target');
+            if (!sel) return;
+            var current = currentSettings ? currentSettings.syncTarget : '1';
+            var options = '<option value="selected" data-i18n="sync_selected">Selected clip (active column)</option>';
+            for (var i = 1; i <= 40; i++) {
+                options += '<option value="' + i + '"' + (String(current) === String(i) ? ' selected' : '') + '>Column ' + i + '</option>';
+            }
+            if (current === 'selected') {
+                options = options.replace('value="selected"', 'value="selected" selected');
+            }
+            sel.innerHTML = options;
+        }
+
+        function populateSyncDisplays() {
+            var sel = document.getElementById('sync-display');
+            if (!sel || !window.electronAPI) return;
+            var currentId = currentSettings ? currentSettings.presenterSyncDisplayId : null;
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var options = '<option value="window">' + (lang === 'pt' ? 'Janela' : 'Window') + '</option>';
+            displayList.forEach(function(d) {
+                var selAttr = currentId !== null && currentId !== undefined && Number(currentId) === d.id ? ' selected' : '';
+                options += '<option value="' + d.id + '"' + selAttr + '>' + displayLabel(d, lang) + '</option>';
+            });
+            sel.innerHTML = options;
+            sel.onchange = function() {
+                var v = sel.value;
+                fetchApi('/api/settings' + pinQuery(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ presenterSyncDisplayId: v === 'window' ? null : Number(v) })
+                });
+            };
+        }
+
+        function populateSyncSettings(s) {
+            var p = s.syncProvider || 'none';
+            document.getElementById('sync-provider').value = p;
+            document.getElementById('sync-host').value = s.syncHost || '';
+            document.getElementById('sync-port').value = s.syncPort !== undefined ? s.syncPort : 8080;
+            document.getElementById('sync-http-url').value = s.syncHttpUrl || '';
+            document.getElementById('sync-http-path').value = s.syncHttpPath || 'position';
+            document.getElementById('sync-http-duration').value = s.syncHttpDuration !== undefined ? s.syncHttpDuration : 60;
+            document.getElementById('sync-osc-port').value = s.syncOscPort !== undefined ? s.syncOscPort : 9001;
+            document.getElementById('sync-osc-address').value = s.syncOscAddress || '/sync/position';
+            document.getElementById('sync-osc-mode').value = s.syncOscMode || 'position';
+            document.getElementById('sync-duration').value = s.syncDuration !== undefined ? s.syncDuration : 60;
+            document.getElementById('sync-resolume-fields').classList.toggle('hidden', p !== 'resolume');
+            document.getElementById('sync-http-fields').classList.toggle('hidden', p !== 'http');
+            document.getElementById('sync-osc-fields').classList.toggle('hidden', p !== 'osc');
+            populateSyncTargets();
+            populateSyncDisplays();
+            updateSyncFollowButton(!!s.syncFollow);
+        }
+
+        function updateSyncFollowButton(val) {
+            var btn = document.getElementById('btn-sync-follow');
+            if (!btn) return;
+            if (val) {
+                btn.textContent = 'FOLLOW: ON';
+                btn.style.background = 'var(--green)';
+                btn.style.color = '#fff';
+            } else {
+                btn.textContent = 'FOLLOW: OFF';
+                btn.style.background = '#334155';
+                btn.style.color = '#cbd5e1';
+            }
+        }
+
+        function toggleSyncFollow() {
+            var cur = !!(currentSettings && currentSettings.syncFollow);
+            syncCmd('follow?value=' + (cur ? '0' : '1'));
+        }
+
+        function syncCmd(cmd) {
+            api('sync/' + cmd);
+        }
+
+        function updateSyncCard(s) {
+            var st = s.syncTimer || {};
+            var statusEl = document.getElementById('sync-status');
+            var timeEl = document.getElementById('sync-time');
+            if (statusEl) {
+                if (st.connected) {
+                    statusEl.textContent = 'SYNC';
+                    statusEl.className = 'msg-badge badge-live';
+                } else {
+                    statusEl.textContent = 'NO SIGNAL';
+                    statusEl.className = 'msg-badge badge-off';
+                }
+            }
+            if (timeEl) {
+                var t = Math.max(0, Math.round(st.timeLeft || 0));
+                var h = Math.floor(t / 3600);
+                var m = Math.floor((t % 3600) / 60);
+                var sec = t % 60;
+                timeEl.textContent =
+                    String(h).padStart(2, '0') + ':' +
+                    String(m).padStart(2, '0') + ':' +
+                    String(sec).padStart(2, '0');
+            }
+        }
+
+        function toggleSyncPresenterWindow() {
+            if (window.electronAPI) {
+                window.electronAPI.toggleSyncPresenter().then(function(active) {
+                    document.getElementById('btn-sync-presenter').classList.toggle('active', active);
+                });
+            } else {
+                window.open('/presenter.html?view=sync', 'syncpresenter');
             }
         }
 
@@ -1958,6 +2210,7 @@
             });
             updatePresetActive(s.mode === 'countdown' ? s.initialTime : -1);
             updateFlashButton(s.flashOn);
+            updateSyncCard(s);
 
             // Clock overlay in monitor preview
             var mClock = document.getElementById('monitor-clock');
@@ -1965,9 +2218,11 @@
                 if (!mClock) {
                     mClock = document.createElement('div');
                     mClock.id = 'monitor-clock';
-                    mClock.style.cssText = 'position:absolute;top:8px;right:12px;color:#fff;font-family:Orbitron,Courier New,monospace;font-size:13px;font-weight:700;opacity:0.9;z-index:4;letter-spacing:1px;';
+                    mClock.style.cssText = 'position:absolute;color:#fff;font-family:Orbitron,Courier New,monospace;font-size:13px;font-weight:700;opacity:0.9;z-index:4;letter-spacing:1px;transform:translate(-50%,-50%);';
                     document.getElementById('monitor-frame').appendChild(mClock);
                 }
+                mClock.style.left = (cfg.clockX !== undefined ? cfg.clockX : 96) + '%';
+                mClock.style.top = (cfg.clockY !== undefined ? cfg.clockY : 4) + '%';
                 var mnow = new Date();
                 mClock.textContent =
                     String(mnow.getHours()).padStart(2, '0') + ':' +
@@ -2136,6 +2391,7 @@
             updateIndicatorButtons(s.statusIndicator);
             updateClockButton(s.showClock);
             populateDisplaySelects();
+            populateSyncSettings(s);
             renderVisualPresets();
             renderAgenda(s.agenda, s.agendaAutoNext);
             populateHotkeyFields(s.hotkeys);
@@ -2465,6 +2721,56 @@
 
         function closeTutorial() {
             document.getElementById('tutorial-modal').classList.remove('active');
+        }
+
+        var SYNC_GUIDE_TEXT = {
+            en: [
+                '<h4>Resolume Arena 7</h4>',
+                '1. Preferences &rarr; Web server &rarr; <b>Enable</b> (port 8080)<br>',
+                '2. Provider: <b>Resolume</b> — IP of the Resolume PC, port 8080<br>',
+                '3. Target: <b>Selected clip</b> (active column) or <b>Column 1-40</b><br>',
+                '4. Test: http://127.0.0.1:8080/api/v1/composition/columns/1/transport',
+                '<h4>Pixera R25</h4>',
+                'Option A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> with the API URL of your Pixera that returns the cue time.<br>',
+                'Option B — Lua script inside Pixera sending OSC every 0.5s to this app (port 9001, address <b>/sync/position</b>). See <b>docs/SYNC_GUIDE.md</b> for the script.',
+                '<h4>WATCHOUT 7</h4>',
+                'Option A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> with the WATCHOUT 7 API URL.<br>',
+                'Option B — OSC output from WATCHOUT 7 to this app, port 9001, address <b>/sync/position</b>.',
+                '<h4>Smart Timer Pro</h4>',
+                '1. Pick provider, fill fields, <b>FOLLOW ON</b> (continuous) or <b>SYNC NOW</b> (grab once).<br>',
+                '2. Pick display and press <b>OPEN DISPLAY</b>. START/PAUSE/RESET control the external timer.<br>',
+                '3. Companion: External Sync actions + preset <b>HH:MM:SS:MS</b> variables (sync_hours, sync_minutes, sync_seconds, sync_ms).'
+            ],
+            pt: [
+                '<h4>Resolume Arena 7</h4>',
+                '1. Preferences &rarr; Web server &rarr; <b>Enable</b> (porta 8080)<br>',
+                '2. Provider: <b>Resolume</b> — IP do PC do Resolume, porta 8080<br>',
+                '3. Target: <b>Selected clip</b> (coluna ativa) ou <b>Column 1-40</b><br>',
+                '4. Testar: http://127.0.0.1:8080/api/v1/composition/columns/1/transport',
+                '<h4>Pixera R25</h4>',
+                'Opção A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> com o URL da API do teu Pixera que devolve o tempo da cue.<br>',
+                'Opção B — script Lua dentro do Pixera a enviar OSC de 0,5 em 0,5 s para esta app (porta 9001, endereço <b>/sync/position</b>). Script em <b>docs/SYNC_GUIDE.md</b>.',
+                '<h4>WATCHOUT 7</h4>',
+                'Opção A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> com o URL da API do WATCHOUT 7.<br>',
+                'Opção B — OSC output do WATCHOUT 7 para esta app, porta 9001, endereço <b>/sync/position</b>.',
+                '<h4>Smart Timer Pro</h4>',
+                '1. Escolhe o provider, preenche os campos, <b>FOLLOW ON</b> (contínuo) ou <b>SYNC NOW</b> (capturar uma vez).<br>',
+                '2. Escolhe o display e prime <b>OPEN DISPLAY</b>. START/PAUSE/RESET controlam o timer externo.<br>',
+                '3. Companion: ações External Sync + preset <b>HH:MM:SS:MS</b> com as variáveis (sync_hours, sync_minutes, sync_seconds, sync_ms).'
+            ]
+        };
+
+        function openSyncGuide() {
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var body = document.getElementById('sync-guide-body');
+            if (body) body.innerHTML = (SYNC_GUIDE_TEXT[lang] || SYNC_GUIDE_TEXT.en).join('');
+            var title = document.getElementById('sync-guide-title');
+            if (title) title.textContent = lang === 'pt' ? 'SYNC EXTERNO — GUIA' : 'EXTERNAL SYNC — GUIDE';
+            document.getElementById('sync-guide-modal').classList.add('active');
+        }
+
+        function closeSyncGuide() {
+            document.getElementById('sync-guide-modal').classList.remove('active');
         }
 
         // --- UPDATES ---

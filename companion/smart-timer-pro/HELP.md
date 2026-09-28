@@ -20,6 +20,7 @@ Bitfocus Companion module to control **Smart Timer Pro** stage timer from an Elg
 - **Quick Times** -- Reset to 1m, 5m, 10m, 15m, 30m, 60m with one button
 - **Manual Adjustments** -- +1min / -1min on the fly
 - **Toggle Message** -- Show/hide message on the presenter screen
+- **External Sync** -- Control the external sync timer (Start/Pause/Reset/Follow/Sync Now) and display its HH : MM : SS : MS
 - **Design** -- Black buttons with white text and colored borders, with large white Google Material icons
 
 ## Installation
@@ -74,6 +75,7 @@ sudo systemctl restart companion
 | Manual Adjustments | +1 Minute, -1 Minute |
 | Status Indicator | Loading Bar ON/OFF, Semáforo ON/OFF |
 | Agenda | Start rundown, Next session, Stop, Session + Time display |
+| External Sync | Hours (HH), Minutes (MM), Seconds (SS), Milliseconds (000) display + Start, Pause, Reset, Follow toggle, Sync Now |
 
 ## Variables
 
@@ -88,10 +90,23 @@ sudo systemctl restart companion
 | `$(smart-timer-pro:seconds)` | Seconds (SS, zero-padded) |
 | `$(smart-timer-pro:sign)` | "-" when the timer is in overtime |
 | `$(smart-timer-pro:msg_1)` through `$(smart-timer-pro:msg_5)` | Quick message text |
+| `$(smart-timer-pro:sync_time)` | External sync timer (HH:MM:SS) |
+| `$(smart-timer-pro:sync_hours)` | External sync hours (HH) |
+| `$(smart-timer-pro:sync_minutes)` | External sync minutes (MM) |
+| `$(smart-timer-pro:sync_seconds)` | External sync seconds (SS) |
+| `$(smart-timer-pro:sync_ms)` | External sync milliseconds (000) |
+| `$(smart-timer-pro:sync_source)` | External sync source label (e.g. "RESOLUME C1") |
+| `$(smart-timer-pro:sync_connected)` | "true" / "false" (false = NO SIGNAL) |
+
+## External Sync Timer (v2.0.0)
+
+The app can follow the remaining time of a cue running in Resolume Arena,
+Pixera or WATCHOUT and show it on a dedicated screen. See **SETTINGS > External Sync Timer > GUIDE**
+in the app, or the `docs/SYNC_GUIDE.md` file, for step-by-step setup of each media server.
 
 ## Requirements
 
-- Smart Timer Pro v1.6.0 or later running on the same network
+- Smart Timer Pro v2.0.0 or later running on the same network
 - Bitfocus Companion v3.4 or later (for colored button borders)
 - Elgato Stream Deck
 

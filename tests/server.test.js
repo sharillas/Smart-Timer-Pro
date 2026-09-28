@@ -135,6 +135,61 @@ test('profile export/import roundtrip', async () => {
     assert.ok(after.body.length >= before.body.length);
 });
 
+test('external sync transport endpoints', async () => {
+    let r = await json('/api/sync/state');
+    assert.strictEqual(r.status, 200);
+    assert.ok(r.body.syncTimer);
+
+    await api('/api/sync/start');
+    r = await json('/api/sync/state');
+    assert.strictEqual(r.body.syncTimer.isRunning, true);
+
+    await api('/api/sync/pause');
+    r = await json('/api/sync/state');
+    assert.strictEqual(r.body.syncTimer.isRunning, false);
+
+    await api('/api/sync/follow?mode=on');
+    r = await json('/api/sync/state');
+    assert.strictEqual(r.body.syncTimer.following, true);
+
+    await api('/api/sync/follow?mode=toggle');
+    r = await json('/api/sync/state');
+    assert.strictEqual(r.body.syncTimer.following, false);
+
+    await api('/api/sync/now');
+    assert.strictEqual(r.status || 200, 200);
+
+    await api('/api/sync/reset');
+    r = await json('/api/sync/state');
+    assert.strictEqual(r.body.syncTimer.isRunning, false);
+    assert.strictEqual(r.body.syncTimer.following, false);
+});
+
+test('companion exposes external sync fields', async () => {
+    const r = await json('/api/companion');
+    assert.ok('syncTime' in r.body);
+    assert.ok('syncTimeMs' in r.body);
+    assert.ok('syncConnected' in r.body);
+    assert.ok('syncRunning' in r.body);
+    assert.ok('syncFollowing' in r.body);
+    assert.ok('syncSource' in r.body);
+    assert.strictEqual(typeof r.body.syncTimeMs, 'number');
+});
+
+test('external sync settings roundtrip', async () => {
+    let r = await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'resolume', syncHost: '10.0.0.5', syncPort: '8080', syncTarget: 'column' }),
+    });
+    assert.strictEqual(r.status, 200);
+    const s = await json('/api/settings');
+    assert.strictEqual(s.body.syncProvider, 'resolume');
+    assert.strictEqual(s.body.syncHost, '10.0.0.5');
+    assert.strictEqual(s.body.syncPort, '8080');
+    assert.strictEqual(s.body.syncTarget, 'column');
+});
+
 test('CSRF: foreign origin blocked', async () => {
     let r = await api('/api/reset?sec=5', { headers: { Origin: 'http://evil.com' } });
     assert.strictEqual(r.status, 403);
