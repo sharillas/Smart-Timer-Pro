@@ -35,51 +35,50 @@ usa o provider **OSC** (endereço `/composition/columns/1/clip/transport/positio
 
 ---
 
-## 2. Pixera R25
+## 2. Pixera R25 (sem scripts — a nossa app faz polling direto)
 
-O Pixera expõe uma REST API (porta 8080, consola/API de controlo). Temos **dois caminhos**:
+O Pixera expõe uma **API TCP (JSON-RPC 2.0)** — a nossa app liga-se ao Pixera
+como cliente e pergunta o countdown a cada 0,5 s. **Não é preciso nenhum script.**
 
-### Opção A — HTTP genérico (se a API expuser o tempo)
-1. Na nossa app: Provider **Pixera / Watchout (HTTP)**
-2. **URL**: `http://<ip-do-pixera>:8080/api/...` (verifica na documentação da API do teu Pixera qual o endpoint que devolve a posição da cue ativa)
-3. **Path**: campo JSON do tempo (ex: `position` ou `time_remaining`) — valor 0–1 é tratado como posição × duração; valor >1 é tratado como segundos restantes
-4. **Duration**: duração da cue (s) — usada quando o valor é uma posição
+### No Pixera (uma vez):
+1. Abrir o separador de definições (canto superior direito) → **API**
+2. Em **Input Network Adapter**, escolher o IP/NIC do Pixera
+3. Escolher um dos **API Access Points** e definir:
+   - **Protocolo: JSON/TCP(dl)**  (recomendado)
+   - **Porta**: qualquer número (ex: **4023**)
+4. Nas **cues da timeline**: marcar cada cue como **"countdown relevant"**
+   (inspector da cue) — é o tempo até à próxima cue relevante que aparece no timer
 
-### Opção B — Script Lua no Pixera + OSC (recomendado, mais fiável)
-Se a API não expuser diretamente o remaining, criar um **script Lua** dentro do Pixera
-(menu Scripting) que envia o tempo por OSC para a nossa app a cada 0.5 s:
+### Na nossa app (Smart Timer Pro):
+1. Provider: **Pixera (TCP API)**
+2. **IP** do Pixera + **porta** (a mesma que escolheste, ex: 4023)
+3. **Timeline name**: nome da timeline (ex: `Timeline 1`)
+4. **Framing**: `JSON/TCP(dl) 0xPX` (ou `JSON/TCP pxr1` se no Pixera tiveres
+   escolhido JSON/TCP em vez de TCP(dl))
+5. **FOLLOW ON** + **OPEN DISPLAY** — o timer externo mostra o tempo até à próxima
+   cue "countdown relevant" da timeline
 
-```lua
--- Pixera Lua: envia o remaining da cue ativa por OSC para o Smart Timer Pro
--- Ajustar: TIMER_IP e TIMER_PORT (da nossa app, default 9001)
--- Verificar na documentação do Pixera os nomes exatos das funções da API Lua
--- (GetTimeline... / GetCue...) e ajustar as linhas marcadas com TODO.
-
-TIMER_IP = "192.168.1.55"   -- IP do PC do Smart Timer Pro
-TIMER_PORT = 9001           -- porta OSC definida na app
-
-function sendRemaining()
-    -- TODO: substituir pelas funções reais do teu Pixera R25
-    -- Exemplo (verificar nomes na documentação de scripting do Pixera):
-    -- local position = GetActiveCuePosition()   -- 0.0 .. 1.0
-    -- local duration  = GetActiveCueDuration()  -- segundos
-    -- local remaining = math.max(0, duration * (1 - position))
-    local remaining = 0   -- TODO: valor real
-    local msg = "/sync/position"
-    -- envia OSC float
-    SendOSC(TIMER_IP, TIMER_PORT, msg, remaining)
-end
-
--- correr a cada 0.5 segundos
--- TODO: usar o mecanismo de timers do Pixera (ex: SetTimer / OnTick)
+Teste rápido (opcional, do PC da nossa app, com PowerShell):
+```powershell
+# TCP(dl): enviar JSON + "0xPX" e ler a resposta
+$c = New-Object System.Net.Sockets.TcpClient("192.168.1.20", 4023)
+$s = $c.GetStream()
+$msg = '{"jsonrpc":"2.0","id":1,"method":"Pixera.Compound.getCurrentCountdownOfTimeline","params":{"name":"Timeline 1"}}0xPX'
+$b = [System.Text.Encoding]::UTF8.GetBytes($msg)
+$s.Write($b, 0, $b.Length)
+Start-Sleep -Milliseconds 500
+$buf = New-Object byte[] 4096
+$n = $s.Read($buf, 0, 4096)
+[System.Text.Encoding]::UTF8.GetString($buf, 0, $n)
+$c.Close()
 ```
+Deve devolver algo como `{"jsonrpc":"2.0","id":1,"result":900}` (900 frames até à próxima cue).
 
-Na nossa app: Provider **OSC**, porta **9001**, endereço **/sync/position**,
-modo **Position (0-1) + duration** com a duração da cue.
-
-> ⚠️ **Verificação necessária no local**: os nomes das funções Lua variam entre
-> versões do Pixera. Abrir a documentação de Scripting do Pixera R25 e substituir
-> as linhas TODO. O fluxo (ler posição/duração → enviar OSC) mantém-se igual.
+> Nota: a documentação oficial do Pixera confirma que a API Lua (Control) **não
+> permite enviar OSC para outro PC**, por isso o caminho é mesmo este: a nossa app
+> liga-se à API TCP do Pixera e pergunta o countdown. Se preferires HTTP, o Pixera
+> não expõe o countdown por HTTP — usa a API TCP acima ou o provider HTTP genérico
+> só se tiveres um servidor intermédio que exponha o tempo.
 
 ---
 

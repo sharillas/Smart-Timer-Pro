@@ -190,6 +190,50 @@ test('external sync settings roundtrip', async () => {
     assert.strictEqual(s.body.syncTarget, 'column');
 });
 
+test('pixera provider polls TCP JSON-RPC (delimiter framing)', async () => {
+    const net = require('node:net');
+    const mock = net.createServer((sock) => {
+        let buf = Buffer.alloc(0);
+        sock.on('data', (d) => {
+            buf = Buffer.concat([buf, d]);
+            const text = buf.toString('utf8');
+            if (text.includes('0xPX')) {
+                for (const chunk of text.split('0xPX')) {
+                    const t = chunk.trim();
+                    if (!t) continue;
+                    let req;
+                    try { req = JSON.parse(t); } catch (e) { continue; }
+                    let result = 900;
+                    if (req.method === 'Pixera.Compound.getCurrentCountdownOfTimeline') result = 900;
+                    else if (req.method === 'Pixera.Compound.getFpsOfTimeline') result = 30;
+                    sock.write(JSON.stringify({ jsonrpc: '2.0', id: req.id, result }) + '0xPX');
+                }
+            }
+        });
+    });
+    await new Promise((r) => mock.listen(0, '127.0.0.1', r));
+    const port = mock.address().port;
+
+    await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'pixera', syncHost: '127.0.0.1', syncPixeraPort: port, syncPixeraTimeline: 'Timeline 1', syncPixeraFraming: 'delimiter' }),
+    });
+
+    await new Promise((r) => setTimeout(r, 1800));
+    const st = await json('/api/sync/state');
+    assert.strictEqual(st.body.syncTimer.connected, true);
+    assert.ok(Math.abs(st.body.syncTimer.timeLeft - 30) < 0.6, 'remaining = 900 frames / 30 fps = 30s, got ' + st.body.syncTimer.timeLeft);
+    assert.ok(String(st.body.syncTimer.sourceLabel).startsWith('PIXERA'));
+
+    await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'none' }),
+    });
+    mock.close();
+});
+
 test('CSRF: foreign origin blocked', async () => {
     let r = await api('/api/reset?sec=5', { headers: { Origin: 'http://evil.com' } });
     assert.strictEqual(r.status, 403);

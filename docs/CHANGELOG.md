@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] - 2026-09-29
+
+### New Features
+- **Pixera (TCP API) provider**: the app polls Pixera directly over its native JSON-RPC 2.0 TCP API (no scripts needed on the Pixera side) and shows the countdown to the next "countdown relevant" cue. Supports both framings — `JSON/TCP(dl)` (0xPX delimiter) and `JSON/TCP` (pxr1 + size header)
+- **Pixera guide rewritten**: verified step-by-step setup (Settings → API → JSON/TCP(dl) + port), with a PowerShell test snippet
+
 ## [2.0.0] - 2026-09-29
 
 ### New Features

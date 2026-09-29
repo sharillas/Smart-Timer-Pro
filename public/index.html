@@ -927,6 +927,7 @@
                         <select id="sync-provider" class="custom-input" style="flex:1" onchange="onSyncProviderChange()">
                             <option value="none" data-i18n="sync_none">None</option>
                             <option value="resolume">Resolume</option>
+                            <option value="pixera">Pixera (TCP API)</option>
                             <option value="http">Pixera / Watchout (HTTP)</option>
                             <option value="osc">OSC</option>
                         </select>
@@ -938,6 +939,19 @@
                         </div>
                         <div class="custom-row" style="margin-bottom:8px">
                             <select id="sync-target" class="custom-input" style="flex:1" onchange="autoSaveSettings()"></select>
+                        </div>
+                    </div>
+                    <div id="sync-pixera-fields" class="hidden">
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="text" id="sync-pixera-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="autoSaveSettings()">
+                            <input type="number" id="sync-pixera-port" class="custom-input" placeholder="4023" style="max-width:90px" onchange="autoSaveSettings()">
+                        </div>
+                        <div class="custom-row" style="margin-bottom:8px">
+                            <input type="text" id="sync-pixera-timeline" class="custom-input" placeholder="Timeline name (ex: Timeline 1)" style="flex:1" onchange="autoSaveSettings()">
+                            <select id="sync-pixera-framing" class="custom-input" style="max-width:170px" onchange="autoSaveSettings()">
+                                <option value="delimiter">JSON/TCP(dl) 0xPX</option>
+                                <option value="header">JSON/TCP pxr1</option>
+                            </select>
                         </div>
                     </div>
                     <div id="sync-http-fields" class="hidden">
@@ -1710,6 +1724,11 @@
                 patch.syncHost = document.getElementById('sync-host').value.trim();
                 patch.syncPort = parseInt(document.getElementById('sync-port').value) || 8080;
                 patch.syncTarget = document.getElementById('sync-target').value;
+            } else if (provider === 'pixera') {
+                patch.syncHost = document.getElementById('sync-pixera-host').value.trim();
+                patch.syncPixeraPort = parseInt(document.getElementById('sync-pixera-port').value) || 4023;
+                patch.syncPixeraTimeline = document.getElementById('sync-pixera-timeline').value.trim() || 'Timeline 1';
+                patch.syncPixeraFraming = document.getElementById('sync-pixera-framing').value;
             } else if (provider === 'http') {
                 patch.syncHttpUrl = document.getElementById('sync-http-url').value.trim();
                 patch.syncHttpPath = document.getElementById('sync-http-path').value.trim() || 'position';
@@ -1731,6 +1750,7 @@
         function onSyncProviderChange() {
             var p = document.getElementById('sync-provider').value;
             document.getElementById('sync-resolume-fields').classList.toggle('hidden', p !== 'resolume');
+            document.getElementById('sync-pixera-fields').classList.toggle('hidden', p !== 'pixera');
             document.getElementById('sync-http-fields').classList.toggle('hidden', p !== 'http');
             document.getElementById('sync-osc-fields').classList.toggle('hidden', p !== 'osc');
             saveSyncSettings();
@@ -1776,6 +1796,10 @@
             document.getElementById('sync-provider').value = p;
             document.getElementById('sync-host').value = s.syncHost || '';
             document.getElementById('sync-port').value = s.syncPort !== undefined ? s.syncPort : 8080;
+            document.getElementById('sync-pixera-host').value = s.syncHost || '';
+            document.getElementById('sync-pixera-port').value = s.syncPixeraPort !== undefined ? s.syncPixeraPort : 4023;
+            document.getElementById('sync-pixera-timeline').value = s.syncPixeraTimeline || 'Timeline 1';
+            document.getElementById('sync-pixera-framing').value = s.syncPixeraFraming || 'delimiter';
             document.getElementById('sync-http-url').value = s.syncHttpUrl || '';
             document.getElementById('sync-http-path').value = s.syncHttpPath || 'position';
             document.getElementById('sync-http-duration').value = s.syncHttpDuration !== undefined ? s.syncHttpDuration : 60;
@@ -1784,6 +1808,7 @@
             document.getElementById('sync-osc-mode').value = s.syncOscMode || 'position';
             document.getElementById('sync-duration').value = s.syncDuration !== undefined ? s.syncDuration : 60;
             document.getElementById('sync-resolume-fields').classList.toggle('hidden', p !== 'resolume');
+            document.getElementById('sync-pixera-fields').classList.toggle('hidden', p !== 'pixera');
             document.getElementById('sync-http-fields').classList.toggle('hidden', p !== 'http');
             document.getElementById('sync-osc-fields').classList.toggle('hidden', p !== 'osc');
             populateSyncTargets();
@@ -2730,9 +2755,11 @@
                 '2. Provider: <b>Resolume</b> — IP of the Resolume PC, port 8080<br>',
                 '3. Target: <b>Selected clip</b> (active column) or <b>Column 1-40</b><br>',
                 '4. Test: http://127.0.0.1:8080/api/v1/composition/columns/1/transport',
-                '<h4>Pixera R25</h4>',
-                'Option A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> with the API URL of your Pixera that returns the cue time.<br>',
-                'Option B — Lua script inside Pixera sending OSC every 0.5s to this app (port 9001, address <b>/sync/position</b>). See <b>docs/SYNC_GUIDE.md</b> for the script.',
+                '<h4>Pixera R25 (no scripts)</h4>',
+                '1. In Pixera: Settings &rarr; <b>API</b> &rarr; pick an API Access Point &rarr; protocol <b>JSON/TCP(dl)</b> + port (e.g. 4023).<br>',
+                '2. Mark the timeline cues as <b>"countdown relevant"</b> (cue inspector).<br>',
+                '3. Here: provider <b>Pixera (TCP API)</b> — Pixera IP, port 4023, timeline name (e.g. Timeline 1).<br>',
+                '4. FOLLOW ON + OPEN DISPLAY — the timer shows the time to the next relevant cue.',
                 '<h4>WATCHOUT 7</h4>',
                 'Option A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> with the WATCHOUT 7 API URL.<br>',
                 'Option B — OSC output from WATCHOUT 7 to this app, port 9001, address <b>/sync/position</b>.',
@@ -2747,9 +2774,11 @@
                 '2. Provider: <b>Resolume</b> — IP do PC do Resolume, porta 8080<br>',
                 '3. Target: <b>Selected clip</b> (coluna ativa) ou <b>Column 1-40</b><br>',
                 '4. Testar: http://127.0.0.1:8080/api/v1/composition/columns/1/transport',
-                '<h4>Pixera R25</h4>',
-                'Opção A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> com o URL da API do teu Pixera que devolve o tempo da cue.<br>',
-                'Opção B — script Lua dentro do Pixera a enviar OSC de 0,5 em 0,5 s para esta app (porta 9001, endereço <b>/sync/position</b>). Script em <b>docs/SYNC_GUIDE.md</b>.',
+                '<h4>Pixera R25 (sem scripts)</h4>',
+                '1. No Pixera: Settings &rarr; <b>API</b> &rarr; escolher um API Access Point &rarr; protocolo <b>JSON/TCP(dl)</b> + porta (ex: 4023).<br>',
+                '2. Marcar as cues da timeline como <b>"countdown relevant"</b> (inspector da cue).<br>',
+                '3. Aqui: provider <b>Pixera (TCP API)</b> — IP do Pixera, porta 4023, nome da timeline (ex: Timeline 1).<br>',
+                '4. FOLLOW ON + OPEN DISPLAY — o timer mostra o tempo até à próxima cue relevante.',
                 '<h4>WATCHOUT 7</h4>',
                 'Opção A — HTTP: provider <b>Pixera / Watchout (HTTP)</b> com o URL da API do WATCHOUT 7.<br>',
                 'Opção B — OSC output do WATCHOUT 7 para esta app, porta 9001, endereço <b>/sync/position</b>.',

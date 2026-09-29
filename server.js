@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const dgram = require('dgram');
+const net = require('net');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -79,6 +80,9 @@ let settings = {
     syncOscPort: 9001,
     syncOscAddress: '/sync/position',
     syncOscMode: 'position',
+    syncPixeraPort: 4023,
+    syncPixeraTimeline: 'Timeline 1',
+    syncPixeraFraming: 'delimiter',
     apiPin: '',
     language: 'en',
     webhookUrl: '',
@@ -443,6 +447,99 @@ async function pollHttpGeneric() {
     } catch (e) { /* handled by timeout */ }
 }
 
+// --- PIXERA (JSON-RPC 2.0 over TCP, Pixera acts as TCP server) ---
+// Framing: 'delimiter' = JSON + "0xPX" terminator (Pixera JSON/TCP(dl)),
+//          'header'    = 'pxr1' + 4-byte little-endian size + JSON (Pixera JSON/TCP).
+
+function framePixeraRequest(payload) {
+    if (settings.syncPixeraFraming === 'header') {
+        const json = Buffer.from(JSON.stringify(payload), 'utf8');
+        const buf = Buffer.alloc(4 + 4 + json.length);
+        buf.write('pxr1', 0, 'ascii');
+        buf.writeUInt32LE(json.length, 4);
+        json.copy(buf, 8);
+        return buf;
+    }
+    return Buffer.from(JSON.stringify(payload) + '0xPX', 'utf8');
+}
+
+function parsePixeraResponses(buf) {
+    const out = [];
+    if (settings.syncPixeraFraming === 'header') {
+        let off = 0;
+        while (buf.length - off >= 8) {
+            const idx = buf.indexOf('pxr1', off, 'ascii');
+            if (idx < 0) break;
+            if (buf.length - idx < 8) break;
+            const size = buf.readUInt32LE(idx + 4);
+            if (buf.length - idx - 8 < size) break;
+            try {
+                out.push(JSON.parse(buf.toString('utf8', idx + 8, idx + 8 + size)));
+            } catch (e) { /* skip malformed */ }
+            off = idx + 8 + size;
+        }
+    } else {
+        const text = buf.toString('utf8');
+        const parts = text.split('0xPX');
+        for (const p of parts) {
+            const t = p.trim();
+            if (!t) continue;
+            try { out.push(JSON.parse(t)); } catch (e) { /* skip malformed */ }
+        }
+    }
+    return out;
+}
+
+function pixeraRpc(cmd, params) {
+    return new Promise((resolve, reject) => {
+        const host = settings.syncHost;
+        const port = settings.syncPixeraPort || 4023;
+        if (!host) return reject(new Error('no host'));
+        const socket = net.connect({ host, port });
+        let settled = false;
+        socket.setTimeout(2000, () => { if (!settled) { settled = true; socket.destroy(); reject(new Error('timeout')); } });
+        const chunks = [];
+        socket.on('connect', () => {
+            socket.write(framePixeraRequest({ jsonrpc: '2.0', id: 1, method: cmd, params }));
+        });
+        socket.on('data', (d) => {
+            chunks.push(d);
+            if (settled) return;
+            let responses = [];
+            try { responses = parsePixeraResponses(Buffer.concat(chunks)); } catch (e) { return; }
+            if (responses.length > 0) {
+                settled = true;
+                socket.destroy();
+                resolve(responses);
+            }
+        });
+        socket.on('error', () => { if (!settled) { settled = true; socket.destroy(); reject(new Error('conn')); } });
+        socket.on('close', () => {
+            if (!settled) {
+                settled = true;
+                try { resolve(parsePixeraResponses(Buffer.concat(chunks))); } catch (e) { reject(e); }
+            }
+        });
+    });
+}
+
+async function pollPixera() {
+    const name = settings.syncPixeraTimeline || 'Timeline 1';
+    try {
+        const res = await pixeraRpc('Pixera.Compound.getCurrentCountdownOfTimeline', { name });
+        const countdownRes = Array.isArray(res) ? res.find((r) => r && r.result !== undefined) : res;
+        if (!countdownRes || typeof countdownRes.result !== 'number') return;
+        let fps = 30;
+        try {
+            const res2 = await pixeraRpc('Pixera.Compound.getFpsOfTimeline', { name });
+            const fpsRes = Array.isArray(res2) ? res2.find((r) => r && r.result !== undefined) : res2;
+            if (fpsRes && typeof fpsRes.result === 'number' && fpsRes.result > 0) fps = fpsRes.result;
+        } catch (e) { /* fps optional */ }
+        const seconds = Math.max(0, countdownRes.result / fps);
+        applySyncRemaining(seconds, 'PIXERA · ' + name);
+    } catch (e) { /* handled by timeout */ }
+}
+
 function ensureOscListener() {
     if (syncOscSocket) return;
     syncOscSocket = dgram.createSocket('udp4');
@@ -494,6 +591,8 @@ setInterval(async () => {
         await pollResolume();
     } else if (p === 'http') {
         await pollHttpGeneric();
+    } else if (p === 'pixera') {
+        await pollPixera();
     } else if (p === 'osc') {
         ensureOscListener();
     }
@@ -776,6 +875,9 @@ app.get('/api/sync/state', (req, res) => {
         oscPort: settings.syncOscPort,
         oscAddress: settings.syncOscAddress,
         oscMode: settings.syncOscMode,
+        pixeraPort: settings.syncPixeraPort,
+        pixeraTimeline: settings.syncPixeraTimeline,
+        pixeraFraming: settings.syncPixeraFraming,
         duration: settings.syncDuration
     });
 });
