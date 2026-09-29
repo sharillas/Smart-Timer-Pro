@@ -1,6 +1,6 @@
 {
   "name": "smart-timer-pro",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Smart Timer Pro - Professional Stage Timer for smartchoice",
   "main": "main.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "bump:patch": "node scripts/bump-version.js patch",
     "bump:minor": "node scripts/bump-version.js minor",
     "bump:major": "node scripts/bump-version.js major",
-    "build": "node scripts/bump-version.js && node scripts/build-installer.js"
+    "build": "node scripts/bump-version.js && node scripts/build-installer.js",
+    "icon": "npx electron scripts/make-icon.js"
   },
   "dependencies": {
     "electron-updater": "^6.8.9",

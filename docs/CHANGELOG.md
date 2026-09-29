@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.1] - 2026-09-29
+
+### Changes
+- **New icon everywhere** (vector source `assets/icon.svg`): app window, tray, in-app header, installer, uninstaller, exe and shortcuts now use the new clock icon (dark blue #00077F, transparent background)
+- Added `npm run icon` to regenerate `icon.png`, `icon.ico` and the in-app header logo from the SVG (Chromium rasterizer + PNG-in-ICO packer, no new dependencies)
+
 ## [2.1.0] - 2026-09-29
 
 ### New Features
