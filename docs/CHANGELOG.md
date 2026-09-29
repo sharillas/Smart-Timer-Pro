@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.2] - 2026-09-29
+
+### Changes
+- **In-app header icon**: now a white version of the clock icon (white outline + white rounded square border, transparent background) so it stands out on the dark app background
+- **Sharper shortcuts/exe icon**: the ICO now includes 96px/128px entries and thicker strokes at 16/24/32/48px so the icon keeps its definition in Explorer, Start Menu and desktop shortcuts
+
 ## [2.1.1] - 2026-09-29
 
 ### Changes

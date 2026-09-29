@@ -1,9 +1,11 @@
-// Generates assets/icon.png, assets/icon.ico and public/images/logo.png
-// from assets/icon.svg (vector source). Run with:
-//   npx electron scripts/make-icon.js
-// Uses Chromium (Electron) to rasterize the SVG at all Windows icon sizes
-// and packs them into a PNG-in-ICO file (Vista+ format, accepted by rcedit
-// and by the NSIS installer icon options).
+// Generates the app icons from the vector sources in assets/:
+//   assets/icon.svg       -> assets/icon.png (window/tray, blue) and
+//                            assets/icon.ico (installer/exe/shortcuts, blue,
+//                            with boosted stroke widths at small sizes so the
+//                            shortcuts stay sharp)
+//   assets/icon-white.svg -> public/images/logo.png (in-app header, white,
+//                            so it stands out on the dark app background)
+// Run with:  npm run icon
 
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
@@ -11,19 +13,41 @@ const os = require('os');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const SVG = fs.readFileSync(path.join(ROOT, 'assets', 'icon.svg'), 'utf8');
-const SIZES = [256, 128, 64, 48, 32, 24, 16];
+const SVG_BLUE = fs.readFileSync(path.join(ROOT, 'assets', 'icon.svg'), 'utf8');
+const SVG_WHITE = fs.readFileSync(path.join(ROOT, 'assets', 'icon-white.svg'), 'utf8');
+
+// ico sizes: small sizes get thicker strokes so they stay legible in
+// Explorer / Start Menu / desktop shortcuts
+const ICO_SIZES = [
+    { size: 256, boost: 1.0 },
+    { size: 128, boost: 1.0 },
+    { size: 96, boost: 1.0 },
+    { size: 64, boost: 1.0 },
+    { size: 48, boost: 1.2 },
+    { size: 32, boost: 1.4 },
+    { size: 24, boost: 1.6 },
+    { size: 16, boost: 2.0 },
+];
+
 const TMP_HTML = path.join(os.tmpdir(), 'stp-icon-render.html');
 
-const HTML =
-    '<!doctype html><html><head><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}</style></head>' +
-    '<body>' + SVG + '</body></html>';
+function boostStrokes(svg, factor) {
+    if (factor === 1) return svg;
+    return svg.replace(/stroke-width:([0-9.]+)/g, (m, w) => {
+        const v = parseFloat(w) * factor;
+        return 'stroke-width:' + v.toFixed(3);
+    });
+}
 
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 let sharedWin = null;
 
-async function rasterize(size) {
+async function rasterize(svg, size) {
+    const html =
+        '<!doctype html><html><head><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}</style></head>' +
+        '<body>' + svg + '</body></html>';
+    fs.writeFileSync(TMP_HTML, html);
     if (!sharedWin) {
         sharedWin = new BrowserWindow({
             width: size,
@@ -71,23 +95,26 @@ function writeIco(entries) {
 
 app.whenReady().then(async () => {
     try {
-        fs.writeFileSync(TMP_HTML, HTML);
-        const pngs = [];
-        for (const size of SIZES) {
-            const png = await rasterize(size);
-            pngs.push({ size, data: png });
-            console.log('rendered', size + 'px', png.length, 'bytes');
+        // window / tray icon (blue)
+        const pngBlue256 = await rasterize(SVG_BLUE, 256);
+        fs.writeFileSync(path.join(ROOT, 'assets', 'icon.png'), pngBlue256);
+
+        // in-app header logo (white, stands out on the dark UI)
+        const pngWhite256 = await rasterize(SVG_WHITE, 256);
+        fs.writeFileSync(path.join(ROOT, 'public', 'images', 'logo.png'), pngWhite256);
+
+        // ico with boosted small sizes (installer, exe, shortcuts)
+        const icoPngs = [];
+        for (const { size, boost } of ICO_SIZES) {
+            const png = await rasterize(boostStrokes(SVG_BLUE, boost), size);
+            icoPngs.push({ size, data: png });
+            console.log('ico', size + 'px', 'boost ' + boost, png.length, 'bytes');
         }
+        fs.writeFileSync(path.join(ROOT, 'assets', 'icon.ico'), writeIco(icoPngs));
 
-        const png256 = pngs.find((p) => p.size === 256).data;
-        fs.writeFileSync(path.join(ROOT, 'assets', 'icon.png'), png256);
-        fs.writeFileSync(path.join(ROOT, 'public', 'images', 'logo.png'), png256);
-        fs.writeFileSync(path.join(ROOT, 'assets', 'icon.ico'), writeIco(pngs));
-
-        console.log('PNG color type:', png256[25], '(6 = RGBA)');
-        console.log('OK: assets/icon.png, assets/icon.ico, public/images/logo.png');
+        console.log('OK: assets/icon.png (blue), public/images/logo.png (white), assets/icon.ico');
     } catch (e) {
-        console.error('make-icon failed:', e && e.stack || e);
+        console.error('make-icon failed:', (e && e.stack) || e);
     }
     app.exit(0);
 });
