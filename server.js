@@ -882,6 +882,45 @@ app.get('/api/sync/state', (req, res) => {
     });
 });
 
+// Live connection test for the configured sync provider (diagnostics)
+app.get('/api/sync/test', async (req, res) => {
+    const p = settings.syncProvider || 'none';
+    const t0 = Date.now();
+    const ms = () => Date.now() - t0;
+    try {
+        if (p === 'resolume') {
+            const host = settings.syncHost;
+            const port = settings.syncPort || 8080;
+            if (!host) return res.json({ ok: false, detail: 'Resolume: no IP configured' });
+            const r = await fetch(`http://${host}:${port}/api/v1/composition`, { signal: AbortSignal.timeout(2500) });
+            if (!r.ok) return res.json({ ok: false, detail: `Resolume responded with HTTP ${r.status} — check that the web server is enabled (port ${port})` });
+            return res.json({ ok: true, detail: `Resolume reachable — web server OK on ${host}:${port} (${ms()}ms)` });
+        }
+        if (p === 'pixera') {
+            if (!settings.syncHost) return res.json({ ok: false, detail: 'Pixera: no IP configured' });
+            const responses = await pixeraRpc('Pixera.Utility.getApiRevision', {});
+            const found = Array.isArray(responses) ? responses.find((x) => x && x.result !== undefined) : responses;
+            if (found && found.result !== undefined) {
+                return res.json({ ok: true, detail: `Pixera connected on ${settings.syncHost}:${settings.syncPixeraPort || 4023} — API revision ${found.result} (${ms()}ms)` });
+            }
+            return res.json({ ok: false, detail: 'Pixera: connected but no JSON-RPC answer — check the protocol/framing setting (JSON/TCP(dl) vs JSON/TCP)' });
+        }
+        if (p === 'http') {
+            const url = settings.syncHttpUrl;
+            if (!url) return res.json({ ok: false, detail: 'HTTP: no URL configured' });
+            const r = await fetch(url, { signal: AbortSignal.timeout(2500) });
+            return res.json({ ok: r.ok, detail: `HTTP ${r.status} from ${url} (${ms()}ms)`, ms: ms() });
+        }
+        if (p === 'osc') {
+            ensureOscListener();
+            return res.json({ ok: true, detail: `OSC listener active on port ${settings.syncOscPort || 9001} — send a test message to /sync/position from your media server and watch the timer` });
+        }
+        return res.json({ ok: false, detail: 'No provider selected' });
+    } catch (e) {
+        return res.json({ ok: false, detail: `${p.toUpperCase()}: ${(e && e.message) || 'connection failed'} — check IP/port and firewall` });
+    }
+});
+
 app.get('/api/sync/start', (req, res) => {
     state.syncTimer.following = false;
     state.syncTimer.isRunning = true;

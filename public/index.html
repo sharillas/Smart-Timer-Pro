@@ -934,21 +934,21 @@
                     </div>
                     <div id="sync-resolume-fields" class="hidden">
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="text" id="sync-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="autoSaveSettings()">
-                            <input type="number" id="sync-port" class="custom-input" placeholder="8080" style="max-width:90px" onchange="autoSaveSettings()">
+                            <input type="text" id="sync-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="saveSyncSettings()">
+                            <input type="number" id="sync-port" class="custom-input" placeholder="8080" style="max-width:90px" onchange="saveSyncSettings()">
                         </div>
                         <div class="custom-row" style="margin-bottom:8px">
-                            <select id="sync-target" class="custom-input" style="flex:1" onchange="autoSaveSettings()"></select>
+                            <select id="sync-target" class="custom-input" style="flex:1" onchange="saveSyncSettings()"></select>
                         </div>
                     </div>
                     <div id="sync-pixera-fields" class="hidden">
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="text" id="sync-pixera-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="autoSaveSettings()">
-                            <input type="number" id="sync-pixera-port" class="custom-input" placeholder="4023" style="max-width:90px" onchange="autoSaveSettings()">
+                            <input type="text" id="sync-pixera-host" class="custom-input" data-i18n-ph="sync_host_ph" placeholder="IP (ex: 192.168.1.10)" onchange="saveSyncSettings()">
+                            <input type="number" id="sync-pixera-port" class="custom-input" placeholder="4023" style="max-width:90px" onchange="saveSyncSettings()">
                         </div>
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="text" id="sync-pixera-timeline" class="custom-input" placeholder="Timeline name (ex: Timeline 1)" style="flex:1" onchange="autoSaveSettings()">
-                            <select id="sync-pixera-framing" class="custom-input" style="max-width:170px" onchange="autoSaveSettings()">
+                            <input type="text" id="sync-pixera-timeline" class="custom-input" placeholder="Timeline name (ex: Timeline 1)" style="flex:1" onchange="saveSyncSettings()">
+                            <select id="sync-pixera-framing" class="custom-input" style="max-width:170px" onchange="saveSyncSettings()">
                                 <option value="delimiter">JSON/TCP(dl) 0xPX</option>
                                 <option value="header">JSON/TCP pxr1</option>
                             </select>
@@ -956,25 +956,29 @@
                     </div>
                     <div id="sync-http-fields" class="hidden">
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="text" id="sync-http-url" class="custom-input" data-i18n-ph="sync_url_ph" placeholder="http://ip/api/..." onchange="autoSaveSettings()">
+                            <input type="text" id="sync-http-url" class="custom-input" data-i18n-ph="sync_url_ph" placeholder="http://ip/api/..." onchange="saveSyncSettings()">
                         </div>
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="text" id="sync-http-path" class="custom-input" placeholder="field.path (position 0-1)" style="flex:1" onchange="autoSaveSettings()">
-                            <input type="number" id="sync-http-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="autoSaveSettings()">
+                            <input type="text" id="sync-http-path" class="custom-input" placeholder="field.path (position 0-1)" style="flex:1" onchange="saveSyncSettings()">
+                            <input type="number" id="sync-http-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="saveSyncSettings()">
                         </div>
                     </div>
                     <div id="sync-osc-fields" class="hidden">
                         <div class="custom-row" style="margin-bottom:8px">
-                            <input type="number" id="sync-osc-port" class="custom-input" placeholder="9001" style="max-width:90px" onchange="autoSaveSettings()">
-                            <input type="text" id="sync-osc-address" class="custom-input" placeholder="/sync/position" style="flex:1" onchange="autoSaveSettings()">
+                            <input type="number" id="sync-osc-port" class="custom-input" placeholder="9001" style="max-width:90px" onchange="saveSyncSettings()">
+                            <input type="text" id="sync-osc-address" class="custom-input" placeholder="/sync/position" style="flex:1" onchange="saveSyncSettings()">
                         </div>
                         <div class="custom-row" style="margin-bottom:8px">
-                            <select id="sync-osc-mode" class="custom-input" style="flex:1" onchange="autoSaveSettings()">
+                            <select id="sync-osc-mode" class="custom-input" style="flex:1" onchange="saveSyncSettings()">
                                 <option value="position" data-i18n="sync_mode_position">Position (0-1) + duration</option>
                                 <option value="seconds" data-i18n="sync_mode_seconds">Remaining seconds</option>
                             </select>
-                            <input type="number" id="sync-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="autoSaveSettings()">
+                            <input type="number" id="sync-duration" class="custom-input" placeholder="Duration (s)" style="max-width:110px" onchange="saveSyncSettings()">
                         </div>
+                    </div>
+                    <div class="custom-row" style="margin-bottom:10px">
+                        <button onclick="syncTest()" class="btn-set" style="flex:1;padding:8px" data-i18n="sync_test">TEST CONNECTION</button>
+                        <span id="sync-test-result" style="flex:2;font-size:11px;color:var(--text-dim);line-height:1.4"></span>
                     </div>
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
                         <button id="btn-sync-follow" onclick="toggleSyncFollow()" class="btn btn-sm" style="height:40px;background:#334155;color:#cbd5e1">FOLLOW: OFF</button>
@@ -1152,6 +1156,7 @@
                 sync_url_ph: 'http://ip/api/...',
                 sync_now: 'SYNC NOW',
                 sync_open_display: 'OPEN DISPLAY',
+                sync_test: 'TEST CONNECTION',
                 sync_selected: 'Selected clip (active column)',
                 sync_mode_position: 'Position (0-1) + duration',
                 sync_mode_seconds: 'Remaining seconds',
@@ -1247,6 +1252,7 @@
                 sync_url_ph: 'http://ip/api/...',
                 sync_now: 'SYNC NOW',
                 sync_open_display: 'ABRIR ECRÃ',
+                sync_test: 'TESTAR LIGAÇÃO',
                 sync_selected: 'Clip selecionado (coluna ativa)',
                 sync_mode_position: 'Posição (0-1) + duração',
                 sync_mode_seconds: 'Segundos restantes',
@@ -1837,6 +1843,26 @@
 
         function syncCmd(cmd) {
             api('sync/' + cmd);
+        }
+
+        function syncTest() {
+            var el = document.getElementById('sync-test-result');
+            if (el) {
+                el.textContent = '...';
+                el.style.color = 'var(--text-dim)';
+            }
+            fetchApi('/api/sync/test' + pinQuery()).then(function(r) {
+                return r.json();
+            }).then(function(d) {
+                if (!el) return;
+                el.textContent = (d.ok ? '\u2713 ' : '\u2717 ') + d.detail;
+                el.style.color = d.ok ? 'var(--green)' : 'var(--red)';
+            }).catch(function() {
+                if (el) {
+                    el.textContent = 'Test failed';
+                    el.style.color = 'var(--red)';
+                }
+            });
         }
 
         function updateSyncCard(s) {

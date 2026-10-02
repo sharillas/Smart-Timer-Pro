@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.3] - 2026-09-30
+
+### Fixes
+- **Sync settings not saved**: the IP/port/timeline fields of the External Sync Timer card were saving the wrong settings object — editing them now persists immediately
+- **Sync window not moving**: OPEN DISPLAY now reopens the window on the newly selected monitor, and the fallback window mode has a real frame (draggable) and remembers its last position/size
+- **Updates only on demand**: removed the automatic update check at launch — the app only checks when CHECK FOR UPDATES is pressed
+
+### New Features
+- **TEST CONNECTION button** in the External Sync Timer card: verifies the link to the configured provider (Resolume web server, Pixera TCP API, HTTP URL or the OSC listener) and shows the exact result/error
+
 ## [2.1.2] - 2026-09-29
 
 ### Changes

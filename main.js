@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, screen, dialog, Tray, Menu, nativeImage } =
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
+// Updates download automatically once the user clicks CHECK FOR UPDATES
+autoUpdater.autoDownload = true;
+
 let mainWindow = null;
 let presenterWindow = null;
 let serverInstance = null;
@@ -302,16 +305,67 @@ function createSyncPresenterWindow() {
         windowOpts.resizable = false;
         windowOpts.thickFrame = false;
     } else {
+        // fallback window on the primary: restore the last saved position/size.
+        // Standard frame so the operator can drag it to any area.
         windowOpts.width = 640;
         windowOpts.height = 220;
-        windowOpts.frame = false;
-        windowOpts.thickFrame = false;
         windowOpts.resizable = true;
         windowOpts.alwaysOnTop = true;
+        try {
+            if (serverInstance && serverInstance.getSettings) {
+                const s = serverInstance.getSettings();
+                if (Number.isFinite(s.syncWindowX) && Number.isFinite(s.syncWindowY)) {
+                    const work = displays[0] ? displays[0].workArea : null;
+                    const x = Math.round(s.syncWindowX);
+                    const y = Math.round(s.syncWindowY);
+                    if (work) {
+                        windowOpts.x = Math.min(Math.max(x, work.x), work.x + work.width - 120);
+                        windowOpts.y = Math.min(Math.max(y, work.y), work.y + work.height - 60);
+                    } else {
+                        windowOpts.x = x;
+                        windowOpts.y = y;
+                    }
+                }
+                if (Number.isFinite(s.syncWindowW) && s.syncWindowW >= 320) windowOpts.width = Math.round(s.syncWindowW);
+                if (Number.isFinite(s.syncWindowH) && s.syncWindowH >= 120) windowOpts.height = Math.round(s.syncWindowH);
+            }
+        } catch (e) { /* defaults */ }
     }
 
     syncPresenterWindow = new BrowserWindow(windowOpts);
     syncPresenterWindow.loadURL(pageProtocol() + '://127.0.0.1:3000/presenter.html?view=sync');
+
+    // Remember the fallback window position/size so OPEN DISPLAY reopens it
+    // in the same area (fullscreen mode ignores these values).
+    let saveBoundsTimer = null;
+    const saveBounds = () => {
+        if (!syncPresenterWindow || syncPresenterWindow.isDestroyed()) return;
+        if (!serverInstance || !serverInstance.getSettings) return;
+        const s = serverInstance.getSettings();
+        if (s.presenterSyncDisplayId) return; // fullscreen on a display: skip
+        const b = syncPresenterWindow.getBounds();
+        try {
+            fetch(pageProtocol() + '://127.0.0.1:3000/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    syncWindowX: b.x,
+                    syncWindowY: b.y,
+                    syncWindowW: b.width,
+                    syncWindowH: b.height
+                })
+            }).catch(() => {});
+        } catch (e) { /* ignore */ }
+    };
+    const scheduleSaveBounds = () => {
+        if (saveBoundsTimer) clearTimeout(saveBoundsTimer);
+        saveBoundsTimer = setTimeout(saveBounds, 800);
+    };
+    syncPresenterWindow.on('moved', scheduleSaveBounds);
+    syncPresenterWindow.on('resized', scheduleSaveBounds);
+    syncPresenterWindow.on('closed', () => {
+        if (saveBoundsTimer) clearTimeout(saveBoundsTimer);
+    });
 
     syncPresenterWindow.once('ready-to-show', () => {
         syncPresenterWindow.show();
@@ -331,9 +385,12 @@ function createSyncPresenterWindow() {
 
 function toggleSyncPresenterWindow() {
     if (syncPresenterWindow) {
+        // Reopen: the user may have picked a different display — recreate
+        // the window so it moves to the newly selected monitor.
         syncPresenterEnabled = false;
         syncPresenterWindow.close();
         syncPresenterWindow = null;
+        createSyncPresenterWindow();
     } else {
         createSyncPresenterWindow();
     }
@@ -434,13 +491,8 @@ app.whenReady().then(() => {
         }
     });
 
-    // Check for updates a few seconds after launch (only in the packaged app)
-    setTimeout(() => {
-        if (app.isPackaged) {
-            autoUpdater.autoDownload = true;
-            autoUpdater.checkForUpdates().catch(() => {});
-        }
-    }, 8000);
+    // Updates are only checked manually (Settings > Updates > CHECK FOR UPDATES)
+    // — never automatically at launch.
 });
 
 autoUpdater.on('checking-for-update', () => {

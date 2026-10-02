@@ -234,6 +234,47 @@ test('pixera provider polls TCP JSON-RPC (delimiter framing)', async () => {
     mock.close();
 });
 
+test('sync connection test endpoint (pixera diagnostics)', async () => {
+    const net = require('node:net');
+    const mock = net.createServer((sock) => {
+        let buf = Buffer.alloc(0);
+        sock.on('data', (d) => {
+            buf = Buffer.concat([buf, d]);
+            const text = buf.toString('utf8');
+            if (text.includes('0xPX')) {
+                for (const chunk of text.split('0xPX')) {
+                    const t = chunk.trim();
+                    if (!t) continue;
+                    let req;
+                    try { req = JSON.parse(t); } catch (e) { continue; }
+                    sock.write(JSON.stringify({ jsonrpc: '2.0', id: req.id, result: 461 }) + '0xPX');
+                }
+            }
+        });
+    });
+    await new Promise((r) => mock.listen(0, '127.0.0.1', r));
+    const port = mock.address().port;
+
+    await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'pixera', syncHost: '127.0.0.1', syncPixeraPort: port, syncPixeraTimeline: 'Timeline 1', syncPixeraFraming: 'delimiter' }),
+    });
+    let r = await json('/api/sync/test');
+    assert.strictEqual(r.status, 200);
+    assert.strictEqual(r.body.ok, true);
+    assert.ok(String(r.body.detail).includes('461'));
+
+    await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ syncProvider: 'none' }),
+    });
+    r = await json('/api/sync/test');
+    assert.strictEqual(r.body.ok, false);
+    mock.close();
+});
+
 test('CSRF: foreign origin blocked', async () => {
     let r = await api('/api/reset?sec=5', { headers: { Origin: 'http://evil.com' } });
     assert.strictEqual(r.status, 403);
