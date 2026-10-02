@@ -275,6 +275,38 @@ test('sync connection test endpoint (pixera diagnostics)', async () => {
     mock.close();
 });
 
+test('second timer runs independently (countdown + count-up)', async () => {
+    await api('/api/timer2/reset?sec=90');
+    let r = await json('/api/state');
+    assert.strictEqual(r.body.timer2.timeLeft, 90);
+    assert.strictEqual(r.body.timer2.mode, 'countdown');
+
+    await api('/api/timer2/start');
+    await new Promise((res) => setTimeout(res, 1300));
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timer2.isRunning, true);
+    assert.ok(r.body.timer2.timeLeft < 90);
+
+    await api('/api/timer2/pause');
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timer2.isRunning, false);
+
+    // main timer is untouched
+    assert.ok('timeLeft' in r.body);
+
+    await api('/api/timer2/mode?set=countup');
+    await api('/api/timer2/start');
+    await new Promise((res) => setTimeout(res, 1300));
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timer2.mode, 'countup');
+    assert.ok(r.body.timer2.countupTime >= 1);
+    await api('/api/timer2/pause');
+
+    await api('/api/timer2/add?sec=60');
+    r = await json('/api/state');
+    assert.ok(r.body.timer2.countupTime >= 61);
+});
+
 test('CSRF: foreign origin blocked', async () => {
     let r = await api('/api/reset?sec=5', { headers: { Origin: 'http://evil.com' } });
     assert.strictEqual(r.status, 403);

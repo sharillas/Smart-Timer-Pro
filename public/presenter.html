@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Smart Timer Pro | Presenter</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <script src="/socket.io/socket.io.js"></script>
     <style>
         @font-face {
@@ -184,6 +186,7 @@
         var audioElements = {};
         var builtMode = null;
         var syncView = window.location.search.indexOf('view=sync') >= 0;
+        var timer2View = window.location.search.indexOf('view=timer2') >= 0;
 
         function getTimerEl() { return document.getElementById('timer'); }
         function getMsgEl() { return document.getElementById('msg'); }
@@ -561,10 +564,67 @@
         socket.on('stateUpdate', function(s) {
             if (syncView) {
                 buildSyncStage(s);
+            } else if (timer2View) {
+                buildTimer2Stage(s);
             } else {
                 buildStage(s);
             }
         });
+
+        // --- SECOND TIMER VIEW (independent second display output) ---
+        function buildTimer2Stage(s) {
+            currentState = s;
+            currentSettings = s.settings || {};
+            applyTransparency({ bgMode: 'color', bgColor: '#000000' });
+
+            if (builtMode !== 'timer2') {
+                stage.innerHTML = '';
+                var stack = document.createElement('div');
+                stack.className = 'stack';
+                stack.id = 'stack';
+                stack.style.left = '50%';
+                stack.style.top = '50%';
+                stack.style.gap = 'min(1.5vw, 3vh)';
+                stage.appendChild(stack);
+
+                var cap = document.createElement('div');
+                cap.className = 'caption';
+                cap.id = 'caption';
+                stack.appendChild(cap);
+
+                var timerDiv = document.createElement('div');
+                timerDiv.className = 'timer';
+                timerDiv.id = 'timer';
+                stack.appendChild(timerDiv);
+
+                builtMode = 'timer2';
+            }
+
+            var t2 = s.timer2 || {};
+            var cfg = s.settings || {};
+            var el = getTimerEl();
+            if (el) {
+                var val = t2.mode === 'countup' ? (t2.countupTime || 0) : (t2.timeLeft || 0);
+                el.textContent = formatTime(val, cfg);
+                el.style.fontFamily = cfg.fontFamily || "'Courier New', monospace";
+                el.style.fontSize = timerFontSize(cfg);
+                var color = cfg.colorNormal || '#10b981';
+                if (t2.mode === 'countdown') {
+                    if (t2.alertLevel === 'expired') color = cfg.colorExpired || '#ef4444';
+                    else if (t2.alertLevel === 'danger') color = cfg.colorDanger || '#f97316';
+                    else if (t2.alertLevel === 'warning') color = cfg.colorWarning || '#f59e0b';
+                }
+                el.style.color = color;
+            }
+
+            var cap = document.getElementById('caption');
+            if (cap) {
+                cap.style.fontFamily = captionFont(cfg);
+                cap.style.fontSize = 'min(3vw, 6vh)';
+                cap.style.color = '#9ca3af';
+                cap.textContent = t2.mode === 'countup' ? 'SECOND TIMER · COUNT-UP' : 'SECOND TIMER';
+            }
+        }
 
         // --- SYNC VIEW (external device timer) ---
         function buildSyncStage(s) {
@@ -637,6 +697,8 @@
                 currentState.settings = s;
                 if (syncView) {
                     buildSyncStage(currentState);
+                } else if (timer2View) {
+                    buildTimer2Stage(currentState);
                 } else {
                     buildStage(currentState);
                 }
@@ -673,6 +735,8 @@
             if (e.key === 'Escape' && window.electronAPI) {
                 if (syncView) {
                     window.electronAPI.closeSyncPresenter();
+                } else if (timer2View) {
+                    window.electronAPI.closeTimer2Presenter();
                 } else {
                     window.electronAPI.closePresenter();
                 }
@@ -682,7 +746,7 @@
         // Time-of-day tick + clock overlay tick
         setInterval(function() {
             var el = getTimerEl();
-            if (el && currentState && currentState.mode === 'timeofday') {
+            if (el && !syncView && !timer2View && currentState && currentState.mode === 'timeofday') {
                 el.textContent = formatTimeOfDay();
             }
             var clockEl = document.getElementById('clock');

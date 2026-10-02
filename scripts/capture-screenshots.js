@@ -91,7 +91,7 @@ app.whenReady().then(async () => {
     console.log('step 1');
     await api('/api/reset?sec=600');
     await api('/api/mode?set=countdown');
-    await capture(BASE + '/', 'screenshot_GUI_1.png', 1280, 850);
+    await capture(BASE + '/', 'screenshot_GUI_1.png', 1600, 1000);
 
     // --- 2. GUI agenda active + message live + semaforo ---
     console.log('step 2');
@@ -103,14 +103,14 @@ app.whenReady().then(async () => {
     console.log('step 2d');
     await api('/api/agenda/start?index=1');
     console.log('step 2e');
-    await capture(BASE + '/', 'screenshot_GUI_2.png', 1280, 850);
+    await capture(BASE + '/', 'screenshot_GUI_2.png', 1600, 1000);
 
-    // --- 3. Settings modal ---
+    // --- 3. Settings column (always open on the right) ---
     console.log('step 3');
     await api('/api/message/hide');
     await api('/api/agenda/stop');
     await api('/api/mode?set=countdown');
-    await capture(BASE + '/', 'screenshot_settings.png', 1280, 850, 'openSettings(); true', 1500);
+    await capture(BASE + '/', 'screenshot_settings.png', 1600, 1000);
 
     // --- 4. Presenter countdown (green) ---
     console.log('step 4');
@@ -119,8 +119,7 @@ app.whenReady().then(async () => {
     await capture(BASE + '/presenter.html', 'screenshot_presenter.png', 1280, 720);
 
     // --- 4b. External sync presenter (view=sync, OSC remaining 600s) ---
-    console.log('step 4b');
-    await api('/api/settings', {
+    console.log('step 4b');    await api('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ syncProvider: 'osc', syncOscPort: 9321, syncOscAddress: '/sync/position', syncOscMode: 'seconds', syncDuration: 600 }),
@@ -139,6 +138,11 @@ app.whenReady().then(async () => {
     sock.send(buf.subarray(0, valIdx + 4), 9321, '127.0.0.1', () => sock.close());
     await wait(1000);
     await capture(BASE + '/presenter.html?view=sync', 'screenshot_sync_presenter.png', 1280, 720);
+
+    // --- 4c. Second timer presenter (view=timer2, independent display) ---
+    console.log('step 4c');
+    await api('/api/timer2/reset?sec=600');
+    await capture(BASE + '/presenter.html?view=timer2', 'screenshot_timer2_presenter.png', 1280, 720);
 
     // --- 5. Presenter warning + semaforo + message ---
     console.log('step 5');

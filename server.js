@@ -241,6 +241,14 @@ let state = {
         following: false,
         connected: false,
         sourceLabel: 'SYNC'
+    },
+    timer2: {
+        mode: 'countdown',
+        timeLeft: 600,
+        initialTime: 600,
+        countupTime: 0,
+        isRunning: false,
+        alertLevel: 'normal'
     }
 };
 
@@ -657,7 +665,12 @@ const PIN_PROTECTED = [
     '/sync/pause',
     '/sync/reset',
     '/sync/follow',
-    '/sync/now'
+    '/sync/now',
+    '/timer2/start',
+    '/timer2/pause',
+    '/timer2/reset',
+    '/timer2/add',
+    '/timer2/mode'
 ];
 
 app.use('/api', (req, res, next) => {
@@ -744,6 +757,53 @@ setInterval(() => {
             }
             broadcast();
         }
+    }
+}, 200);
+
+// --- SECOND TIMER TICK (drift-free) ---
+let timer2CountdownEnd = null;
+let timer2CountupStart = null;
+
+function computeTimer2Alert() {
+    if (state.timer2.mode === 'countdown' && state.timer2.isRunning) {
+        if (state.timer2.timeLeft <= 0) return 'expired';
+        if (state.timer2.timeLeft <= settings.dangerThreshold) return 'danger';
+        if (state.timer2.timeLeft <= settings.warningThreshold) return 'warning';
+    }
+    if (state.timer2.mode === 'countdown' && !state.timer2.isRunning && state.timer2.timeLeft <= 0) return 'expired';
+    return 'normal';
+}
+
+setInterval(() => {
+    const t = state.timer2;
+    if (!t.isRunning) return;
+    const now = Date.now();
+    let changed = false;
+
+    if (t.mode === 'countdown') {
+        if (timer2CountdownEnd === null) timer2CountdownEnd = now + t.timeLeft * 1000;
+        const nt = Math.round((timer2CountdownEnd - now) / 1000);
+        if (nt !== t.timeLeft) {
+            t.timeLeft = nt;
+            changed = true;
+            if (settings.stopAtZero && t.timeLeft <= 0) {
+                t.timeLeft = 0;
+                t.isRunning = false;
+                timer2CountdownEnd = null;
+            }
+        }
+    } else if (t.mode === 'countup') {
+        if (timer2CountupStart === null) timer2CountupStart = now - t.countupTime * 1000;
+        const nt = Math.floor((now - timer2CountupStart) / 1000);
+        if (nt !== t.countupTime) {
+            t.countupTime = nt;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        t.alertLevel = computeTimer2Alert();
+        broadcast();
     }
 }, 200);
 
@@ -975,6 +1035,71 @@ app.get('/api/sync/now', (req, res) => {
     }
     broadcast();
     res.send('Synced now');
+});
+
+// --- SECOND TIMER API (independent timer for a second display output) ---
+app.get('/api/timer2/start', (req, res) => {
+    state.timer2.isRunning = true;
+    timer2CountdownEnd = null;
+    timer2CountupStart = null;
+    logEvent('timer2_start', state.timer2.mode);
+    broadcast();
+    res.send('Second timer started');
+});
+
+app.get('/api/timer2/pause', (req, res) => {
+    state.timer2.isRunning = false;
+    timer2CountdownEnd = null;
+    timer2CountupStart = null;
+    broadcast();
+    res.send('Second timer paused');
+});
+
+app.get('/api/timer2/reset', (req, res) => {
+    state.timer2.isRunning = false;
+    timer2CountdownEnd = null;
+    timer2CountupStart = null;
+    const sec = parseInt(req.query.sec);
+    if (!isNaN(sec) && sec >= 0) {
+        state.timer2.timeLeft = sec;
+        state.timer2.initialTime = sec;
+        state.timer2.countupTime = 0;
+    } else {
+        state.timer2.timeLeft = state.timer2.initialTime || 0;
+        state.timer2.countupTime = 0;
+    }
+    broadcast();
+    res.send('Second timer reset');
+});
+
+app.get('/api/timer2/add', (req, res) => {
+    const sec = parseInt(req.query.sec) || 0;
+    if (state.timer2.mode === 'countup') {
+        state.timer2.countupTime += sec;
+        if (state.timer2.isRunning) timer2CountupStart -= sec * 1000;
+    } else {
+        state.timer2.timeLeft += sec;
+        if (state.timer2.timeLeft < 0) state.timer2.timeLeft = 0;
+        if (state.timer2.isRunning) timer2CountdownEnd += sec * 1000;
+    }
+    broadcast();
+    res.send('Second timer adjusted');
+});
+
+app.get('/api/timer2/mode', (req, res) => {
+    const m = req.query.set;
+    if (m !== 'countdown' && m !== 'countup') return res.status(400).send('Invalid mode');
+    state.timer2.mode = m;
+    state.timer2.isRunning = false;
+    timer2CountdownEnd = null;
+    timer2CountupStart = null;
+    if (m === 'countdown') {
+        state.timer2.timeLeft = state.timer2.initialTime || 0;
+    } else {
+        state.timer2.countupTime = 0;
+    }
+    broadcast();
+    res.send('Second timer mode set');
 });
 
 app.get('/api/add', (req, res) => {    captureUndo();

@@ -13,6 +13,8 @@ let isQuitting = false;
 let presenterEnabled = false;
 let syncPresenterWindow = null;
 let syncPresenterEnabled = false;
+let timer2Window = null;
+let timer2Enabled = false;
 let httpsEnabled = false;
 
 const pageProtocol = () => (httpsEnabled ? 'https' : 'http');
@@ -396,6 +398,136 @@ function toggleSyncPresenterWindow() {
     }
 }
 
+// --- SECOND TIMER PRESENTER (independent display output) ---
+function createTimer2PresenterWindow() {
+    const displays = screen.getAllDisplays();
+    timer2Enabled = true;
+
+    let targetDisplay = null;
+    if (displays.length > 1) {
+        try {
+            if (serverInstance && serverInstance.getSettings) {
+                const savedId = serverInstance.getSettings().presenter2DisplayId;
+                if (savedId !== undefined && savedId !== null && savedId !== '') {
+                    const found = displays.find((d) => d.id === Number(savedId) && displays.indexOf(d) !== 0);
+                    if (found) targetDisplay = found;
+                }
+            }
+        } catch (e) { /* default */ }
+        if (!targetDisplay) targetDisplay = displays.slice(1).find(() => true) || null;
+    }
+
+    let windowOpts = {
+        title: 'Smart Timer Pro - Second Timer',
+        icon: path.join(__dirname, 'assets', 'icon.png'),
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
+        },
+        backgroundColor: '#000000',
+        show: false,
+        autoHideMenuBar: true
+    };
+
+    if (targetDisplay) {
+        const { x, y, width, height } = targetDisplay.bounds;
+        windowOpts.x = x;
+        windowOpts.y = y;
+        windowOpts.width = width;
+        windowOpts.height = height;
+        windowOpts.fullscreen = true;
+        windowOpts.frame = false;
+        windowOpts.resizable = false;
+        windowOpts.thickFrame = false;
+    } else {
+        // fallback window on the primary: restore the last saved position/size
+        windowOpts.width = 640;
+        windowOpts.height = 220;
+        windowOpts.resizable = true;
+        windowOpts.alwaysOnTop = true;
+        try {
+            if (serverInstance && serverInstance.getSettings) {
+                const s = serverInstance.getSettings();
+                if (Number.isFinite(s.timer2WindowX) && Number.isFinite(s.timer2WindowY)) {
+                    const work = displays[0] ? displays[0].workArea : null;
+                    const x = Math.round(s.timer2WindowX);
+                    const y = Math.round(s.timer2WindowY);
+                    if (work) {
+                        windowOpts.x = Math.min(Math.max(x, work.x), work.x + work.width - 120);
+                        windowOpts.y = Math.min(Math.max(y, work.y), work.y + work.height - 60);
+                    } else {
+                        windowOpts.x = x;
+                        windowOpts.y = y;
+                    }
+                }
+                if (Number.isFinite(s.timer2WindowW) && s.timer2WindowW >= 320) windowOpts.width = Math.round(s.timer2WindowW);
+                if (Number.isFinite(s.timer2WindowH) && s.timer2WindowH >= 120) windowOpts.height = Math.round(s.timer2WindowH);
+            }
+        } catch (e) { /* defaults */ }
+    }
+
+    timer2Window = new BrowserWindow(windowOpts);
+    timer2Window.loadURL(pageProtocol() + '://127.0.0.1:3000/presenter.html?view=timer2');
+
+    let saveBoundsTimer = null;
+    const saveBounds = () => {
+        if (!timer2Window || timer2Window.isDestroyed()) return;
+        if (!serverInstance || !serverInstance.getSettings) return;
+        const s = serverInstance.getSettings();
+        if (s.presenter2DisplayId) return;
+        const b = timer2Window.getBounds();
+        try {
+            fetch(pageProtocol() + '://127.0.0.1:3000/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    timer2WindowX: b.x,
+                    timer2WindowY: b.y,
+                    timer2WindowW: b.width,
+                    timer2WindowH: b.height
+                })
+            }).catch(() => {});
+        } catch (e) { /* ignore */ }
+    };
+    const scheduleSaveBounds = () => {
+        if (saveBoundsTimer) clearTimeout(saveBoundsTimer);
+        saveBoundsTimer = setTimeout(saveBounds, 800);
+    };
+    timer2Window.on('moved', scheduleSaveBounds);
+    timer2Window.on('resized', scheduleSaveBounds);
+    timer2Window.on('closed', () => {
+        if (saveBoundsTimer) clearTimeout(saveBoundsTimer);
+    });
+
+    timer2Window.once('ready-to-show', () => {
+        timer2Window.show();
+    });
+
+    timer2Window.on('closed', () => {
+        timer2Window = null;
+        if (timer2Enabled && !isQuitting && mainWindow) {
+            setTimeout(() => {
+                if (timer2Enabled && !isQuitting && !timer2Window && mainWindow) {
+                    createTimer2PresenterWindow();
+                }
+            }, 2000);
+        }
+    });
+}
+
+function toggleTimer2PresenterWindow() {
+    if (timer2Window) {
+        // Reopen: the user may have picked a different display
+        timer2Enabled = false;
+        timer2Window.close();
+        timer2Window = null;
+        createTimer2PresenterWindow();
+    } else {
+        createTimer2PresenterWindow();
+    }
+}
+
 // --- IPC HANDLERS ---
 ipcMain.handle('toggle-presenter', () => {
     togglePresenterWindow();
@@ -407,6 +539,24 @@ ipcMain.handle('close-presenter', () => {
         presenterEnabled = false;
         presenterWindow.close();
         presenterWindow = null;
+    }
+    return true;
+});
+
+ipcMain.handle('toggle-timer2-presenter', () => {
+    toggleTimer2PresenterWindow();
+    return timer2Window !== null;
+});
+
+ipcMain.handle('get-timer2-presenter-status', () => {
+    return timer2Window !== null;
+});
+
+ipcMain.handle('close-timer2-presenter', () => {
+    if (timer2Window) {
+        timer2Enabled = false;
+        timer2Window.close();
+        timer2Window = null;
     }
     return true;
 });
@@ -538,10 +688,14 @@ app.on('before-quit', () => {
     isQuitting = true;
     presenterEnabled = false;
     syncPresenterEnabled = false;
+    timer2Enabled = false;
     if (presenterWindow) {
         presenterWindow.close();
     }
     if (syncPresenterWindow) {
         syncPresenterWindow.close();
+    }
+    if (timer2Window) {
+        timer2Window.close();
     }
 });
