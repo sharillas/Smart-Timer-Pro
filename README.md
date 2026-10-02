@@ -3,7 +3,7 @@
 Professional Stage Timer for Windows -- developed for **smartchoice**.
 
 [![Licença](https://img.shields.io/badge/Licen%C3%A7a-Propriet%C3%A1ria-blue.svg)](LICENSE)
-[![Versão](https://img.shields.io/badge/Vers%C3%A3o-1.7.0-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
+[![Versão](https://img.shields.io/badge/Vers%C3%A3o-2.1.3-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
 [![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20x64-lightgrey.svg)](https://github.com/sharillas/Smart-Timer-Pro)
 [![Electron](https://img.shields.io/badge/Electron-28-blue.svg)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
@@ -15,7 +15,7 @@ A full-featured countdown/count-up timer for live events, conferences, and stage
 ## Screenshots
 
 ### GUI - Controller
-Main control panel: transport (GO/PAUSE/RESET), presets, agenda, messaging and live monitor preview.
+Main control panel: transport (GO/PAUSE/RESET), presets, agenda, messaging, external sync timer card and live monitor preview.
 
 ![GUI Controller](assets/screenshot_GUI_1.png)
 
@@ -25,7 +25,7 @@ Agenda/rundown running: session timeline, "now playing" card, live message badge
 ![GUI Agenda Live](assets/screenshot_GUI_2.png)
 
 ### Settings
-Full settings modal: fonts, colors, thresholds, audio slots, PIN, shortcuts, profiles, language, webhook/OSC, HTTPS and updates.
+Full settings drawer: fonts, colors, thresholds, audio slots, PIN, shortcuts, profiles, language, webhook/OSC, HTTPS, show clock position and updates.
 
 ![Settings](assets/screenshot_settings.png)
 
@@ -39,17 +39,22 @@ Warning color, live message and the Semáforo indicator on the external display.
 
 ![Presenter Semáforo](assets/screenshot_External_Monitor_Smaforo.png)
 
+### External Sync Timer Display
+Second presenter window that follows the remaining time of a cue running in Resolume Arena, Pixera or WATCHOUT (timecode font, SYNC badge).
+
+![External Sync Presenter](assets/screenshot_sync_presenter.png)
+
 ### Remote Control (phone/tablet)
 Lightweight remote page at `/remote.html` with GO/PAUSE, RESET, +1m/-1m and message toggle.
 
 ![Remote Control](assets/screenshot_remote.png)
 
 ### Companion Module - Preset Buttons
-Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda controls).
+Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda controls, external sync HH:MM:SS:MS).
 
 ![Companion Module](assets/screenshot_Companion_Module.png)
 
-> Screenshots can be regenerated with `node scripts/capture-screenshots.js` (starts a temporary server with demo data and captures all pages).
+> Screenshots can be regenerated with `npx electron scripts/capture-screenshots.js` (starts a temporary server with demo data and captures all pages).
 
 ## Features
 
@@ -58,14 +63,18 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 | **Countdown / Count-Up** | Timer with HH:MM:SS or MM:SS display |
 | **Time of Day** | Live clock display (HH:MM:SS) |
 | **Idle / Logo** | Custom logo display on external screen |
-| **External Display** | Fullscreen presenter window on secondary monitor/projector |
+| **External Display** | Fullscreen presenter window on secondary monitor/projector (primary display never used) |
 | **Fallback Window** | If no external monitor, opens resizable window |
+| **Show Clock** | Clock overlay on the presenter with configurable position (X/Y %) |
 | **Messaging** | Custom messages with instant trigger to presenter |
 | **Quick Messages** | Bank of up to 5 editable messages (add, edit, delete, instant live) |
 | **Audio Cues** | Upload custom sounds for timer end and warning thresholds |
 | **Settings** | Customizable font family, colors (normal/warning/danger/expired), thresholds, HH/SS toggles |
 | **Stop at Zero** | Auto-pause countdown at 00:00 (configurable) |
-| **Bitfocus Companion** | Stream Deck integration via `/api/companion` endpoint |
+| **Expired Flash** | Flash on expiry (3x/6x/8x/infinite) + manual FLASH button |
+| **Visual Presets** | 4 slots to save/apply the current look (background, fonts, colors, timer size) |
+| **External Sync Timer** | Second timer that follows the remaining time of a cue in **Resolume Arena** (REST), **Pixera** (TCP API) or **WATCHOUT** (HTTP/OSC) — shown on its own display with timecode font, SYNC/NO SIGNAL badge and TEST CONNECTION diagnostics |
+| **Bitfocus Companion** | Stream Deck integration via `/api/companion` endpoint, including External Sync actions and HH:MM:SS:MS presets |
 | **Agenda / Rundown** | Session list with per-session countdown, auto-advance and visual timeline |
 | **Session Log** | Records all timer events; CSV export for reporting |
 | **Event Profiles** | Export/import full event setup (settings, messages, presets, agenda, logo) |
@@ -78,7 +87,7 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 | **Undo** | Ctrl+Z reverts the last action |
 | **Keyboard Shortcuts** | Space = GO/PAUSE, R = RESET, M = message toggle (configurable) |
 | **System Tray** | Close to tray with quick controls; timer keeps running |
-| **Auto-Update** | Automatic updates via GitHub releases |
+| **Updates** | Manual update check via Settings > Updates (no automatic checks) |
 | **Portable** | Single `.exe` installer -- no Node.js or Electron needed on target PC |
 
 ## Tech Stack
@@ -95,20 +104,31 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 
 ```
 Smart-Timer-Pro/
-├── main.js                  # Electron main process (window management)
+├── main.js                  # Electron main process (window management, tray, updates)
 ├── preload.js               # IPC bridge for renderer
 ├── server.js                # Express + Socket.IO backend (port 3000)
 ├── package.json             # Dependencies & electron-builder config
-├── messages.json            # Default quick messages
 ├── .gitignore
 ├── assets/
-│   ├── icon.png             # App icon
-│   └── icon.ico             # Installer icon
+│   ├── icon.svg             # Vector icon source (dark blue)
+│   ├── icon-white.svg       # Vector icon source (white, in-app header)
+│   ├── icon.png             # App window / tray icon
+│   ├── icon.ico             # Installer / exe / shortcuts icon
+│   └── screenshot_*.png     # README screenshots
+├── scripts/
+│   ├── make-icon.js         # Generates icon.png / icon.ico / logo.png (npm run icon)
+│   ├── capture-screenshots.js
+│   ├── build-installer.js
+│   └── after-pack.js        # Patches the exe icon after packaging
+├── companion/
+│   └── smart-timer-pro/     # Bitfocus Companion module
+├── docs/                    # CHANGELOG, DEVELOPMENT, API, OBS, OPERATOR_GUIDE, SYNC_GUIDE
 └── public/
     ├── index.html           # Moderator control panel
-    ├── presenter.html       # Fullscreen presenter view
+    ├── presenter.html       # Fullscreen presenter view (?view=sync for external sync)
+    ├── remote.html          # Mobile remote control
     └── images/
-        └── logo.svg         # smartchoice logo
+        └── logo.png         # In-app header logo (white)
 ```
 
 ## API Endpoints
@@ -153,7 +173,20 @@ Smart-Timer-Pro/
 ### Companion (Stream Deck)
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/companion` | Full state for Bitfocus Companion integration |
+| GET | `/api/companion` | Full state for Bitfocus Companion integration (incl. external sync timer) |
+
+### External Sync Timer
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/sync/state` | Sync timer state + provider config |
+| GET | `/api/sync/test` | Live connection test to the configured provider (diagnostics) |
+| GET | `/api/sync/start` | Start the local countdown of the sync timer |
+| GET | `/api/sync/pause` | Pause the sync timer |
+| GET | `/api/sync/reset` | Reset the sync timer |
+| GET | `/api/sync/follow?value=0\|1` | Follow ON/OFF (also accepts `mode=toggle\|on\|off`) |
+| GET | `/api/sync/now` | Grab the current cue time once and count down locally |
+
+> Providers: **Resolume Arena 7** (REST, port 8080), **Pixera** (JSON-RPC 2.0 over TCP, JSON/TCP(dl) or JSON/TCP), **Pixera/WATCHOUT (HTTP)** (generic JSON GET), **OSC** (UDP listener). Setup guide: `docs/SYNC_GUIDE.md` or the GUIDE button in the app.
 
 ## Socket.IO Events
 
@@ -186,7 +219,15 @@ Smart-Timer-Pro/
   "dangerThreshold": 30,
   "stopAtZero": true,
   "audioEndEnabled": true,
-  "audioWarningEnabled": true
+  "audioWarningEnabled": true,
+  "showClock": false,
+  "clockX": 96,
+  "clockY": 4,
+  "syncProvider": "none",
+  "syncHost": "",
+  "syncPixeraPort": 4023,
+  "syncPixeraTimeline": "Timeline 1",
+  "syncOscPort": 9001
 }
 ```
 
@@ -194,7 +235,7 @@ The installer is standalone -- no Node.js, Electron, or any runtime required on 
 
 ## Installation
 
-1. Run `Smart Timer Pro Setup 1.7.0.exe`
+1. Run `Smart Timer Pro Setup 2.1.3.exe`
 2. Follow the installer wizard
 3. Launch from desktop shortcut or Start Menu
 
