@@ -105,6 +105,33 @@ function writeIco(entries) {
     return Buffer.concat([header, ...dirs, ...blobs]);
 }
 
+// PNG-based ICNS for macOS (accepted by Finder/Dock/electron-builder)
+function writeIcns(entries) {
+    const typeBySize = { 16: 'icp4', 32: 'icp5', 64: 'icp6', 128: 'ic07', 256: 'ic08', 512: 'ic09', 1024: 'ic10' };
+    const header = Buffer.alloc(8);
+    header.write('icns', 0, 'ascii');
+    const parts = [header];
+    let total = 8;
+    for (const { size, data } of entries) {
+        const type = typeBySize[size];
+        if (!type) continue;
+        const chunk = Buffer.alloc(8 + data.length);
+        chunk.write(type, 0, 'ascii');
+        chunk.writeUInt32BE(8 + data.length, 4);
+        data.copy(chunk, 8);
+        parts.push(chunk);
+        total += chunk.length;
+    }
+    const out = Buffer.alloc(total);
+    let off = 0;
+    for (const p of parts) {
+        p.copy(out, off);
+        off += p.length;
+    }
+    out.writeUInt32BE(total, 4);
+    return out;
+}
+
 app.whenReady().then(async () => {
     try {
         const largeBlue = await rasterizeLarge(SVG_BLUE);
@@ -131,7 +158,14 @@ app.whenReady().then(async () => {
         }
         fs.writeFileSync(path.join(ROOT, 'assets', 'icon.ico'), writeIco(icoPngs));
 
-        console.log('OK: assets/icon.png, assets/icon.ico, public/images/logo.png, public/favicon-16/32.png');
+        // macOS icon (PNG-based icns)
+        const icnsPngs = [16, 32, 64, 128, 256, 512, 1024].map((s) => ({
+            size: s,
+            data: s === 1024 ? largeBlue : downscale(largeBlue, s)
+        }));
+        fs.writeFileSync(path.join(ROOT, 'assets', 'icon.icns'), writeIcns(icnsPngs));
+
+        console.log('OK: assets/icon.png, assets/icon.ico, assets/icon.icns, public/images/logo.png, public/favicon-16/32.png');
     } catch (e) {
         console.error('make-icon failed:', (e && e.stack) || e);
     }

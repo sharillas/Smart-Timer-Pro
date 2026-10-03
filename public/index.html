@@ -33,37 +33,164 @@
             --text: #f3f4f6; --text-dim: #9ca3af;
             --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15);
             --green: #10b981; --amber: #f59e0b; --red: #ef4444;
+            --input-bg: #0f172a; --panel-bg: #0f172a;
+            --chip-bg: rgba(30,41,59,0.5); --overlay: rgba(0,0,0,0.3);
+        }
+
+        /* --- SKINS --- */
+        body[data-theme="light"] {
+            --bg: #eef2f7; --card: #ffffff; --border: #d5dde8;
+            --text: #1e293b; --text-dim: #64748b;
+            --accent: #2563eb; --accent-glow: rgba(37,99,235,0.12);
+            --input-bg: #f1f5f9; --panel-bg: #f8fafc;
+            --chip-bg: #e2e8f0; --overlay: rgba(15,23,42,0.08);
+        }
+        body[data-theme="lightblue"] {
+            --bg: #dbe7f5; --card: #ffffff; --border: #bcd0e8;
+            --text: #16324f; --text-dim: #5b7390;
+            --accent: #1d4ed8; --accent-glow: rgba(29,78,216,0.12);
+            --input-bg: #eaf2fb; --panel-bg: #f2f7fd;
+            --chip-bg: #d6e4f5; --overlay: rgba(13,27,51,0.08);
+        }
+        body[data-theme="duotone"] {
+            --bg: #e8edf6; --card: #1b2f55; --border: #2e4778;
+            --text: #eef3fc; --text-dim: #a3b4d0;
+            --accent: #60a5fa; --accent-glow: rgba(96,165,250,0.16);
+            --input-bg: #13234a; --panel-bg: #16294f;
+            --chip-bg: #24406e; --overlay: rgba(8,15,35,0.35);
+        }
+        body[data-theme="navy"] {
+            --bg: #0c1a33; --card: #14294c; --border: #27456f;
+            --text: #eaf1fb; --text-dim: #8ea5c6;
+            --accent: #4f8ff7; --accent-glow: rgba(79,143,247,0.16);
+            --input-bg: #0e1f3d; --panel-bg: #112241;
+            --chip-bg: #1d3a66; --overlay: rgba(4,10,24,0.45);
+        }
+        body[data-theme="midnight"] {
+            --bg: #080e1c; --card: #101a2e; --border: #233250;
+            --text: #e8eefb; --text-dim: #7d90b4;
+            --accent: #38bdf8; --accent-glow: rgba(56,189,248,0.15);
+            --input-bg: #0a1222; --panel-bg: #0d1628;
+            --chip-bg: #1a2742; --overlay: rgba(2,6,14,0.5);
+        }
+        body[data-theme="graphite"] {
+            --bg: #1e2025; --card: #2a2d34; --border: #45484f;
+            --text: #f3f4f6; --text-dim: #a6aab2;
+            --accent: #22d3ee; --accent-glow: rgba(34,211,238,0.14);
+            --input-bg: #16181c; --panel-bg: #17191e;
+            --chip-bg: #34373e; --overlay: rgba(0,0,0,0.35);
+        }
+        body[data-theme="nord"] {
+            --bg: #2e3440; --card: #3b4252; --border: #4c566a;
+            --text: #eceff4; --text-dim: #9aa5b8;
+            --accent: #88c0d0; --accent-glow: rgba(136,192,208,0.16);
+            --input-bg: #272c38; --panel-bg: #2a3040;
+            --chip-bg: #434c5e; --overlay: rgba(20,24,33,0.4);
+        }
+        body[data-theme="emerald"] {
+            --bg: #0b1f19; --card: #123227; --border: #1f4d3d;
+            --text: #eaf6f0; --text-dim: #8fb5a3;
+            --accent: #34d399; --accent-glow: rgba(52,211,153,0.15);
+            --input-bg: #0a1a15; --panel-bg: #0d201a;
+            --chip-bg: #1b4435; --overlay: rgba(3,10,8,0.45);
+        }
+        body[data-theme="violet"] {
+            --bg: #16102a; --card: #221a3d; --border: #362960;
+            --text: #f1edfa; --text-dim: #a493cc;
+            --accent: #a78bfa; --accent-glow: rgba(167,139,250,0.16);
+            --input-bg: #120d24; --panel-bg: #150f28;
+            --chip-bg: #2e2450; --overlay: rgba(8,5,20,0.5);
+        }
+        body[data-theme="crimson"] {
+            --bg: #1c0f12; --card: #2c1519; --border: #4a2229;
+            --text: #faeef0; --text-dim: #c09aa0;
+            --accent: #fb7185; --accent-glow: rgba(251,113,133,0.16);
+            --input-bg: #160b0d; --panel-bg: #190d10;
+            --chip-bg: #3c1d23; --overlay: rgba(12,4,6,0.5);
+        }
+        body[data-theme="amber"] {
+            --bg: #1c150a; --card: #2b1f0d; --border: #4a3718;
+            --text: #faf3e6; --text-dim: #bda67c;
+            --accent: #fbbf24; --accent-glow: rgba(251,191,36,0.16);
+            --input-bg: #161007; --panel-bg: #191207;
+            --chip-bg: #3c2d12; --overlay: rgba(12,7,2,0.5);
+        }
+        body[data-theme="cyan"] {
+            --bg: #08191f; --card: #0e2830; --border: #19434e;
+            --text: #e8f7fa; --text-dim: #8db8c2;
+            --accent: #22d3ee; --accent-glow: rgba(34,211,238,0.16);
+            --input-bg: #071318; --panel-bg: #09171d;
+            --chip-bg: #173a45; --overlay: rgba(2,10,13,0.5);
+        }
+        body[data-theme="roselight"] {
+            --bg: #faf3f0; --card: #ffffff; --border: #ecd9d2;
+            --text: #3d2520; --text-dim: #9b7f76;
+            --accent: #e11d48; --accent-glow: rgba(225,29,72,0.10);
+            --input-bg: #fdf6f4; --panel-bg: #fbf1ee;
+            --chip-bg: #f3e3de; --overlay: rgba(61,37,32,0.07);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg); color: var(--text); padding: 24px;
+            background: var(--bg); color: var(--text); padding: 16px;
             user-select: none; overflow-y: auto;
         }
-        .container { max-width: none; flex: 1 1 620px; min-width: 0; margin: 0; }
+        .container { max-width: none; grid-column: 1; min-width: 0; }
         body {
-            display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 10px var(--settings-w, 360px);
+            gap: 0 16px; align-items: start;
         }
+        .app-footer { grid-column: 1 / -1; }
         .settings-col {
-            width: 350px; flex: 0 0 350px; order: 2;
+            grid-column: 3; grid-row: 1;
+            position: sticky; top: 0; align-self: start;
             background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 20px; position: sticky; top: 0;
-            max-height: calc(100vh - 48px); overflow-y: auto;
+            padding: 18px;
+            max-height: calc(100vh - 32px); overflow-y: auto;
         }
         .settings-col .modal-content {
             width: 100%; max-height: none; border: none; border-radius: 0;
             padding: 0; transform: none; overflow: visible;
         }
-        @media (max-width: 1320px) {
-            .settings-col { flex: 1 1 100%; order: 3; position: static; max-height: none; }
+        .col-divider {
+            cursor: col-resize; position: relative; z-index: 6;
+            justify-self: stretch; align-self: stretch;
+            min-height: 100px;
         }
+        .col-divider::after {
+            content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px;
+            border-radius: 2px; background: var(--border); opacity: 0.25;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .col-divider:hover::after, .col-divider.active::after {
+            background: var(--accent); opacity: 0.65;
+        }
+        #divider-main { grid-column: 2; grid-row: 1; }
+        @media (max-width: 1180px) {
+            body { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+            .settings-col { grid-column: 1 / -1; grid-row: auto; position: static; max-height: none; }
+            #divider-main { display: none; }
+            .app-footer { grid-column: 1 / -1; }
+        }
+        @media (max-width: 880px) {
+            body { grid-template-columns: 1fr; }
+            .container { grid-column: 1; }
+            .app-footer { grid-column: 1; }
+        }
+        .settings-col::-webkit-scrollbar, body::-webkit-scrollbar { width: 10px; height: 10px; }
+        .settings-col::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: var(--bg); border-radius: 10px; }
+        .settings-col::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+            background: var(--border); border-radius: 10px; border: 2px solid var(--bg);
+        }
+        .settings-col::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover { background: var(--accent); }
         header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
         }
         .brand { display: flex; align-items: center; gap: 14px; }
-        .brand-logo { height: 40px; }
-        .brand-text { font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+        .brand-logo { height: 48px; }
+        .brand-text { font-size: 24px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--text); }
         .brand-text strong { color: var(--accent); }
         .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .header-btn {
@@ -75,13 +202,24 @@
         .header-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .header-btn.warn { border-color: rgba(239,68,68,0.3); color: var(--red); }
 
-        .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-        @media (min-width: 1100px) { .grid { grid-template-columns: 1.5fr 1fr; } }
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, var(--left-fr, 1.35fr)) 10px minmax(0, 1fr);
+            gap: 0 16px; align-items: start;
+        }
+        .grid .side-left { grid-column: 1; min-width: 0; }
+        .grid .side-right { grid-column: 3; min-width: 0; }
+        #divider-grid { grid-column: 2; grid-row: 1; }
+        @media (max-width: 880px) {
+            .grid { grid-template-columns: 1fr; }
+            .grid .side-left, .grid .side-right { grid-column: 1; }
+            #divider-grid { display: none; }
+        }
 
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; min-width: 0; }
         .card-header {
             font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
-            color: #ffffff; margin-bottom: 16px; font-weight: 700;
+            color: var(--text); margin-bottom: 16px; font-weight: 700;
         }
         .monitor-preview {
             width: 100%; aspect-ratio: 16/6; background: #000;
@@ -111,7 +249,7 @@
         .monitor-bar-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
         .monitor-semaforo {
             position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 6px; background: rgba(15,23,42,0.9);
+            display: flex; gap: 6px; background: var(--overlay);
             padding: 5px 8px; border-radius: 999px; z-index: 3;
         }
         .monitor-lamp {
@@ -123,7 +261,7 @@
         .monitor-lamp.on-red { background: #ef4444; opacity: 1; box-shadow: 0 0 8px rgba(239,68,68,0.9); animation: pulse 0.6s infinite; }
         .msg-preview {
             margin-top: 14px; padding: 12px 16px; border-radius: 10px;
-            background: rgba(0,0,0,0.3); border-left: 4px solid var(--border);
+            background: var(--overlay); border-left: 4px solid var(--border);
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
         }
         .msg-badge {
@@ -132,41 +270,53 @@
         }
         .badge-live { background: var(--red); color: #fff; animation: pulse 1.5s infinite; }
         .badge-off { background: #334155; color: var(--text-dim); }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
         .btn {
             border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
             color: #fff; transition: all 0.15s; display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.5px;
+            min-width: 0; overflow: hidden;
         }
         .btn:active { transform: scale(0.96); }
         .btn-icon { font-size: 24px; }
         .btn-label { font-size: 17px; }
+        .btn-label-start {
+            font-size: 32px; color: #fff; letter-spacing: 2px; font-weight: 900;
+            line-height: 1;
+        }
+        .btn-label-plain {
+            font-size: 20px; color: #fff; letter-spacing: 1.5px; font-weight: 800;
+            white-space: nowrap;
+        }
+        .btn-sm { white-space: normal; overflow-wrap: anywhere; }
         .btn-start { background: var(--green); height: 120px; }
         .btn-start:hover { background: #059669; }
-        .btn-pause { background: var(--amber); height: 120px; }
-        .btn-pause:hover { background: #d97706; }
-        .btn-reset { background: #334155; height: 120px; color: #cbd5e1; }
-        .btn-reset:hover { background: #475569; }
+        .btn-pause { background: #d97706; height: 120px; }
+        .btn-pause:hover { background: #b45309; }
+        .btn-reset { background: var(--red); height: 120px; color: #fff; }
+        .btn-reset:hover { filter: brightness(1.1); }
         .btn-sm { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; }
         .btn-add { background: rgba(0,163,224,0.15); color: var(--accent); border: 1px solid rgba(0,163,224,0.2); }
-        .btn-sub { background: #334155; color: #94a3b8; }
+        .btn-sub { background: var(--chip-bg); color: var(--text-dim); }
         .btn-add:hover { background: rgba(0,163,224,0.25); }
-        .btn-sub:hover { background: #475569; }
-        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-        .preset-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+        .btn-sub:hover { filter: brightness(1.15); }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .preset-grid.cols4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .preset-grid.cols3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .btn-preset {
-            background: rgba(30,41,59,0.5); border: 1.5px solid var(--border);
-            padding: 14px 6px; border-radius: 10px; color: #e5e7eb; font-weight: 700;
+            background: var(--chip-bg); border: 1.5px solid var(--border);
+            padding: 14px 6px; border-radius: 10px; color: var(--text); font-weight: 700;
             cursor: pointer; transition: all 0.15s; font-size: 15px; text-align: center;
             letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .btn-preset:hover { background: rgba(59,130,246,0.12); border-color: var(--accent); color: #fff; }
         .btn-preset.active { border-color: var(--green); color: #6ee7b7; background: rgba(16,185,129,0.10); }
-        .custom-row { display: flex; gap: 8px; }
+        .custom-row { display: flex; gap: 8px; min-width: 0; }
         .custom-input {
-            flex: 1; background: #0f172a; border: 1px solid var(--border);
-            border-radius: 10px; color: #fff; padding: 12px 16px;
+            flex: 1; background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); padding: 12px 16px;
             font-size: 14px; font-weight: 600; outline: none;
+            min-width: 0;
         }
         .custom-input:focus { border-color: var(--accent); }
         .btn-set {
@@ -176,8 +326,8 @@
         }
         .btn-set:hover { background: #0090cc; }
         .msg-input {
-            width: 100%; background: #0f172a; border: 1px solid var(--border);
-            border-radius: 10px; color: #fff; padding: 12px; font-size: 14px;
+            width: 100%; background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); padding: 12px; font-size: 14px;
             outline: none; margin-bottom: 10px;
         }
         .msg-input:focus { border-color: var(--accent); }
@@ -200,7 +350,7 @@
         }
         .msg-bank-item {
             width: 100%; background: var(--card); border: 1px solid var(--border);
-            padding: 12px 40px 12px 16px; border-radius: 10px; color: #fff;
+            padding: 12px 40px 12px 16px; border-radius: 10px; color: var(--text);
             font-weight: 600; cursor: pointer; transition: all 0.15s;
             position: relative; text-align: left; font-size: 13px;
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -255,7 +405,7 @@
             padding: 24px; transform: none; overflow-y: auto;
         }
         .modal-title {
-            color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
+            color: var(--text); font-size: 18px; font-weight: 900; letter-spacing: 1px;
             margin: 0 0 20px 0; display: flex; justify-content: space-between;
             align-items: center;
         }
@@ -265,24 +415,36 @@
         }
         .modal-close:hover { color: var(--red); }
         .setting-group {
-            background: #0f172a; padding: 16px; border-radius: 12px;
-            border: 1px solid #1e293b; margin-bottom: 14px;
+            background: var(--panel-bg); padding: 16px; border-radius: 12px;
+            border: 1px solid var(--border); margin-bottom: 14px;
         }
         .setting-group h3 {
             font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px;
-            color: #ffffff; margin: 0 0 12px 0; font-weight: 700;
+            color: var(--text); margin: 0 0 12px 0; font-weight: 700;
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
+        .setting-group h3::after {
+            content: '\25BE';
+            color: var(--text-dim); font-size: 13px;
+            transition: transform 0.2s;
+        }
+        .setting-group.collapsed h3 { margin-bottom: 0; }
+        .setting-group.collapsed h3::after { content: '\25B8'; }
+        .setting-group.collapsed > :not(h3) { display: none; }
         .setting-row {
             display: flex; align-items: center; justify-content: space-between;
-            gap: 10px; margin-bottom: 8px;
+            gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
         }
         .setting-row:last-child { margin-bottom: 0; }
-        .setting-label { font-size: 13px; color: #cbd5e1; white-space: nowrap; }
+        .setting-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
         .setting-input {
-            background: #1e293b; border: 1px solid var(--border);
-            color: #fff; padding: 6px 10px; border-radius: 6px;
+            background: var(--input-bg); border: 1px solid var(--border);
+            color: var(--text); padding: 6px 10px; border-radius: 6px;
             font-size: 13px; outline: none; width: 120px; text-align: center;
+            max-width: 100%; min-width: 0;
         }
+        select.setting-input { min-width: 0; max-width: 100%; }
         .setting-input:focus { border-color: var(--accent); }
         .setting-input[type="color"] {
             width: 40px; height: 30px; padding: 2px; cursor: pointer;
@@ -296,7 +458,7 @@
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .toggle-slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background: #334155; border-radius: 24px; transition: 0.2s;
+            background: var(--chip-bg); border-radius: 24px; transition: 0.2s;
         }
         .toggle-slider:before {
             position: absolute; content: ""; height: 18px; width: 18px;
@@ -395,14 +557,16 @@
 
         /* --- ULTRA-WIDE (maximized) --- */
         @media (min-width: 1800px) {
-            .container { max-width: none; }
-            .grid { grid-template-columns: 1.6fr 1fr; gap: 28px; }
+            body { column-gap: 24px; }
+            .grid { column-gap: 24px; }
         }
     </style>
 </head>
 <body>
 
     <div class="conn-banner" id="conn-banner">CONNECTION LOST — RECONNECTING...</div>
+
+    <div class="col-divider" id="divider-main" title="Drag to resize"></div>
 
     <!-- SETTINGS (always-open right column) -->
     <div class="settings-col" id="settings-modal">
@@ -415,7 +579,7 @@
                 <h3 data-i18n="font_time">Font & Time Format</h3>
                 <div class="setting-row">
                     <span class="setting-label">Font Family</span>
-                    <select id="set-font" class="setting-input" style="width:200px" onchange="onFontChange()">
+                    <select id="set-font" class="setting-input" style="flex:1;min-width:0;width:auto" onchange="onFontChange()">
                         <option value="'Courier New', monospace">Courier New (mono)</option>
                         <option value="Arial, sans-serif">Arial</option>
                         <option value="Helvetica, sans-serif">Helvetica</option>
@@ -517,6 +681,56 @@
                 <div class="setting-row">
                     <span class="setting-label">Y (%)</span>
                     <input type="number" id="set-clock-y" class="setting-input num" min="0" max="100" onchange="markSettingsDirty()">
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3 data-i18n="timer2_settings">Second Timer Display</h3>
+                <div class="setting-row">
+                    <span class="setting-label">Show Seconds</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-timer2-seconds" onchange="markSettingsDirty()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Show Hours</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="set-timer2-hours" onchange="markSettingsDirty()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Background</span>
+                    <input type="color" id="set-timer2-bg" class="setting-input" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Normal</span>
+                    <input type="color" id="set-timer2-color-normal" class="setting-input" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Warning</span>
+                    <input type="color" id="set-timer2-color-warning" class="setting-input" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Danger</span>
+                    <input type="color" id="set-timer2-color-danger" class="setting-input" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Expired</span>
+                    <input type="color" id="set-timer2-color-expired" class="setting-input" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">X (%)</span>
+                    <input type="number" id="set-timer2-x" class="setting-input num" min="0" max="100" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Y (%)</span>
+                    <input type="number" id="set-timer2-y" class="setting-input num" min="0" max="100" onchange="markSettingsDirty()">
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Size (vw)</span>
+                    <input type="number" id="set-timer2-size" class="setting-input num" min="4" max="40" onchange="markSettingsDirty()">
                 </div>
             </div>
 
@@ -719,7 +933,7 @@
                 <h3>Display</h3>
                 <div class="setting-row">
                     <span class="setting-label" data-i18n="presenter_display_label">External display</span>
-                    <select id="set-presenter-display" class="setting-input" style="width:240px" onchange="markSettingsDirty()"></select>
+                    <select id="set-presenter-display" class="setting-input" style="flex:1;min-width:0;width:auto" onchange="markSettingsDirty()"></select>
                 </div>
                 <p class="setting-hint" id="display-hint" style="display:none" data-i18n="display_hint">No external display detected — the timer opens in a small window.</p>
                 <div class="setting-row">
@@ -728,16 +942,6 @@
                         <input type="checkbox" id="set-auto-presenter" onchange="markSettingsDirty()">
                         <span class="toggle-slider"></span>
                     </label>
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label" data-i18n="color_theme_label">Color theme</span>
-                    <select id="set-color-theme" class="setting-input" style="width:200px" onchange="onThemeChange()">
-                        <option value="default">Default (green/amber)</option>
-                        <option value="cyan">Cyan</option>
-                        <option value="magenta">Magenta</option>
-                        <option value="lime">Lime</option>
-                        <option value="mono">Monochrome white</option>
-                    </select>
                 </div>
             </div>
 
@@ -875,11 +1079,12 @@
 
                 <div class="card" style="margin-bottom:24px">
                     <div class="card-header"><span data-i18n="second_timer">Second Timer</span> <span id="timer2-status" style="font-weight:400;color:var(--text-dim);font-size:11px"></span></div>
-                    <div class="preset-grid cols2" style="margin-bottom:12px">
+                    <div class="preset-grid cols3" style="margin-bottom:12px">
                         <button onclick="timer2Mode('countdown')" class="btn-preset active" id="timer2-mode-countdown">Countdown</button>
                         <button onclick="timer2Mode('countup')" class="btn-preset" id="timer2-mode-countup">Count-Up</button>
+                        <button onclick="timer2Mode('timeofday')" class="btn-preset" id="timer2-mode-timeofday">Time of Day</button>
                     </div>
-                    <div id="timer2-time" style="text-align:center;font-family:'Orbitron','Courier New',monospace;font-size:34px;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:1px">10:00</div>
+                    <div id="timer2-time" style="text-align:center;font-family:'Orbitron','Courier New',monospace;font-size:34px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:1px">10:00</div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <input type="text" id="timer2-input" placeholder="HH:MM:SS" class="custom-input" style="font-family:monospace">
                         <button onclick="timer2Set()" class="btn-set" data-i18n="set">SET</button>
@@ -887,11 +1092,11 @@
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
                         <button onclick="timer2Cmd('add?sec=60')" class="btn btn-add btn-sm" style="height:40px">+1 MIN</button>
                         <button onclick="timer2Cmd('add?sec=-60')" class="btn btn-sub btn-sm" style="height:40px">-1 MIN</button>
-                        <button onclick="timer2Cmd('reset')" class="btn btn-reset btn-sm" style="height:40px">⟳</button>
+                        <button onclick="timer2Cmd('reset')" class="btn btn-reset btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">RESET</button>
                     </div>
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
-                        <button onclick="timer2Cmd('start')" class="btn btn-start btn-sm" style="height:40px">▶ START</button>
-                        <button onclick="timer2Cmd('pause')" class="btn btn-pause btn-sm" style="height:40px">⏸ PAUSE</button>
+                        <button onclick="timer2Cmd('start')" class="btn btn-start btn-sm" style="height:40px">START</button>
+                        <button onclick="timer2Cmd('pause')" class="btn btn-pause btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">PAUSE</button>
                     </div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <select id="timer2-display" class="custom-input" style="flex:1"></select>
@@ -921,21 +1126,21 @@
                 </div>
             </div>
 
+            <div class="col-divider" id="divider-grid" title="Drag to resize"></div>
+
             <div class="side-right">
                 <div class="card" style="margin-bottom:24px">
                     <div class="card-header" data-i18n="controls">Controls</div>
                     <div class="btn-grid">
                         <button id="btn-start" title="Atalho: Espaço" onclick="api('start')" class="btn btn-start">
-                            <span class="btn-icon">▶</span>
-                            <span class="btn-label" data-i18n="go">GO</span>
+                            <span class="btn-icon" style="font-size:16px">▶</span>
+                            <span class="btn-label-start" data-i18n="go">START</span>
                         </button>
                         <button id="btn-pause" title="Atalho: Espaço" onclick="api('pause')" class="btn btn-pause hidden">
-                            <span class="btn-icon">⏸</span>
-                            <span class="btn-label" data-i18n="pause">PAUSE</span>
+                            <span class="btn-label-plain" data-i18n="pause">PAUSE</span>
                         </button>
                         <button title="Atalho: R" onclick="api('reset')" class="btn btn-reset">
-                            <span class="btn-icon">↺</span>
-                            <span class="btn-label" data-i18n="reset">RESET</span>
+                            <span class="btn-label-plain" data-i18n="reset">RESET</span>
                         </button>
                     </div>
                     <div class="btn-grid" style="margin-top:12px">
@@ -1028,12 +1233,12 @@
                     </div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <span id="sync-status" class="msg-badge badge-off" style="flex:none">NO SIGNAL</span>
-                        <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:18px;font-weight:700;color:#fff;text-align:center">00:00:00</span>
+                        <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:18px;font-weight:700;color:var(--text);text-align:center">00:00:00</span>
                     </div>
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
-                        <button onclick="syncCmd('start')" class="btn btn-start btn-sm" style="height:40px">▶ START</button>
-                        <button onclick="syncCmd('pause')" class="btn btn-reset btn-sm" style="height:40px">⏸ PAUSE</button>
-                        <button onclick="syncCmd('reset')" class="btn btn-reset btn-sm" style="height:40px">⟳ RESET</button>
+                        <button onclick="syncCmd('start')" class="btn btn-start btn-sm" style="height:40px">START</button>
+                        <button onclick="syncCmd('pause')" class="btn btn-pause btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">PAUSE</button>
+                        <button onclick="syncCmd('reset')" class="btn btn-reset btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">RESET</button>
                     </div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <select id="sync-display" class="custom-input" style="flex:1"></select>
@@ -1085,8 +1290,100 @@
 
     <script>
         const socket = io();
+        // SKIN: graphite is the app default. The ?theme= param is used for the
+        // skin gallery screenshots (light, navy, emerald, ...).
+        var themeParam = new URLSearchParams(window.location.search).get('theme');
+        document.body.dataset.theme = themeParam || 'graphite';
         let audioEnabled = false;
         let apiPin = localStorage.getItem('stp_pin') || '';
+
+        // --- RESIZABLE COLUMNS (drag the subtle dividers) ---
+        (function() {
+            var bodyEl = document.body;
+            var mainGrid = document.querySelector('.grid');
+
+            function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+            // settings column width (px) — persisted
+            var settingsW = clamp(parseInt(localStorage.getItem('stp_settings_width'), 10) || 360, 300, 640);
+            bodyEl.style.setProperty('--settings-w', settingsW + 'px');
+
+            // left/middle ratio (fr) — persisted
+            var leftFr = clamp(parseFloat(localStorage.getItem('stp_left_fr')) || 1.35, 0.35, 3);
+            mainGrid.style.setProperty('--left-fr', leftFr + 'fr');
+
+            function startDrag(divider, onStart, onMove, onEnd) {
+                if (!divider) return;
+                divider.addEventListener('pointerdown', function(e) {
+                    e.preventDefault();
+                    divider.classList.add('active');
+                    divider.setPointerCapture(e.pointerId);
+                    onStart(e.clientX);
+                    var move = function(ev) { onMove(ev.clientX); };
+                    var up = function() {
+                        divider.classList.remove('active');
+                        divider.removeEventListener('pointermove', move);
+                        divider.removeEventListener('pointerup', up);
+                        divider.removeEventListener('pointercancel', up);
+                        onEnd();
+                    };
+                    divider.addEventListener('pointermove', move);
+                    divider.addEventListener('pointerup', up);
+                    divider.addEventListener('pointercancel', up);
+                });
+            }
+
+            var startX = 0;
+            startDrag(document.getElementById('divider-main'),
+                function(x) { startX = x; },
+                function(x) {
+                    var newW = clamp(settingsW + (startX - x), 300, 640);
+                    bodyEl.style.setProperty('--settings-w', newW + 'px');
+                },
+                function() {
+                    var w = parseFloat(bodyEl.style.getPropertyValue('--settings-w')) || settingsW;
+                    settingsW = w;
+                    localStorage.setItem('stp_settings_width', String(Math.round(w)));
+                });
+
+            var gridRect = null;
+            startDrag(document.getElementById('divider-grid'),
+                function(x) {
+                    gridRect = mainGrid.getBoundingClientRect();
+                },
+                function(x) {
+                    if (!gridRect || gridRect.width <= 0) return;
+                    var frac = clamp((x - gridRect.left - 5) / gridRect.width, 0.25, 0.78);
+                    leftFr = frac / (1 - frac);
+                    mainGrid.style.setProperty('--left-fr', leftFr + 'fr');
+                },
+                function() {
+                    localStorage.setItem('stp_left_fr', String(Math.round(leftFr * 100) / 100));
+                });
+        })();
+        (function() {
+            var groups = document.querySelectorAll('.setting-group');
+            for (var i = 0; i < groups.length; i++) {
+                if (i > 0) groups[i].classList.add('collapsed');
+            }
+            var panel = document.getElementById('settings-modal');
+            panel.addEventListener('click', function(e) {
+                var h3 = null;
+                if (e.target && e.target.closest) h3 = e.target.closest('.setting-group > h3');
+                if (!h3) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var g = h3.parentElement;
+                var wasCollapsed = g.classList.contains('collapsed');
+                for (var i = 0; i < groups.length; i++) groups[i].classList.add('collapsed');
+                if (wasCollapsed) g.classList.remove('collapsed');
+            });
+            panel.addEventListener('mousedown', function(e) {
+                if (e.target && e.target.closest && e.target.closest('.setting-group > h3')) {
+                    e.preventDefault();
+                }
+            });
+        })();
 
         // --- API HELPERS (with PIN support) ---
         function fetchApi(url, opts) {
@@ -1130,7 +1427,7 @@
                 next: 'NEXT',
                 stop: 'STOP',
                 controls: 'Controls',
-                go: 'GO',
+                go: 'START',
                 pause: 'PAUSE',
                 reset: 'RESET',
                 add_min: '+1 MIN',
@@ -1200,6 +1497,7 @@
                 sync_now: 'SYNC NOW',
                 sync_open_display: 'OPEN DISPLAY',
                 second_timer: 'Second Timer',
+                timer2_settings: 'Second Timer Display',
                 open_display: 'OPEN DISPLAY',
                 set: 'SET',
                 sync_test: 'TEST CONNECTION',
@@ -1230,7 +1528,7 @@
                 next: 'SEGUINTE',
                 stop: 'PARAR',
                 controls: 'Controlos',
-                go: 'GO',
+                go: 'START',
                 pause: 'PAUSA',
                 reset: 'RESET',
                 add_min: '+1 MIN',
@@ -1300,6 +1598,7 @@
                 sync_now: 'SYNC NOW',
                 sync_open_display: 'ABRIR ECRÃ',
                 second_timer: 'Segundo Timer',
+                timer2_settings: 'Ecrã do Segundo Timer',
                 open_display: 'ABRIR ECRÃ',
                 set: 'DEFINIR',
                 sync_test: 'TESTAR LIGAÇÃO',
@@ -1515,7 +1814,7 @@
             } else {
                 document.getElementById('custom-font-row').classList.add('hidden');
             }
-            autoSaveSettings();
+            markSettingsDirty();
         }
 
         function onBgModeChange() {
@@ -1525,30 +1824,12 @@
             } else {
                 document.getElementById('bg-color-row').classList.remove('hidden');
             }
-            autoSaveSettings();
+            markSettingsDirty();
         }
 
         function onLanguageChange() {
-            autoSaveSettings();
+            markSettingsDirty();
             applyLanguage();
-        }
-
-        var COLOR_THEMES = {
-            default: { normal: '#10b981', warning: '#f59e0b', danger: '#f97316', expired: '#ef4444' },
-            cyan: { normal: '#06b6d4', warning: '#22d3ee', danger: '#f59e0b', expired: '#ef4444' },
-            magenta: { normal: '#e879f9', warning: '#f59e0b', danger: '#f43f5e', expired: '#ef4444' },
-            lime: { normal: '#84cc16', warning: '#facc15', danger: '#f97316', expired: '#ef4444' },
-            mono: { normal: '#f8fafc', warning: '#cbd5e1', danger: '#94a3b8', expired: '#ef4444' }
-        };
-
-        function onThemeChange() {
-            var theme = COLOR_THEMES[document.getElementById('set-color-theme').value];
-            if (!theme) return;
-            document.getElementById('set-color-normal').value = theme.normal;
-            document.getElementById('set-color-warning').value = theme.warning;
-            document.getElementById('set-color-danger').value = theme.danger;
-            document.getElementById('set-color-expired').value = theme.expired;
-            autoSaveSettings();
         }
 
         function populateSettingsForm(s) {
@@ -1595,7 +1876,6 @@
                 }
             }
             document.getElementById('set-auto-presenter').checked = s.autoOpenPresenter === true;
-            document.getElementById('set-color-theme').value = s.colorTheme || 'default';
             document.getElementById('set-webhook').value = s.webhookUrl || '';
             document.getElementById('set-osc-enabled').checked = s.oscEnabled === true;
             document.getElementById('set-osc-host').value = s.oscHost || '';
@@ -1609,6 +1889,16 @@
             document.getElementById('set-timer-size').value = s.timerSize !== undefined ? s.timerSize : 22;
             document.getElementById('set-clock-x').value = s.clockX !== undefined ? s.clockX : 96;
             document.getElementById('set-clock-y').value = s.clockY !== undefined ? s.clockY : 4;
+            document.getElementById('set-timer2-seconds').checked = s.timer2ShowSeconds !== false;
+            document.getElementById('set-timer2-hours').checked = s.timer2ShowHours !== false;
+            document.getElementById('set-timer2-bg').value = s.timer2BgColor || '#000000';
+            document.getElementById('set-timer2-color-normal').value = s.timer2ColorNormal || '#10b981';
+            document.getElementById('set-timer2-color-warning').value = s.timer2ColorWarning || '#f59e0b';
+            document.getElementById('set-timer2-color-danger').value = s.timer2ColorDanger || '#f97316';
+            document.getElementById('set-timer2-color-expired').value = s.timer2ColorExpired || '#ef4444';
+            document.getElementById('set-timer2-x').value = s.timer2X !== undefined ? s.timer2X : 50;
+            document.getElementById('set-timer2-y').value = s.timer2Y !== undefined ? s.timer2Y : 50;
+            document.getElementById('set-timer2-size').value = s.timer2Size !== undefined ? s.timer2Size : 22;
             document.getElementById('set-bar-x').value = s.barX !== undefined ? s.barX : 10;
             document.getElementById('set-bar-y').value = s.barY !== undefined ? s.barY : 88;
             document.getElementById('set-bar-width').value = s.barWidth !== undefined ? s.barWidth : 80;
@@ -1653,6 +1943,16 @@
                 timerSize: parseInt(document.getElementById('set-timer-size').value) || 22,
                 clockX: parseInt(document.getElementById('set-clock-x').value) || 96,
                 clockY: parseInt(document.getElementById('set-clock-y').value) || 4,
+                timer2ShowSeconds: document.getElementById('set-timer2-seconds').checked,
+                timer2ShowHours: document.getElementById('set-timer2-hours').checked,
+                timer2BgColor: document.getElementById('set-timer2-bg').value,
+                timer2ColorNormal: document.getElementById('set-timer2-color-normal').value,
+                timer2ColorWarning: document.getElementById('set-timer2-color-warning').value,
+                timer2ColorDanger: document.getElementById('set-timer2-color-danger').value,
+                timer2ColorExpired: document.getElementById('set-timer2-color-expired').value,
+                timer2X: parseInt(document.getElementById('set-timer2-x').value) || 50,
+                timer2Y: parseInt(document.getElementById('set-timer2-y').value) || 50,
+                timer2Size: parseInt(document.getElementById('set-timer2-size').value) || 22,
                 barX: parseInt(document.getElementById('set-bar-x').value) || 10,
                 barY: parseInt(document.getElementById('set-bar-y').value) || 88,
                 barWidth: parseInt(document.getElementById('set-bar-width').value) || 80,
@@ -1661,7 +1961,6 @@
                 semaforoY: parseInt(document.getElementById('set-semaforo-y').value) || 88,
                 semaforoSize: parseInt(document.getElementById('set-semaforo-size').value) || 46,
                 language: document.getElementById('set-language').value,
-                colorTheme: document.getElementById('set-color-theme').value,
                 autoOpenPresenter: document.getElementById('set-auto-presenter').checked,
                 presenterDisplayId: (function() {
                     var sel = document.getElementById('set-presenter-display');
@@ -1982,7 +2281,14 @@
             var t = s.timer2 || {};
             var el = document.getElementById('timer2-time');
             if (el) {
-                var v = t.mode === 'countup' ? (t.countupTime || 0) : (t.timeLeft || 0);
+                var v;
+                if (t.mode === 'countup') v = t.countupTime || 0;
+                else if (t.mode === 'timeofday') {
+                    var d = new Date();
+                    v = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+                } else {
+                    v = t.timeLeft || 0;
+                }
                 var abs = Math.abs(v);
                 var h = Math.floor(abs / 3600);
                 var m = Math.floor((abs % 3600) / 60);
@@ -1994,11 +2300,27 @@
             }
             var b1 = document.getElementById('timer2-mode-countdown');
             var b2 = document.getElementById('timer2-mode-countup');
-            if (b1) b1.classList.toggle('active', t.mode !== 'countup');
+            var b3 = document.getElementById('timer2-mode-timeofday');
+            if (b1) b1.classList.toggle('active', t.mode === 'countdown');
             if (b2) b2.classList.toggle('active', t.mode === 'countup');
+            if (b3) b3.classList.toggle('active', t.mode === 'timeofday');
             var st = document.getElementById('timer2-status');
             if (st) st.textContent = t.isRunning ? 'RUNNING' : '';
         }
+
+        // tick the second timer card in time-of-day mode
+        setInterval(function() {
+            if (lastState && lastState.timer2 && lastState.timer2.mode === 'timeofday') {
+                var d = new Date();
+                var el = document.getElementById('timer2-time');
+                if (el) {
+                    el.textContent =
+                        String(d.getHours()).padStart(2, '0') + ':' +
+                        String(d.getMinutes()).padStart(2, '0') + ':' +
+                        String(d.getSeconds()).padStart(2, '0');
+                }
+            }
+        }, 1000);
 
         function populateTimer2Displays() {
             var sel = document.getElementById('timer2-display');
@@ -2179,10 +2501,13 @@
             var h = Math.floor(totalSeconds / 3600);
             var m = Math.floor((totalSeconds % 3600) / 60);
             var s = totalSeconds % 60;
-            if (h > 0) return h + ' H';
-            if (m > 0) return m + ' MIN';
-            if (s > 0) return s + (lang === 'pt' ? ' SEG' : ' SEC');
-            return '0';
+            if (h > 0) {
+                var mm = m > 0 ? ':' + String(m).padStart(2, '0') : '';
+                return String(h).padStart(2, '0') + mm + ' H';
+            }
+            if (m > 0) return String(m).padStart(2, '0') + ' Min';
+            if (s > 0) return String(s).padStart(2, '0') + (lang === 'pt' ? ' Seg' : ' Sec');
+            return '00:00';
         }
         function renderCustomPresets(presets) {
             var grid = document.getElementById('custom-presets-grid');
@@ -2222,7 +2547,7 @@
                 var btn = document.createElement('button');
                 btn.className = 'btn-preset';
                 btn.style.cssText = 'width:100%;position:relative;padding-right:20px';
-                btn.textContent = p.label || presetLabel(p.seconds);
+                btn.textContent = presetLabel(p.seconds);
                 btn.dataset.sec = p.seconds;
                 btn.onclick = function() { resetTime(p.seconds); };
 

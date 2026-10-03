@@ -83,6 +83,16 @@ let settings = {
     syncPixeraPort: 4023,
     syncPixeraTimeline: 'Timeline 1',
     syncPixeraFraming: 'delimiter',
+    timer2ShowSeconds: true,
+    timer2ShowHours: true,
+    timer2ColorNormal: '#10b981',
+    timer2ColorWarning: '#f59e0b',
+    timer2ColorDanger: '#f97316',
+    timer2ColorExpired: '#ef4444',
+    timer2BgColor: '#000000',
+    timer2X: 50,
+    timer2Y: 50,
+    timer2Size: 22,
     apiPin: '',
     language: 'en',
     webhookUrl: '',
@@ -1088,14 +1098,14 @@ app.get('/api/timer2/add', (req, res) => {
 
 app.get('/api/timer2/mode', (req, res) => {
     const m = req.query.set;
-    if (m !== 'countdown' && m !== 'countup') return res.status(400).send('Invalid mode');
+    if (m !== 'countdown' && m !== 'countup' && m !== 'timeofday') return res.status(400).send('Invalid mode');
     state.timer2.mode = m;
     state.timer2.isRunning = false;
     timer2CountdownEnd = null;
     timer2CountupStart = null;
     if (m === 'countdown') {
         state.timer2.timeLeft = state.timer2.initialTime || 0;
-    } else {
+    } else if (m === 'countup') {
         state.timer2.countupTime = 0;
     }
     broadcast();

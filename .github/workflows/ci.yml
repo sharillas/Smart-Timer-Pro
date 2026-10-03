@@ -18,6 +18,29 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  build-mac:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+
+      - name: Build macOS (Intel + Apple Silicon)
+        run: npx electron-builder --mac --publish never
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-builds
+          path: |
+            dist/*.dmg
+            dist/*-mac.zip
+          retention-days: 7
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: test

@@ -143,11 +143,28 @@ touch user data (they use a fresh temporary directory for each run).
 GitHub Actions (`.github/workflows/ci.yml`):
 
 - On every push and pull request to `master`: runs `npm test`
-- On version tags (`v*`): runs the tests, builds the installer and the
-  Companion module, and publishes them to a GitHub release automatically
+- On version tags (`v*`): runs the tests, builds the Windows installer, the
+  macOS builds (Intel x64 + Apple Silicon arm64, uploaded as workflow
+  artifacts) and the Companion module
 
 To release: bump the version (`npm run bump:minor` etc.), commit, and push a
 tag (`git tag vX.Y.Z && git push origin vX.Y.Z`). The workflow does the rest.
+
+## Code Signing (removes the SmartScreen / Gatekeeper warnings)
+
+The app is currently unsigned, so Windows SmartScreen and macOS Gatekeeper
+show a warning on first run. electron-builder signs automatically when the
+standard environment variables are set:
+
+- **Windows**: `CSC_LINK` (path/URL to a `.p12` code-signing certificate) and
+  `CSC_KEY_PASSWORD`. A normal OV or EV "code signing" certificate
+  (~€70–300/year, e.g. Sectigo/SSL.com) makes SmartScreen stop warning.
+- **macOS**: set `CSC_LINK`/`CSC_KEY_PASSWORD` or a Developer ID in the
+  keychain and add `"notarize": true` (Apple ID credentials via
+  `APPLE_ID`/`APPLE_APP_SPECIFIC_PASSWORD`/`APPLE_TEAM_ID`).
+
+Once signed, run the build again — the installer and the app bundles carry
+the signature and the warnings disappear.
 
 ## Companion Module Development
 

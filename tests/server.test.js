@@ -305,6 +305,11 @@ test('second timer runs independently (countdown + count-up)', async () => {
     await api('/api/timer2/add?sec=60');
     r = await json('/api/state');
     assert.ok(r.body.timer2.countupTime >= 61);
+
+    await api('/api/timer2/mode?set=timeofday');
+    r = await json('/api/state');
+    assert.strictEqual(r.body.timer2.mode, 'timeofday');
+    assert.strictEqual(r.body.timer2.isRunning, false);
 });
 
 test('CSRF: foreign origin blocked', async () => {

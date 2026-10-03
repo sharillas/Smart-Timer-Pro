@@ -90,9 +90,9 @@ function startServer() {
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({
-        width: 1280,
-        height: 850,
-        minWidth: 1024,
+        width: 1440,
+        height: 900,
+        minWidth: 1100,
         minHeight: 700,
         title: 'Smart Timer Pro - Moderator',
         icon: path.join(__dirname, 'assets', 'icon.png'),
@@ -107,6 +107,32 @@ function createMainWindow() {
 
     mainWindow.loadURL(pageProtocol() + '://127.0.0.1:3000/');
     mainWindow.setMenuBarVisibility(false);
+
+    // The WEB TIMER (remote control) opens as a dedicated, fully resizable
+    // window so it can be sized freely on any device/screen.
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (String(url).includes('remote.html')) {
+            const remoteWin = new BrowserWindow({
+                width: 440,
+                height: 860,
+                minWidth: 340,
+                minHeight: 560,
+                resizable: true,
+                maximizable: true,
+                title: 'Smart Timer Pro - Web Timer',
+                icon: path.join(__dirname, 'assets', 'icon.png'),
+                autoHideMenuBar: true,
+                useContentSize: true,
+                webPreferences: {
+                    contextIsolation: true,
+                    nodeIntegration: false
+                }
+            });
+            remoteWin.loadURL(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
+    });
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();

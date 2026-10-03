@@ -1,15 +1,28 @@
 # Changelog
 
-## [3.0.0] - 2026-09-30
+## [3.0.0] - 2026-10-03
 
 ### New Features
-- **New logo everywhere**: v3 vector icon (SVG source) applied to the app window, tray, in-app header (white variant), favicon (16/32), installer, uninstaller, exe and shortcuts — rendered with supersampling for maximum definition, with boosted strokes at small ICO sizes
-- **Second Timer**: a fully independent second timer (countdown/count-up, own transport, own presets via SET HH:MM:SS and ±1 min) that runs simultaneously with the main timer on its own display output or window
-- **Always-open Settings column**: settings now live in a permanent column on the right side of the interface; changes are collected and applied with the **APPLY** button at the end (the Settings button was removed)
+- **New v3 logo everywhere**: vector icon (SVG source) applied to the app window, tray, in-app header (white variant), favicons (16/32), Windows installer/uninstaller/exe/shortcuts and the new macOS icon (`icon.icns`) — rendered with supersampling, boosted strokes at small ICO sizes
+- **Second Timer**: fully independent second timer (countdown / count-up / time of day) running simultaneously with the main timer on its own display output or window; configurable text format, colors, background, position and size in a dedicated settings group
+- **Always-open Settings column**: permanent right-side column with collapsible accordion groups (only one open at a time) and an APPLY button at the end — changes take effect on apply; the Settings button was removed
+- **Resizable columns**: drag the two subtle dividers to resize the interface columns (persisted between sessions), content reflows automatically
+- **Graphite skin**: clean professional dark graphite theme as the app default (color theme picker removed; the app always uses the default theme)
+- **Web Timer window**: the remote page now opens in a dedicated resizable window (440×860, minimizable/maximizable)
+- **macOS support**: Intel (x64) + Apple Silicon (arm64) DMG/ZIP builds via GitHub Actions, hardened runtime, `icon.icns` generated from the SVG
 
 ### Changes
 - **REMOTE button renamed to WEB TIMER**
-- Second timer presenter window: display picker (never the primary), draggable fallback window with position memory, Escape to close, auto-recovery
+- **Buttons restyled**: GO renamed to START (bigger, stands out), PAUSE/RESET are text-only white, RESET is red, second timer and sync START buttons renamed
+- **Preset badges**: auto-formatted labels — "01 Min", "10 Min", "02 H", "45 Seg" (always derived from the seconds)
+- **Bigger app title** in the header
+- Removed the Color Theme setting (uses the default theme everywhere)
+
+### Fixes
+- Settings accordion toggling rewritten (one group open at a time, no stuck states)
+- Settings selects no longer overflow the column width
+- The settings column divider now works on maximized/ultra-wide windows (removed a media query that was pinning the settings width)
+- Fixed a crash when changing language/font/background (references to a removed save function)
 
 ## [2.1.3] - 2026-09-30
 

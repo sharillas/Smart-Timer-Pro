@@ -1,21 +1,22 @@
 # Smart Timer Pro
 
-Professional Stage Timer for Windows -- developed for **smartchoice**.
+Professional Stage Timer for Windows and macOS -- developed for **smartchoice**.
 
 [![Licença](https://img.shields.io/badge/Licen%C3%A7a-Propriet%C3%A1ria-blue.svg)](LICENSE)
-[![Versão](https://img.shields.io/badge/Vers%C3%A3o-2.1.3-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
-[![Plataforma](https://img.shields.io/badge/Plataforma-Windows%20x64-lightgrey.svg)](https://github.com/sharillas/Smart-Timer-Pro)
+[![Versão](https://img.shields.io/badge/Vers%C3%A3o-3.0.0-green.svg)](https://github.com/sharillas/Smart-Timer-Pro/releases)
+[![Windows](https://img.shields.io/badge/Windows-x64-lightgrey.svg)](https://github.com/sharillas/Smart-Timer-Pro)
+[![macOS](https://img.shields.io/badge/macOS-Intel%20%2B%20Apple%20Silicon-lightgrey.svg)](https://github.com/sharillas/Smart-Timer-Pro)
 [![Electron](https://img.shields.io/badge/Electron-28-blue.svg)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7-black.svg)](https://socket.io/)
 [![Companion](https://img.shields.io/badge/Companion-Module-orange.svg)](https://github.com/sharillas/Smart-Timer-Pro/tree/master/companion/smart-timer-pro)
 
-A full-featured countdown/count-up timer for live events, conferences, and stage productions. Built with Electron + Node.js, installable as a standalone `.exe` on Windows.
+A full-featured countdown/count-up timer for live events, conferences, and stage productions. Built with Electron + Node.js, installable as a standalone app on Windows and macOS.
 
 ## Screenshots
 
 ### GUI - Controller
-Main control panel: transport (GO/PAUSE/RESET), presets, agenda, messaging, external sync timer card and live monitor preview.
+Main control panel: transport (START/PAUSE/RESET), presets, agenda, messaging, second timer and external sync timer cards, live monitor preview, and the always-open settings column on the right.
 
 ![GUI Controller](assets/screenshot_GUI_1.png)
 
@@ -24,8 +25,8 @@ Agenda/rundown running: session timeline, "now playing" card, live message badge
 
 ![GUI Agenda Live](assets/screenshot_GUI_2.png)
 
-### Settings
-Full settings drawer: fonts, colors, thresholds, audio slots, PIN, shortcuts, profiles, language, webhook/OSC, HTTPS, show clock position and updates.
+### Settings Column
+Always-open settings column: collapsible groups (accordion), timers display options (colors, background, position, size), security, webhook/OSC and updates — changes apply with APPLY.
 
 ![Settings](assets/screenshot_settings.png)
 
@@ -44,13 +45,18 @@ Second presenter window that follows the remaining time of a cue running in Reso
 
 ![External Sync Presenter](assets/screenshot_sync_presenter.png)
 
-### Remote Control (phone/tablet)
-Lightweight remote page at `/remote.html` with GO/PAUSE, RESET, +1m/-1m and message toggle.
+### Second Timer Display
+Independent second timer running on its own display output (countdown / count-up / time of day).
 
-![Remote Control](assets/screenshot_remote.png)
+![Second Timer Presenter](assets/screenshot_timer2_presenter.png)
+
+### Web Timer (phone/tablet)
+Lightweight remote page at `/remote.html` with START/PAUSE, RESET, +1m/-1m and message toggle.
+
+![Web Timer](assets/screenshot_remote.png)
 
 ### Companion Module - Preset Buttons
-Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda controls, external sync HH:MM:SS:MS).
+Stream Deck presets via Bitfocus Companion (HH:MM:SS display, START/PAUSE, agenda controls, external sync HH:MM:SS:MS).
 
 ![Companion Module](assets/screenshot_Companion_Module.png)
 
@@ -61,15 +67,19 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 | Feature | Description |
 |---|---|
 | **Countdown / Count-Up** | Timer with HH:MM:SS or MM:SS display |
+| **Second Timer** | Independent second timer (countdown / count-up / time of day) running simultaneously on its own display output or window, with its own colors, background, position and size |
 | **Time of Day** | Live clock display (HH:MM:SS) |
 | **Idle / Logo** | Custom logo display on external screen |
 | **External Display** | Fullscreen presenter window on secondary monitor/projector (primary display never used) |
 | **Fallback Window** | If no external monitor, opens resizable window |
+| **Resizable Columns** | Drag the subtle dividers to resize the three interface columns (persisted between sessions) |
+| **Settings Column** | Always-open settings column with accordion groups and an APPLY button (changes take effect on apply) |
+| **Graphite Skin** | Clean professional dark graphite theme (built-in, no picker) |
 | **Show Clock** | Clock overlay on the presenter with configurable position (X/Y %) |
 | **Messaging** | Custom messages with instant trigger to presenter |
 | **Quick Messages** | Bank of up to 5 editable messages (add, edit, delete, instant live) |
 | **Audio Cues** | Upload custom sounds for timer end and warning thresholds |
-| **Settings** | Customizable font family, colors (normal/warning/danger/expired), thresholds, HH/SS toggles |
+| **Preset Badges** | Auto-formatted time badges ("01 Min", "10 Min", "02 H", "45 Seg") |
 | **Stop at Zero** | Auto-pause countdown at 00:00 (configurable) |
 | **Expired Flash** | Flash on expiry (3x/6x/8x/infinite) + manual FLASH button |
 | **Visual Presets** | 4 slots to save/apply the current look (background, fonts, colors, timer size) |
@@ -82,13 +92,13 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 | **OBS Integration** | Browser source with transparent overlay mode (see `docs/OBS.md`) |
 | **OSC Output** | Send timer events to lighting consoles (GrandMA, ETC, ...) |
 | **Webhooks** | HTTP callbacks on timer events (vMix, automation, ...) |
-| **Remote Control** | Lightweight mobile page at `/remote.html` for phone/tablet control |
+| **Web Timer** | Lightweight resizable window at `/remote.html` for phone/tablet control |
 | **Multi-language** | English / Português |
 | **Undo** | Ctrl+Z reverts the last action |
 | **Keyboard Shortcuts** | Space = GO/PAUSE, R = RESET, M = message toggle (configurable) |
 | **System Tray** | Close to tray with quick controls; timer keeps running |
 | **Updates** | Manual update check via Settings > Updates (no automatic checks) |
-| **Portable** | Single `.exe` installer -- no Node.js or Electron needed on target PC |
+| **Windows + macOS** | Standalone installer on Windows (`.exe`) and macOS (`.dmg`/`.zip`, Intel + Apple Silicon) -- no Node.js or Electron needed on the target machine |
 
 ## Tech Stack
 
@@ -98,7 +108,7 @@ Stream Deck presets via Bitfocus Companion (HH:MM:SS display, GO/PAUSE, agenda c
 | Backend | Node.js + Express |
 | Real-time | Socket.IO |
 | Frontend | Vanilla HTML/CSS/JS |
-| Installer | electron-builder (NSIS) |
+| Installer | electron-builder (NSIS on Windows, DMG/ZIP on macOS) |
 
 ## Project Structure
 
@@ -110,23 +120,25 @@ Smart-Timer-Pro/
 ├── package.json             # Dependencies & electron-builder config
 ├── .gitignore
 ├── assets/
-│   ├── icon.svg             # Vector icon source (dark blue)
+│   ├── icon.svg             # Vector icon source
 │   ├── icon-white.svg       # Vector icon source (white, in-app header)
 │   ├── icon.png             # App window / tray icon
-│   ├── icon.ico             # Installer / exe / shortcuts icon
+│   ├── icon.ico             # Windows installer / exe / shortcuts icon
+│   ├── icon.icns            # macOS app icon
 │   └── screenshot_*.png     # README screenshots
 ├── scripts/
-│   ├── make-icon.js         # Generates icon.png / icon.ico / logo.png (npm run icon)
+│   ├── make-icon.js         # Generates icon.png / icon.ico / icon.icns / logo.png / favicons (npm run icon)
 │   ├── capture-screenshots.js
 │   ├── build-installer.js
-│   └── after-pack.js        # Patches the exe icon after packaging
+│   └── after-pack.js        # Patches the Windows exe icon after packaging
 ├── companion/
 │   └── smart-timer-pro/     # Bitfocus Companion module
 ├── docs/                    # CHANGELOG, DEVELOPMENT, API, OBS, OPERATOR_GUIDE, SYNC_GUIDE
 └── public/
     ├── index.html           # Moderator control panel
-    ├── presenter.html       # Fullscreen presenter view (?view=sync for external sync)
-    ├── remote.html          # Mobile remote control
+    ├── presenter.html       # Fullscreen presenter view (?view=sync / ?view=timer2)
+    ├── remote.html          # Web Timer (mobile remote control)
+    ├── favicon-16.png / favicon-32.png
     └── images/
         └── logo.png         # In-app header logo (white)
 ```
@@ -188,6 +200,15 @@ Smart-Timer-Pro/
 
 > Providers: **Resolume Arena 7** (REST, port 8080), **Pixera** (JSON-RPC 2.0 over TCP, JSON/TCP(dl) or JSON/TCP), **Pixera/WATCHOUT (HTTP)** (generic JSON GET), **OSC** (UDP listener). Setup guide: `docs/SYNC_GUIDE.md` or the GUIDE button in the app.
 
+### Second Timer
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/timer2/start` | Start the second timer |
+| GET | `/api/timer2/pause` | Pause the second timer |
+| GET | `/api/timer2/reset?sec=N` | Reset the second timer (default: last set time) |
+| GET | `/api/timer2/add?sec=N` | Add/subtract N seconds |
+| GET | `/api/timer2/mode?set=countdown\|countup\|timeofday` | Change second timer mode |
+
 ## Socket.IO Events
 
 ### Server → Client
@@ -235,14 +256,19 @@ The installer is standalone -- no Node.js, Electron, or any runtime required on 
 
 ## Installation
 
-1. Run `Smart Timer Pro Setup 2.1.3.exe`
+### Windows
+1. Run `Smart Timer Pro Setup 3.0.0.exe`
 2. Follow the installer wizard
 3. Launch from desktop shortcut or Start Menu
+
+### macOS
+1. Open the `.dmg` (Intel or Apple Silicon) and drag Smart Timer Pro to Applications
+2. First launch: right-click → Open (Gatekeeper, unsigned build)
 
 ## Data Storage
 
 User data (settings, messages, logos, audio) is stored in:
-- Electron: `%APPDATA%/smart-timer-pro/`
+- Electron: `%APPDATA%/smart-timer-pro/` (Windows) / `~/Library/Application Support/smart-timer-pro/` (macOS)
 - Standalone server: project directory
 
 ## License
