@@ -7,9 +7,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     toggleSyncPresenter: () => ipcRenderer.invoke('toggle-sync-presenter'),
     getSyncPresenterStatus: () => ipcRenderer.invoke('get-sync-presenter-status'),
     closeSyncPresenter: () => ipcRenderer.invoke('close-sync-presenter'),
+    onSyncPresenterStatus: (callback) => {
+        ipcRenderer.on('sync-presenter-status', (event, active) => callback(active));
+    },
     toggleTimer2Presenter: () => ipcRenderer.invoke('toggle-timer2-presenter'),
     getTimer2PresenterStatus: () => ipcRenderer.invoke('get-timer2-presenter-status'),
     closeTimer2Presenter: () => ipcRenderer.invoke('close-timer2-presenter'),
+    onTimer2PresenterStatus: (callback) => {
+        ipcRenderer.on('timer2-presenter-status', (event, active) => callback(active));
+    },
     getDisplays: () => ipcRenderer.invoke('get-displays'),
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
     getAppInfo: () => ipcRenderer.invoke('get-app-info'),

@@ -1233,7 +1233,7 @@
                     </div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <span id="sync-status" class="msg-badge badge-off" style="flex:none">NO SIGNAL</span>
-                        <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:18px;font-weight:700;color:var(--text);text-align:center">00:00:00</span>
+                        <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:14px;font-weight:700;color:var(--text);text-align:center">00:00:00:00</span>
                     </div>
                     <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
                         <button onclick="syncCmd('start')" class="btn btn-start btn-sm" style="height:40px">START</button>
@@ -2235,21 +2235,32 @@
                 }
             }
             if (timeEl) {
-                var t = Math.max(0, Math.round(st.timeLeft || 0));
+                var t = Math.max(0, st.timeLeft || 0);
                 var h = Math.floor(t / 3600);
                 var m = Math.floor((t % 3600) / 60);
-                var sec = t % 60;
+                var s = Math.floor(t % 60);
+                var cs = Math.floor((t * 100) % 100);
                 timeEl.textContent =
                     String(h).padStart(2, '0') + ':' +
                     String(m).padStart(2, '0') + ':' +
-                    String(sec).padStart(2, '0');
+                    String(s).padStart(2, '0') + ':' +
+                    String(cs).padStart(2, '0');
             }
+        }
+
+        function updateSyncPresenterButton(active) {
+            var btn = document.getElementById('btn-sync-presenter');
+            if (!btn) return;
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var pt = lang === 'pt';
+            btn.textContent = active ? (pt ? 'FECHAR ECRÃ' : 'CLOSE DISPLAY') : (pt ? 'ABRIR ECRÃ' : 'OPEN DISPLAY');
+            btn.classList.toggle('active', !!active);
         }
 
         function toggleSyncPresenterWindow() {
             if (window.electronAPI) {
                 window.electronAPI.toggleSyncPresenter().then(function(active) {
-                    document.getElementById('btn-sync-presenter').classList.toggle('active', active);
+                    updateSyncPresenterButton(active);
                 });
             } else {
                 window.open('/presenter.html?view=sync', 'syncpresenter');
@@ -2347,14 +2358,33 @@
             };
         }
 
+        function updateTimer2PresenterButton(active) {
+            var btn = document.getElementById('btn-timer2-presenter');
+            if (!btn) return;
+            var lang = (currentSettings && currentSettings.language) || 'en';
+            var pt = lang === 'pt';
+            btn.textContent = active ? (pt ? 'FECHAR ECRÃ' : 'CLOSE DISPLAY') : (pt ? 'ABRIR ECRÃ' : 'OPEN DISPLAY');
+            btn.classList.toggle('active', !!active);
+        }
+
         function toggleTimer2PresenterWindow() {
             if (window.electronAPI) {
                 window.electronAPI.toggleTimer2Presenter().then(function(active) {
-                    document.getElementById('btn-timer2-presenter').classList.toggle('active', active);
+                    updateTimer2PresenterButton(active);
                 });
             } else {
                 window.open('/presenter.html?view=timer2', 'timer2presenter');
             }
+        }
+
+        // keep the OPEN/CLOSE DISPLAY labels in sync with the real window state
+        if (window.electronAPI) {
+            window.electronAPI.onSyncPresenterStatus(function(active) {
+                updateSyncPresenterButton(active);
+            });
+            window.electronAPI.onTimer2PresenterStatus(function(active) {
+                updateTimer2PresenterButton(active);
+            });
         }
 
         function toggleClock() {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.1] - 2026-10-03
+
+### Fixes
+- **External Sync window**: closing it with the X now closes it for good (no auto-reopen); the OPEN DISPLAY button toggles between OPEN DISPLAY and CLOSE DISPLAY (same for the Second Timer button)
+- **HH:MM:SS:MS display**: the external sync timer (presenter window, GUI card and Companion) now shows exactly HH:MM:SS:MS — 2-digit hours, minutes, seconds and 2-digit hundredths of a second, with sub-second precision kept server-side
+
 ## [3.0.0] - 2026-10-03
 
 ### New Features

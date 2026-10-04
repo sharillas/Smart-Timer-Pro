@@ -645,6 +645,20 @@
             }
         }
 
+        // HH:MM:SS:MS (2-digit hours/minutes/seconds + 2-digit hundredths of
+        // a second) for the external sync timer.
+        function formatSyncTime(sec) {
+            sec = Math.max(0, sec || 0);
+            var h = Math.floor(sec / 3600);
+            var m = Math.floor((sec % 3600) / 60);
+            var s = Math.floor(sec % 60);
+            var cs = Math.floor((sec * 100) % 100);
+            return String(h).padStart(2, '0') + ':' +
+                   String(m).padStart(2, '0') + ':' +
+                   String(s).padStart(2, '0') + ':' +
+                   String(cs).padStart(2, '0');
+        }
+
         // --- SYNC VIEW (external device timer) ---
         function buildSyncStage(s) {
             currentState = s;
@@ -681,8 +695,8 @@
             var el = getTimerEl();
             if (el) {
                 var t = (s.syncTimer && s.syncTimer.timeLeft) || 0;
-                el.textContent = formatTime(t, { showHours: true, showSeconds: true });
-                el.style.fontSize = 'min(11vw, 20vh)';
+                el.textContent = formatSyncTime(t);
+                el.style.fontSize = 'min(9vw, 16vh)';
             }
 
             var cap = document.getElementById('caption');

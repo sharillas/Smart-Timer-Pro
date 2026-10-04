@@ -397,10 +397,17 @@ function createSyncPresenterWindow() {
 
     syncPresenterWindow.once('ready-to-show', () => {
         syncPresenterWindow.show();
+        broadcastSyncPresenterStatus(true);
+    });
+
+    // X on the window closes it for good (no auto-reopen)
+    syncPresenterWindow.on('close', () => {
+        syncPresenterEnabled = false;
     });
 
     syncPresenterWindow.on('closed', () => {
         syncPresenterWindow = null;
+        broadcastSyncPresenterStatus(false);
         if (syncPresenterEnabled && !isQuitting && mainWindow) {
             setTimeout(() => {
                 if (syncPresenterEnabled && !isQuitting && !syncPresenterWindow && mainWindow) {
@@ -409,16 +416,34 @@ function createSyncPresenterWindow() {
             }, 2000);
         }
     });
+
+    // renderer crash recovery (only when the window was expected to stay open)
+    syncPresenterWindow.webContents.on('render-process-gone', () => {
+        if (!syncPresenterEnabled || isQuitting) return;
+        const dead = syncPresenterWindow;
+        syncPresenterWindow = null;
+        if (dead && !dead.isDestroyed()) dead.destroy();
+        setTimeout(() => {
+            if (syncPresenterEnabled && !isQuitting && !syncPresenterWindow && mainWindow) {
+                createSyncPresenterWindow();
+            }
+        }, 2000);
+    });
+}
+
+function broadcastSyncPresenterStatus(active) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        try { mainWindow.webContents.send('sync-presenter-status', active); } catch (e) { /* ignore */ }
+    }
 }
 
 function toggleSyncPresenterWindow() {
     if (syncPresenterWindow) {
-        // Reopen: the user may have picked a different display — recreate
-        // the window so it moves to the newly selected monitor.
+        // Close for good (the button toggles between OPEN and CLOSE DISPLAY)
         syncPresenterEnabled = false;
         syncPresenterWindow.close();
         syncPresenterWindow = null;
-        createSyncPresenterWindow();
+        broadcastSyncPresenterStatus(false);
     } else {
         createSyncPresenterWindow();
     }
@@ -528,10 +553,17 @@ function createTimer2PresenterWindow() {
 
     timer2Window.once('ready-to-show', () => {
         timer2Window.show();
+        broadcastTimer2PresenterStatus(true);
+    });
+
+    // X on the window closes it for good (no auto-reopen)
+    timer2Window.on('close', () => {
+        timer2Enabled = false;
     });
 
     timer2Window.on('closed', () => {
         timer2Window = null;
+        broadcastTimer2PresenterStatus(false);
         if (timer2Enabled && !isQuitting && mainWindow) {
             setTimeout(() => {
                 if (timer2Enabled && !isQuitting && !timer2Window && mainWindow) {
@@ -540,15 +572,33 @@ function createTimer2PresenterWindow() {
             }, 2000);
         }
     });
+
+    timer2Window.webContents.on('render-process-gone', () => {
+        if (!timer2Enabled || isQuitting) return;
+        const dead = timer2Window;
+        timer2Window = null;
+        if (dead && !dead.isDestroyed()) dead.destroy();
+        setTimeout(() => {
+            if (timer2Enabled && !isQuitting && !timer2Window && mainWindow) {
+                createTimer2PresenterWindow();
+            }
+        }, 2000);
+    });
+}
+
+function broadcastTimer2PresenterStatus(active) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        try { mainWindow.webContents.send('timer2-presenter-status', active); } catch (e) { /* ignore */ }
+    }
 }
 
 function toggleTimer2PresenterWindow() {
     if (timer2Window) {
-        // Reopen: the user may have picked a different display
+        // Close for good (the button toggles between OPEN and CLOSE DISPLAY)
         timer2Enabled = false;
         timer2Window.close();
         timer2Window = null;
-        createTimer2PresenterWindow();
+        broadcastTimer2PresenterStatus(false);
     } else {
         createTimer2PresenterWindow();
     }

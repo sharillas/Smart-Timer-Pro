@@ -753,13 +753,14 @@ setInterval(() => {
         }
     }
 
-    // External sync timer: local countdown when not following the source
+    // External sync timer: local countdown when not following the source.
+    // Keeps sub-second precision so the display can show HH:MM:SS:MS.
     if (state.syncTimer.isRunning && !state.syncTimer.following) {
         if (syncCountdownEnd === null) {
             syncCountdownEnd = now + state.syncTimer.timeLeft * 1000;
         }
-        const nt = Math.round((syncCountdownEnd - now) / 1000);
-        if (nt !== state.syncTimer.timeLeft) {
+        const nt = Math.round(syncCountdownEnd - now) / 1000;
+        if (Math.abs(nt - state.syncTimer.timeLeft) >= 0.005) {
             state.syncTimer.timeLeft = Math.max(0, nt);
             if (state.syncTimer.timeLeft <= 0) {
                 state.syncTimer.isRunning = false;

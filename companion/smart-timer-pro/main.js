@@ -121,7 +121,7 @@ class SmartTimerProInstance extends InstanceBase {
 					sync_hours: Math.floor(syncTotalSec / 3600).toString().padStart(2, '0'),
 					sync_minutes: Math.floor((syncTotalSec % 3600) / 60).toString().padStart(2, '0'),
 					sync_seconds: (syncTotalSec % 60).toString().padStart(2, '0'),
-					sync_ms: (syncMs % 1000).toString().padStart(3, '0'),
+					sync_ms: Math.floor((syncMs % 1000) / 10).toString().padStart(2, '0'),
 					sync_source: data.syncSource || '',
 					sync_connected: data.syncConnected ? 'true' : 'false',
 				};
