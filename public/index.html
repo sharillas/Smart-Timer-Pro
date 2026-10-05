@@ -199,7 +199,7 @@
             font-weight: 600; letter-spacing: 0.5px; transition: all 0.15s;
         }
         .header-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .header-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .header-btn.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
         .header-btn.warn { border-color: rgba(239,68,68,0.3); color: var(--red); }
 
         .grid {
@@ -296,9 +296,9 @@
         .btn-reset { background: var(--red); height: 120px; color: #fff; }
         .btn-reset:hover { filter: brightness(1.1); }
         .btn-sm { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; }
-        .btn-add { background: rgba(0,163,224,0.15); color: var(--accent); border: 1px solid rgba(0,163,224,0.2); }
+        .btn-add { background: rgba(29,78,216,0.28); color: #dbeafe; border: 1px solid rgba(59,130,246,0.35); }
         .btn-sub { background: var(--chip-bg); color: var(--text-dim); }
-        .btn-add:hover { background: rgba(0,163,224,0.25); }
+        .btn-add:hover { background: rgba(29,78,216,0.45); }
         .btn-sub:hover { filter: brightness(1.15); }
         .preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
         .preset-grid.cols4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -320,11 +320,11 @@
         }
         .custom-input:focus { border-color: var(--accent); }
         .btn-set {
-            background: var(--accent); border: none; padding: 12px 20px;
+            background: #1d4ed8; border: none; padding: 12px 20px;
             border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer;
             font-size: 12px; letter-spacing: 1px; white-space: nowrap;
         }
-        .btn-set:hover { background: #0090cc; }
+        .btn-set:hover { background: #2563eb; }
         .msg-input {
             width: 100%; background: var(--input-bg); border: 1px solid var(--border);
             border-radius: 10px; color: var(--text); padding: 12px; font-size: 14px;
@@ -337,14 +337,14 @@
             margin-bottom: 14px; transition: all 0.15s;
         }
         .btn-msg-show { background: var(--red); color: #fff; }
-        .btn-msg-hide { background: var(--accent); color: #fff; }
+        .btn-msg-hide { background: #1d4ed8; color: #fff; }
         .bank-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 10px;
         }
         .btn-save {
-            background: rgba(0,163,224,0.15); color: var(--accent);
-            border: 1px solid rgba(0,163,224,0.2); padding: 6px 14px;
+            background: rgba(29,78,216,0.28); color: #dbeafe;
+            border: 1px solid rgba(59,130,246,0.35); padding: 6px 14px;
             border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
             letter-spacing: 0.5px;
         }
@@ -483,11 +483,11 @@
         .audio-status.none { background: rgba(100,116,139,0.15); color: var(--text-dim); }
 
         .btn-small {
-            background: var(--accent); border: none; padding: 6px 12px;
+            background: #1d4ed8; border: none; padding: 6px 12px;
             border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700;
             cursor: pointer; white-space: nowrap;
         }
-        .btn-small:hover { background: #0090cc; }
+        .btn-small:hover { background: #2563eb; }
         .btn-small.danger { background: var(--red); }
         .btn-small.danger:hover { background: #dc2626; }
 
@@ -1234,11 +1234,6 @@
                     <div class="custom-row" style="margin-bottom:10px">
                         <span id="sync-status" class="msg-badge badge-off" style="flex:none">NO SIGNAL</span>
                         <span id="sync-time" style="flex:1;font-family:Orbitron,Courier New,monospace;font-size:14px;font-weight:700;color:var(--text);text-align:center">00:00:00:00</span>
-                    </div>
-                    <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
-                        <button onclick="syncCmd('start')" class="btn btn-start btn-sm" style="height:40px">START</button>
-                        <button onclick="syncCmd('pause')" class="btn btn-pause btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">PAUSE</button>
-                        <button onclick="syncCmd('reset')" class="btn btn-reset btn-sm" style="height:40px;color:#fff;font-size:14px;font-weight:800;letter-spacing:1px">RESET</button>
                     </div>
                     <div class="custom-row" style="margin-bottom:10px">
                         <select id="sync-display" class="custom-input" style="flex:1"></select>
